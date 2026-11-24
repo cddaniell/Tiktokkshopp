@@ -239,7 +239,9 @@ body.semrede .wrap{padding-bottom:200px}
 
 <script>
 {
-const LINK='https://claude.ai/artifact/D2CL9WbAYCemogA4goCkSN';
+const STANDALONE=!!window.SAMVET_STANDALONE,AUTH=window.SAMVET_AUTH||null;
+const LINK=STANDALONE?location.origin+'/':'https://claude.ai/artifact/D2CL9WbAYCemogA4goCkSN';
+const blobSrc=id=>/^https?:\/\//.test(String(id||''))?String(id):'/_blob/'+encodeURIComponent(id);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -528,12 +530,12 @@ function alertas(p){
 
 /* ---------- gravação ---------- */
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const errMsg=e=>e&&e.code==='invalid_argument'?'Seu acesso não permite salvar. Peça ao dono do SAMVET para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
+const errMsg=e=>e&&['invalid_argument','permission-denied','invalid-argument'].includes(e.code)?'Seu acesso não permite salvar. Peça ao dono do SAMVET para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
 const COLS={pacientes:'pac',estoque:'est',clientes:'cli',orcamentos:'orc'};
 const colRef=c=>db.collection(BASE+'/'+c);
 const cfgRef=()=>db.doc(BASE+'/config/clinica');
 const lsKey=col=>col==='pacientes'?'prontuario-vet':'samvet-'+col;
-const PERM=['invalid_argument','quota_exceeded','revoked','not_granted','permission_denied'];
+const PERM=['invalid_argument','quota_exceeded','revoked','not_granted','permission_denied','permission-denied','invalid-argument','unauthenticated'];
 function pendentes(){return LS.get(PFX+'pendentes',[])}
 function enfileirar(op){semRede=true;const l=pendentes().filter(x=>!(x.col===op.col&&x.id===op.id));l.push(op);LS.set(PFX+'pendentes',l);avisoPend()}
 let semRede=false,balaoVisto=false;
@@ -753,21 +755,21 @@ function renderConta(){
    <div class="grow"><h3>Seu perfil</h3><form id="perff" class="addrow"><input id="pf_apelido" placeholder="Como quer ser chamado(a)" aria-label="Nome de exibição" value="${esc(S.cfg.apelido||'')}"><button class="btn sm">Salvar nome</button></form>
    <div class="btns" style="margin-top:8px"><button class="btn sm" data-fotoperfil>${fotoPerfil()?'Trocar foto':'Adicionar foto'}</button>${fotoPerfil()?'<button class="btn sm ghost" data-fotoperfilrm>Remover foto</button>':''}</div>
    <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p></div></div>
-  ${db?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
+  ${db&&!STANDALONE?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
   <div class="cols">
   <div class="box"><h3>${db?'Conectado':'Você está no modo local'}</h3>
-   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> Outras pessoas que usam este mesmo link têm o próprio SAMVET e não veem seus pacientes, clientes nem caixa.</p>`
-   :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login do Claude e abra o SAMVET pelo link abaixo.</p>`}
+   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> ${STANDALONE?'Cada pessoa entra com o próprio e-mail e tem o próprio SAMVET.':'Outras pessoas que usam este mesmo link têm o próprio SAMVET'} e não veem seus pacientes, clientes nem caixa.</p>${STANDALONE&&AUTH?`<p class="meta">E-mail: <b>${esc(AUTH.email()||'')}</b>${AUTH.verificado()?' · confirmado':' · <span class="late">ainda não confirmado</span>'}</p><div class="btns">${AUTH.verificado()?'':'<button class="btn sm" data-reverif>Reenviar confirmação</button>'}<button class="btn sm" data-trocasenha>Trocar senha</button><button class="btn sm del" data-sair>Sair da conta</button></div>`:''}`
+   :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login ${STANDALONE?'':'do Claude '}e abra o SAMVET pelo link abaixo.</p>`}
    <span class="lbl">Link do SAMVET</span><p class="link" id="lnk">${LINK}</p>
    <div class="btns"><button class="btn sm" data-copylink>Copiar link</button><a class="btn sm" href="${LINK}" target="_blank" rel="noopener">Abrir em nova aba</a></div></div>
   <div class="box"><h3>Como entrar de outro aparelho</h3><ol class="steps">
-   <li>No celular ou computador, acesse <b>claude.ai</b> e entre com o mesmo e-mail e senha da sua conta.</li>
-   <li>Abra o link do SAMVET (acima). Ele também fica na sua lista de artifacts.</li>
+   ${STANDALONE?`<li>No celular ou computador, abra o link do SAMVET (acima).</li><li>Entre com o mesmo e-mail e senha. No celular, use "Adicionar à tela de início" para ter o ícone do aplicativo.</li>`:`<li>No celular ou computador, acesse <b>claude.ai</b> e entre com o mesmo e-mail e senha da sua conta.</li>
+   <li>Abra o link do SAMVET (acima). Ele também fica na sua lista de artifacts.</li>`}
    <li>Pronto: pacientes, agenda, caixa e estoque são os mesmos, atualizados ao vivo.</li></ol>
    <h3 style="margin-top:12px">Outra pessoa usar o SAMVET dela</h3><ol class="steps">
-   <li>No topo do SAMVET, toque em <b>Compartilhar</b> e convide a pessoa pelo e-mail.</li>
+   ${STANDALONE?`<li>Mande o link do SAMVET para a pessoa.</li><li>Ela toca em <b>Criar conta</b> e se cadastra com o próprio e-mail.</li><li>Ela começa com um SAMVET vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`:`<li>No topo do SAMVET, toque em <b>Compartilhar</b> e convide a pessoa pelo e-mail.</li>
    <li>Dê acesso de <b>edição</b>. Só visualizar não deixa salvar.</li>
-   <li>A pessoa entra com o próprio login do Claude e começa com um SAMVET vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li></ol></div>
+   <li>A pessoa entra com o próprio login do Claude e começa com um SAMVET vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`}</ol></div>
   </div>
   <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.</p>
    <form id="cfgf"><div class="f">
@@ -779,7 +781,7 @@ function renderConta(){
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
   $('perff').onsubmit=e=>{e.preventDefault();salvarCfg({...S.cfg,apelido:$('pf_apelido').value.trim()},'Nome salvo')};
   if($('padV'))window._padV=padAssin($('padV'));
-  if($('meName'))$('meName').textContent=S.cfg.apelido||nome||'Conta Claude';
+  if($('meName'))$('meName').textContent=S.cfg.apelido||nome||(STANDALONE?'Sua conta':'Conta Claude');
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
 }
 
@@ -937,7 +939,7 @@ async function guardarAssin(pad){
   if(assets){try{const r=await assets.upload(await pad.blob());return{assetId:r.id}}catch(e){}}
   return{url:pad.url()};
 }
-const srcAssin=a=>a?(a.assetId?'/_blob/'+encodeURIComponent(a.assetId):a.url||''):'';
+const srcAssin=a=>a?(a.assetId?blobSrc(a.assetId):a.url||''):'';
 async function dataUrlDe(src){if(!src||src.startsWith('data:'))return src;try{const b=await (await fetch(src)).blob();return await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}catch(e){return''}}
 async function htmlDoc(titulo,texto,assT,nomeT){
   const v=await dataUrlDe(srcAssin(S.cfg.assinVet)),t=await dataUrlDe(srcAssin(assT));
@@ -1172,7 +1174,7 @@ async function pdfOrc(o){
   return d;
 }
 async function exportarPdfOrc(o){
-  if(!dl){toast('Para baixar o PDF, abra o SAMVET pelo link do Claude com sua conta.');return}
+  if(!dl){toast(STANDALONE?'Não foi possível baixar aqui.':'Para baixar o PDF, abra o SAMVET pelo link do Claude com sua conta.');return}
   toast('Gerando PDF…');
   try{const d=await pdfOrc(o);const nome=`Orçamento ${o.numero} - ${o.cliente}.pdf`.replace(/[\/\\:*?"<>|]/g,'-');
     const r=await dl.save({filename:nome,data:d.output('blob')});if(r&&r.status==='saved')toast('PDF salvo: '+nome);
@@ -1291,7 +1293,7 @@ function abrirDoc(p,titulo,texto,docId,opt={}){
 }
 function anexos(p){
   const l=ord(p.anexos),imgs=l.filter(a=>/^image\//.test(a.tipo));
-  const u=a=>'/_blob/'+encodeURIComponent(a.assetId);
+  const u=a=>blobSrc(a.assetId);
   const A=imgs.find(a=>a.id===S.cmpA)||imgs[imgs.length-1],B=imgs.find(a=>a.id===S.cmpB)||imgs[0];
   return `<div class="bar"><h3>Fotos, laudos e exames</h3>${assets?'<button class="btn pri sm" data-upload>+ Anexar arquivo</button>':''}</div>
   <p class="hint">${assets?'Fotos de feridas, radiografias, laudos em PDF. Ficam guardados junto da ficha.':db?'Só quem tem acesso de edição ao SAMVET pode anexar arquivos.':'Anexos precisam do login: abra o SAMVET pelo link do Claude.'}</p>
@@ -1470,6 +1472,9 @@ document.addEventListener('click',e=>{
   else if(d.rmsv){salvarCfg({...S.cfg,servicos:(S.cfg.servicos||[]).filter(x=>x.id!==d.rmsv)},'Serviço removido')}
   else if(d.rmexame){const pr={...(S.cfg.precos||{})};delete pr[precoK('exames',d.rmexame)];salvarCfg({...S.cfg,precos:pr,examesExtra:(S.cfg.examesExtra||[]).filter(x=>x!==d.rmexame)},'Exame removido')}
   else if(d.quick&&p){const x=(S.cfg.servicos||[]).find(y=>y.id===d.quick);if(x){salvar({...p,fin:[...(p.fin||[]),{id:uid(),data:hoje(),tipo:x.tipo||'Serviço',desc:x.nome,qtd:'1',unit:String(num(x.valor)),total:String(num(x.valor)),sit:'Pendente',pago:''}]});toast(x.nome+' · '+R$(x.valor)+' lançado')}}
+  else if('sair' in d&&AUTH)AUTH.sair();
+  else if('trocasenha' in d&&AUTH)AUTH.trocarSenha().then(m=>toast(m));
+  else if('reverif' in d&&AUTH)AUTH.reenviar().then(m=>toast(m));
   else if('copylink' in d)copiar(LINK,'Link copiado');
   else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,orcamentos:S.orc,config:S.cfg},null,1),'application/json')}
   else if('importar' in d)$('fileimp').click();
