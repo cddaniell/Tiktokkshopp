@@ -251,7 +251,7 @@ const VAC_BOV=['Brucelose (B19 / RB51)','Raiva','Clostridioses','Leptospirose','
 const FORMAS=['','Pix','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência'];
 
 const S={pac:[],est:[],cli:[],cliSel:null,cfg:{},sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac',finF:'pend'};
-let db=null,dict=null,user=null,assets=null,dl=null,me=null,micBtn=null,micTa=null,timer=null;
+let BASE='',PFX='samvet-',db=null,dict=null,user=null,assets=null,dl=null,me=null,micBtn=null,micTa=null,timer=null;
 const queue={};
 
 const F_PAC=[
@@ -506,10 +506,12 @@ function alertas(p){
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const errMsg=e=>e&&e.code==='invalid_argument'?'Você não tem permissão para editar.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
 const COLS={pacientes:'pac',estoque:'est',clientes:'cli'};
+const colRef=c=>db.collection(BASE+'/'+c);
+const cfgRef=()=>db.doc(BASE+'/config/clinica');
 const lsKey=col=>col==='pacientes'?'prontuario-vet':'samvet-'+col;
 const PERM=['invalid_argument','quota_exceeded','revoked','not_granted','permission_denied'];
-function pendentes(){return LS.get('samvet-pendentes',[])}
-function enfileirar(op){semRede=true;const l=pendentes().filter(x=>!(x.col===op.col&&x.id===op.id));l.push(op);LS.set('samvet-pendentes',l);avisoPend()}
+function pendentes(){return LS.get(PFX+'pendentes',[])}
+function enfileirar(op){semRede=true;const l=pendentes().filter(x=>!(x.col===op.col&&x.id===op.id));l.push(op);LS.set(PFX+'pendentes',l);avisoPend()}
 let semRede=false,balaoVisto=false;
 function avisoPend(){
   const n=pendentes().length,off=!!db&&(!navigator.onLine||semRede),el=$('rede');
@@ -521,22 +523,22 @@ let enviando=false;
 async function reenviar(){
   if(!db||enviando)return;if(!navigator.onLine){avisoPend();return}enviando=true;let falhou=false;
   try{for(const op of pendentes()){
-    try{if(op.del)await db.collection(op.col).doc(op.id).delete();else await db.collection(op.col).doc(op.id).set(op.body);
-      LS.set('samvet-pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id&&x.t===op.t)))}
-    catch(e){if(e&&PERM.includes(e.code)){LS.set('samvet-pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id)));toast(errMsg(e))}else{falhou=true;break}}
+    try{if(op.del)await colRef(op.col).doc(op.id).delete();else await colRef(op.col).doc(op.id).set(op.body);
+      LS.set(PFX+'pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id&&x.t===op.t)))}
+    catch(e){if(e&&PERM.includes(e.code)){LS.set(PFX+'pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id)));toast(errMsg(e))}else{falhou=true;break}}
   }}finally{enviando=false;semRede=falhou;avisoPend()}
 }
 function enviar(col,id,body,del){
   const k=col+'/'+id,op={col,id,body,del:!!del,t:Date.now()};
   if(!navigator.onLine){enfileirar(op);return Promise.resolve()}
-  queue[k]=(queue[k]||Promise.resolve()).then(()=>del?db.collection(col).doc(id).delete():db.collection(col).doc(id).set(body)).catch(e=>{if(e&&PERM.includes(e.code))toast(errMsg(e));else enfileirar(op)});
+  queue[k]=(queue[k]||Promise.resolve()).then(()=>del?colRef(col).doc(id).delete():colRef(col).doc(id).set(body)).catch(e=>{if(e&&PERM.includes(e.code))toast(errMsg(e));else enfileirar(op)});
   return queue[k];
 }
 function gravar(col,obj,arr){
   obj.atualizado=Date.now();
   const i=arr.findIndex(x=>x.id===obj.id);i<0?arr.push(obj):arr[i]=obj;
   if(!db){LS.set(lsKey(col),arr);render();return Promise.resolve()}
-  LS.set('samvet-cache-'+col,arr);render();
+  LS.set(PFX+'cache-'+col,arr);render();
   const body=JSON.parse(JSON.stringify(obj));delete body.id;
   return enviar(col,obj.id,body);
 }
@@ -547,7 +549,7 @@ function apagar(col,id){
 }
 const salvar=p=>gravar('pacientes',syncFin(vincCli(p)),S.pac);
 const salvarEst=it=>gravar('estoque',it,S.est);
-function salvarCfg(c,msg='Dados da clínica salvos',quiet){S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}LS.set('samvet-cache-config',c);db.doc('config/clinica').set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
+function salvarCfg(c,msg='Dados da clínica salvos',quiet){S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}LS.set(PFX+'cache-config',c);cfgRef().set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
 
 /* ---------- navegação ---------- */
 const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['clientes','Clientes'],['caixa','Caixa'],['relat','Relatórios'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
@@ -576,7 +578,7 @@ function renderLista(){
   else rows=list.map(({p,a})=>{const u=ult(p)[0];const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}${deb?` · <span class="late">deve ${R$(deb)}</span>`:''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
   const hj=new Date(),hr=hj.getHours(),nm=(me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
-  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo SAMVET"></span><div><h2>${esc(S.cfg.clinica||'SAMVET')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p></div></div>`;
+  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo SAMVET"></span><div><h2>${esc(S.cfg.clinica||'SAMVET')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
   $('view').innerHTML=capa+`<div class="counts">${[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('')}</div>
   <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro, microchip ou treinador" aria-label="Buscar paciente" value="${esc(S.q)}">
   <div id="rows">${rows}</div>`;
@@ -720,7 +722,7 @@ function renderConta(){
   $('view').innerHTML=`<div class="bar"><h2>Conta e acesso</h2></div>
   <div class="cols">
   <div class="box"><h3>${db?'Conectado':'Você está no modo local'}</h3>
-   ${db?`<p>${me&&me.avatarUrl?`<img src="${esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p>`
+   ${db?`<p>${me&&me.avatarUrl?`<img src="${esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> Outras pessoas que usam este mesmo link têm o próprio SAMVET e não veem seus pacientes, clientes nem caixa.</p>`
    :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login do Claude e abra o SAMVET pelo link abaixo.</p>`}
    <span class="lbl">Link do SAMVET</span><p class="link" id="lnk">${LINK}</p>
    <div class="btns"><button class="btn sm" data-copylink>Copiar link</button><a class="btn sm" href="${LINK}" target="_blank" rel="noopener">Abrir em nova aba</a></div></div>
@@ -728,10 +730,10 @@ function renderConta(){
    <li>No celular ou computador, acesse <b>claude.ai</b> e entre com o mesmo e-mail e senha da sua conta.</li>
    <li>Abra o link do SAMVET (acima). Ele também fica na sua lista de artifacts.</li>
    <li>Pronto: pacientes, agenda, caixa e estoque são os mesmos, atualizados ao vivo.</li></ol>
-   <h3 style="margin-top:12px">Equipe e outros veterinários</h3><ol class="steps">
+   <h3 style="margin-top:12px">Outra pessoa usar o SAMVET dela</h3><ol class="steps">
    <li>No topo do SAMVET, toque em <b>Compartilhar</b> e convide a pessoa pelo e-mail.</li>
-   <li>Dê acesso de edição para quem vai lançar dados. Cada um entra com o próprio login do Claude.</li>
-   <li>Quem tem só acesso de visualização não vê os prontuários.</li></ol></div>
+   <li>Dê acesso de <b>edição</b>. Só visualizar não deixa salvar.</li>
+   <li>A pessoa entra com o próprio login do Claude e começa com um SAMVET vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li></ol></div>
   </div>
   <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.</p>
    <form id="cfgf"><div class="f">
@@ -739,7 +741,7 @@ function renderConta(){
    </div><div class="acts"><button class="btn pri">Salvar dados da clínica</button></div></form></div>
   <div class="box"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
   <div class="box"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
-  <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}.</p>
+  <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, clientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}. ${(()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último backup baixado neste aparelho: '+new Date(t).toLocaleDateString('pt-BR')+'.':'Nenhum backup baixado ainda neste aparelho.'})()}</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
   if($('padV'))window._padV=padAssin($('padV'));
   if($('meName'))$('meName').textContent=nome?nome:'Conta Claude';
@@ -1178,7 +1180,7 @@ document.addEventListener('click',e=>{
   else if(d.rmexame){const pr={...(S.cfg.precos||{})};delete pr[precoK('exames',d.rmexame)];salvarCfg({...S.cfg,precos:pr,examesExtra:(S.cfg.examesExtra||[]).filter(x=>x!==d.rmexame)},'Exame removido')}
   else if(d.quick&&p){const x=(S.cfg.servicos||[]).find(y=>y.id===d.quick);if(x){salvar({...p,fin:[...(p.fin||[]),{id:uid(),data:hoje(),tipo:x.tipo||'Serviço',desc:x.nome,qtd:'1',unit:String(num(x.valor)),total:String(num(x.valor)),sit:'Pendente',pago:''}]});toast(x.nome+' · '+R$(x.valor)+' lançado')}}
   else if('copylink' in d)copiar(LINK,'Link copiado');
-  else if('backup' in d)baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,config:S.cfg},null,1),'application/json');
+  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,config:S.cfg},null,1),'application/json')}
   else if('importar' in d)$('fileimp').click();
   else if('back' in d){S.sel=null;render()}
   else if(d.tab&&p){S.tab=d.tab;render()}
@@ -1209,6 +1211,10 @@ render();
   const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
   [db,dict,user,assets,dl]=await Promise.all([use('db'),use('dictation'),use('user'),use('assets'),use('downloads')]);
   if(user){try{me=await user.me()}catch(e){me=null}}
+  const uid=me&&me.id;
+  if(db&&!uid){db=null;window.__semId=1}
+  if(db){BASE=`data/users/${uid}/samvet`;PFX='samvet-'+uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-';
+    const velho=LS.get('samvet-pendentes',null);if(velho&&velho.length){LS.set(PFX+'pendentes',[...LS.get(PFX+'pendentes',[]),...velho]);try{localStorage.removeItem('samvet-pendentes')}catch(e){}}}
   renderWho();
   if(dict){
     dict.onState(({state})=>{if(micBtn){micBtn.classList.toggle('on',state==='listening');micBtn.textContent=state==='listening'?'Parar':'Ditar';if(state==='idle')micBtn=null}});
@@ -1216,20 +1222,20 @@ render();
   }
   if(!db){
     S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.cfg=LS.get('samvet-config',{});
-    note('Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
-  S.pac=LS.get('samvet-cache-pacientes',[]);S.est=LS.get('samvet-cache-estoque',[]);S.cli=LS.get('samvet-cache-clientes',[]);S.cfg=LS.get('samvet-cache-config',{});render();
+    note(window.__semId?'Não foi possível identificar sua conta neste link, então os dados ficam só neste aparelho. Peça a quem compartilhou para te convidar com acesso de edição.':'Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
+  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.cfg=LS.get(PFX+'cache-config',{});render();
   note(S.pac.length?'Mostrando os dados salvos neste aparelho enquanto conecta…':'Carregando pacientes…');
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
-  db.collection('pacientes').onSnapshot(snap=>{
+  colRef('pacientes').onSnapshot(snap=>{
     if(!snap.metadata.fromCache){clearTimeout(timer);note('')}
-    S.pac=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set('samvet-cache-pacientes',S.pac);avisoPend();
+    S.pac=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))render();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
-  db.collection('clientes').onSnapshot(snap=>{S.cli=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set('samvet-cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))render()},()=>{});
-  db.collection('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set('samvet-cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
-  db.doc('config/clinica').onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set('samvet-cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))render()},()=>{});
+  colRef('clientes').onSnapshot(snap=>{S.cli=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))render()},()=>{});
+  colRef('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
+  cfgRef().onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))render()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render();if(pendentes().length&&navigator.onLine)reenviar()},60000);
   addEventListener('online',()=>{avisoPend();reenviar()});addEventListener('offline',avisoPend);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&pendentes().length)reenviar()});
