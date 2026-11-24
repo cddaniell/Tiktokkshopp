@@ -155,6 +155,13 @@ textarea.doc{width:100%;min-height:340px;font:15px/1.5 var(--body);padding:12px;
 .capa p{margin:4px 0 0;color:var(--mute)}
 .capa .hoje{margin-top:10px;font-weight:700;color:var(--ink)}
 @media(max-width:600px){.top .logo{width:34px;height:34px}.top h1{font-size:22px}.capa{grid-template-columns:1fr;justify-items:center;text-align:center;padding:20px 16px;gap:10px}.capa .logo{width:130px;height:130px}}
+.pgrp{border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;margin:0}
+.pgrp legend{font:800 14px var(--display);color:var(--brand);padding:0 6px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;align-items:center;padding:4px 0;font-size:14px}
+.prow input{min-height:38px;padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);text-align:right;width:100%}
+.fichafin{margin-top:20px;border-width:2px;border-color:var(--brand)}
+.totrow td{border-top:2px solid var(--line);border-bottom:0}
+p.info{margin:0 0 12px}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 
@@ -242,7 +249,7 @@ const F_PAC=[
  {k:'status',l:'Status',t:'select',o:STATUS}];
 
 const MODS=[
- {key:'consultas',tab:'Consultas',titulo:'Histórico clínico',add:'Nova consulta',titleK:'tipo',
+ {key:'consultas',priceK:'tipo',tab:'Consultas',titulo:'Histórico clínico',add:'Nova consulta',titleK:'tipo',
   def:()=>({tipo:'Consulta'}),
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'tipo',l:'Tipo',t:'select',o:['Consulta','Retorno','Emergência','Atendimento a campo','Cirurgia','Internação','Exame pré-compra','Teleorientação'],h:1},
    {k:'queixa',l:'S · Queixa principal / anamnese',t:'ta'},
@@ -266,9 +273,10 @@ const MODS=[
    {sec:'A / P · Avaliação e plano'},
    {k:'exame',l:'Exame físico: achados',t:'ta'},{k:'diag',l:'Diagnóstico / suspeita',t:'ta'},
    {k:'trat',l:'Tratamento / prescrição',t:'ta'},{k:'orient',l:'Orientações ao tutor',t:'ta'},
-   {k:'retorno',l:'Retorno marcado',t:'date',h:1},{k:'valor',l:'Valor do atendimento (R$)',t:'number',h:1,hint2:'lança no Financeiro'}],
+   {k:'retorno',l:'Retorno marcado',t:'date',h:1},
+   {sec:'Valor'},{k:'valor',l:'Valor do atendimento (R$)',t:'number',h:1,hint2:'entra no Financeiro'},{k:'kmrod',l:'Deslocamento (km rodados)',t:'number',h:1,hint2:'× valor do km'}],
   save:(o,p,novo)=>{if(!o.peso&&o.perim&&o.comp)o.peso=String(Math.round(o.perim*o.perim*o.comp/11880))}},
- {key:'evolucao',tab:'Evolução',titulo:'Evolução da internação',add:'Nova evolução',titleK:'turno',show:p=>p.status==='internado',
+ {key:'evolucao',priceFix:'Diária de internação',tab:'Evolução',titulo:'Evolução da internação',add:'Nova evolução',titleK:'turno',show:p=>p.status==='internado',
   hint:'Registro por turno do paciente internado: o que foi observado, parâmetros, avaliação e plano.',
   def:()=>({hora:agoraH(),turno:new Date().getHours()<12?'Manhã':new Date().getHours()<18?'Tarde':'Noite'}),
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'hora',l:'Hora',t:'time',h:1},{k:'turno',l:'Turno',t:'select',o:['Manhã','Tarde','Noite','Madrugada'],h:1},{k:'resp',l:'Responsável',h:1},
@@ -277,11 +285,12 @@ const MODS=[
    {k:'fezes',l:'Fezes',t:'select',o:['','Normais','Ressecadas','Pastosas','Diarreicas','Ausentes'],h:1},{k:'urina',l:'Urina',t:'select',o:['','Normal','Diminuída','Ausente','Alterada'],h:1},
    {k:'fluido',l:'Fluidoterapia (L no turno)',t:'number',h:1},{k:'curativo',l:'Curativo / feridas',h:1},
    {k:'obs',l:'Avaliação e plano',t:'ta'}]},
- {key:'meds',tab:'Medicação',titulo:'Medicação e internação',add:'Nova medicação',titleK:'med',dateK:'inicio',
+ {key:'meds',priceFix:'Aplicação (por dose)',tab:'Medicação',titulo:'Medicação e internação',add:'Nova medicação',titleK:'med',dateK:'inicio',
   hint:'Toque em "Registrar aplicação" a cada dose. O app avisa quando a próxima atrasar e mostra tudo no quadro de Internação.',
   def:()=>({inicio:hoje(),via:'IV',freq:'12'}),
   f:[{k:'med',l:'Medicamento',req:1,listEst:1},{k:'dose',l:'Dose (mg/kg, mL…)',h:1},{k:'via',l:'Via',t:'select',o:['IV','IM','SC','VO','Tópica','Intra-articular','Nebulização','Retal','Intrauterina','Oftálmica'],h:1},
-   {k:'freq',l:'A cada (horas)',t:'number',h:1},{k:'inicio',l:'Início',t:'date',h:1},{k:'fim',l:'Término',t:'date',h:1},{k:'carencia',l:'Carência (dias, abate/leite/competição)',t:'number',h:1},{k:'obs',l:'Observações',t:'ta'}]},
+   {k:'freq',l:'A cada (horas)',t:'number',h:1},{k:'inicio',l:'Início',t:'date',h:1},{k:'fim',l:'Término',t:'date',h:1},{k:'carencia',l:'Carência (dias, abate/leite/competição)',t:'number',h:1},{k:'obs',l:'Observações',t:'ta'},
+   {sec:'Valor'},{k:'valor',l:'Valor do medicamento (R$)',t:'number',h:1,hint2:'fornecimento'},{k:'valorAplic',l:'Valor por aplicação (R$)',t:'number',h:1,hint2:'soma a cada dose'}]},
  {key:'agend',tab:'Agendamentos',titulo:'Agendamentos',add:'Agendar',titleK:'tipo',dateK:'data',
   hint:'Horários marcados aparecem na Agenda com botão de lembrete por WhatsApp.',
   def:()=>({tipo:'Consulta',situacao:'Agendado',hora:'08:00'}),
@@ -289,46 +298,46 @@ const MODS=[
    {k:'tipo',l:'Tipo',t:'select',o:['Consulta','Retorno','Visita a campo','Vacinação','Vermifugação','Cirurgia','Casqueamento','Odontologia','Reprodução','Exame pré-compra','Coleta AIE / mormo'],h:1},
    {k:'situacao',l:'Situação',t:'select',o:['Agendado','Confirmado','Realizado','Faltou','Cancelado'],h:1},
    {k:'local',l:'Local'},{k:'obs',l:'Observações',t:'ta'}]},
- {key:'locomotor',tab:'Locomotor',titulo:'Exame de claudicação',add:'Nova avaliação',titleK:'grau',sp:'eq',
+ {key:'locomotor',priceFix:'Exame de claudicação',tab:'Locomotor',titulo:'Exame de claudicação',add:'Nova avaliação',titleK:'grau',sp:'eq',
   hint:'Grau segundo a escala da AAEP (0 a 5).',
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'grau',l:'Grau de claudicação (AAEP)',t:'select',o:AAEP,h:1},
    {k:'membro',l:'Membro(s)',t:'checks',o:MEMB},
    {k:'flexao',l:'Teste de flexão',t:'select',o:['','Não realizado','Negativo','Positivo'],h:1},{k:'pinca',l:'Pinça de casco',t:'select',o:['','Não realizado','Negativo','Positivo'],h:1},
    {k:'bloq',l:'Bloqueios anestésicos'},{k:'imagem',l:'Imagem (RX / US)',t:'ta'},
    {k:'diag',l:'Diagnóstico',t:'ta'},{k:'conduta',l:'Conduta / repouso / fisioterapia',t:'ta'},{k:'prox',l:'Reavaliação',t:'date',h:1}]},
- {key:'odonto',tab:'Odonto',titulo:'Odontologia',add:'Novo atendimento',titleK:'proc',sp:'eq',
+ {key:'odonto',priceK:'proc',tab:'Odonto',titulo:'Odontologia',add:'Novo atendimento',titleK:'proc',sp:'eq',
   def:()=>({proc:'Avaliação'}),
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'proc',l:'Procedimento',t:'select',o:['Avaliação','Odontoplastia / nivelamento','Extração','Remoção de dente de lobo','Remoção de capa','Tratamento periodontal'],h:1},
    {k:'achados',l:'Achados',t:'checks',o:['Pontas de esmalte','Ganchos','Rampas','Ondas','Degraus','Diastemas','Úlceras na bochecha','Dente de lobo','Capas retidas','Fratura','Doença periodontal']},
    {k:'dentes',l:'Dentes envolvidos (Triadan)'},{k:'sedacao',l:'Sedação',h:1},{k:'prox',l:'Próxima revisão',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}],
   save:o=>{if(!o.prox&&o.data)o.prox=addD(o.data,180)}},
- {key:'casco',tab:'Casco',titulo:'Casqueamento e ferrageamento',add:'Novo registro',titleK:'tipo',sp:'cas',
+ {key:'casco',priceK:'tipo',tab:'Casco',titulo:'Casqueamento e ferrageamento',add:'Novo registro',titleK:'tipo',sp:'cas',
   hint:'Sem data de próximo, o app sugere 6 semanas.',def:()=>({tipo:'Casqueamento'}),
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'tipo',l:'Tipo',t:'select',o:['Casqueamento','Ferrageamento','Ferradura ortopédica','Retirada de ferradura','Tratamento de casco'],h:1},
    {k:'membros',l:'Membros',t:'checks',o:MEMB},
    {k:'achados',l:'Achados',t:'checks',o:['Sem alterações','Rachadura','Abscesso','Laminite','Broca','Desequilíbrio médio-lateral','Talões baixos','Contratura de talões','Pododermatite']},
    {k:'ferrador',l:'Ferrador / casqueador',h:1},{k:'prox',l:'Próximo',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}],
   save:o=>{if(!o.prox&&o.data)o.prox=addD(o.data,42)}},
- {key:'repro',tab:'Reprodução',titulo:'Controle reprodutivo',add:'Novo evento',titleK:'evento',fem:1,
+ {key:'repro',priceK:'evento',tab:'Reprodução',titulo:'Controle reprodutivo',add:'Novo evento',titleK:'evento',fem:1,
   hint:'Com resultado "Prenhe", o app calcula o parto previsto a partir da última cobertura ou inseminação.',def:()=>({evento:'Exame / ultrassom'}),
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'evento',l:'Evento',t:'select',o:['Exame / ultrassom',...COB,'Diagnóstico de gestação','Indução de ovulação','Tratamento uterino','Parto','Aborto'],h:1},
    {k:'ovE',l:'Ovário esquerdo (folículo mm / CL)',h:1},{k:'ovD',l:'Ovário direito (folículo mm / CL)',h:1},
    {k:'edema',l:'Edema uterino (0–3)',t:'select',o:['','0','1','2','3'],h:1},{k:'reprodutor',l:'Reprodutor / sêmen',h:1},
    {k:'resultado',l:'Resultado',t:'select',o:['','Prenhe','Vazia'],h:1},{k:'parto',l:'Parto previsto',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}],
   save:(o,p)=>{if(o.resultado==='Prenhe'&&!o.parto){const c=(p.repro||[]).filter(r=>COB.includes(r.evento)&&r.data<=o.data).sort((a,b)=>b.data.localeCompare(a.data))[0];if(c&&GEST[p.especie])o.parto=addD(c.data,GEST[p.especie])}}},
- {key:'vacinas',tab:'Sanidade',titulo:'Vacinas, vermífugos e OPG',add:'Adicionar',titleK:'nome',
+ {key:'vacinas',priceK:'tipo',tab:'Sanidade',titulo:'Vacinas, vermífugos e OPG',add:'Adicionar',titleK:'nome',
   hint:'Para vacinar vários animais da mesma propriedade de uma vez, use Ferramentas › Atendimento em lote.',
   def:()=>({tipo:'Vacina'}),
   f:[{k:'tipo',l:'Tipo',t:'select',o:['Vacina','Vermífugo','Exame de fezes (OPG)'],h:1},{k:'nome',l:'Produto / princípio ativo',req:1,h:1,list:p=>EQ.includes(p.especie)?VAC_EQ:RUM.includes(p.especie)?VAC_BOV:[]},
    {k:'data',l:'Data',t:'date',h:1},{k:'prox',l:'Próxima dose',t:'date',h:1},
    {k:'opg',l:'OPG (ovos por grama)',t:'number',h:1},{k:'lote',l:'Lote / fabricante',h:1},{k:'obs',l:'Observações',t:'ta'}]},
- {key:'oficiais',tab:'Exames oficiais',titulo:'Exames oficiais e GTA',add:'Novo exame',titleK:'tipo',sp:'gr',
+ {key:'oficiais',priceK:'tipo',tab:'Exames oficiais',titulo:'Exames oficiais e GTA',add:'Novo exame',titleK:'tipo',sp:'gr',
   hint:'AIE e mormo valem 60 dias para trânsito na maioria dos estados; passaporte equestre pode ter outro prazo. Ajuste a validade conforme seu estado.',
   def:p=>({tipo:EQ.includes(p.especie)?'AIE (Anemia Infecciosa Equina)':'Brucelose',resultado:'Aguardando',val:'60'}),
   f:[{k:'tipo',l:'Exame',t:'select',o:['AIE (Anemia Infecciosa Equina)','Mormo','Brucelose','Tuberculose','Atestado de influenza','Outro'],h:1},{k:'data',l:'Data da colheita',t:'date',h:1},
    {k:'resultado',l:'Resultado',t:'select',o:['Aguardando','Negativo','Positivo','Inconclusivo'],h:1},{k:'val',l:'Validade (dias)',t:'number',h:1},
    {k:'lab',l:'Laboratório',h:1},{k:'laudo',l:'Nº do laudo / requisição',h:1},{k:'obs',l:'Observações',t:'ta'}]},
- {key:'exames',tab:'Exames',titulo:'Exames complementares',add:'Novo exame',titleK:'nome',
+ {key:'exames',priceK:'nome',tab:'Exames',titulo:'Exames complementares',add:'Novo exame',titleK:'nome',
   f:[{k:'nome',l:'Exame',req:1,h:1,list:['Hemograma','Bioquímico','Fibrinogênio','Lactato','Gasometria','Radiografia','Ultrassonografia','Endoscopia','Coproparasitológico','Cultura e antibiograma','Citologia','Histopatológico']},{k:'data',l:'Data',t:'date',h:1},{k:'res',l:'Resultado / laudo',t:'ta'}]},
  {key:'fin',tab:'Financeiro',titulo:'Financeiro do paciente',add:'Novo lançamento',titleK:'desc',
   hint:'Serviços, medicamentos, exames e deslocamento. O total do paciente aparece no Caixa.',
@@ -340,6 +349,50 @@ const MODS=[
    {k:'forma',l:'Forma de pagamento',t:'select',o:FORMAS,h:1},{k:'obs',l:'Observações',t:'ta'}],
   save:o=>{o.total=String(Math.max(0,num(o.qtd||1)*num(o.unit)-num(o.desconto)));if(o.sit==='Pago')o.pago=o.total}}
 ];
+const SEMVALOR=['fin','agend'];
+for(const m of MODS)if(!SEMVALOR.includes(m.key)&&!m.f.some(f=>f.k==='valor'))m.f.push({sec:'Valor'},{k:'valor',l:m.key==='evolucao'?'Valor (diária / procedimentos do turno, R$)':'Valor (R$)',t:'number',h:1,hint2:'entra no Financeiro'});
+const optsDe=(m,k)=>{const f=m.f.find(x=>x.k===k);return ((f&&(f.o||f.list))||[]).filter(x=>typeof x==='string'&&x)};
+const PRECOS=MODS.filter(m=>!SEMVALOR.includes(m.key)).map(m=>({m,nomes:m.priceFix?[m.priceFix]:optsDe(m,m.priceK)}));
+const precoK=(key,nome)=>key+'|'+nome;
+const preco=(key,nome)=>num((S.cfg.precos||{})[precoK(key,nome)]);
+const precoDe=(m,it)=>m.priceFix?preco(m.key,m.priceFix):preco(m.key,it[m.priceK]);
+const tituloIt=(m,it)=>m.titleK==='grau'&&it.grau?'Grau '+String(it.grau).split(' – ')[0]:String(it[m.titleK]||m.tab).split(' – ')[0];
+const valorItem=(m,it)=>m.key==='meds'?num(it.valor)+num(it.valorAplic)*(it.aplic||[]).length:num(it.valor);
+const TIPOFIN={meds:'Medicamento / produto',exames:'Exame',oficiais:'Exame',evolucao:'Internação (diária)',consultas:'Serviço'};
+function syncFin(p){
+  const want=new Map();
+  for(const m of MODS){if(SEMVALOR.includes(m.key))continue;for(const it of (p[m.key]||[])){
+    const v=valorItem(m,it),dk=m.dateK||'data',n=(it.aplic||[]).length;
+    if(v>0)want.set(it.id,{mod:m.key,tipo:TIPOFIN[m.key]||'Serviço',data:it[dk]||hoje(),desc:m.tab+': '+tituloIt(m,it)+(m.key==='meds'&&num(it.valorAplic)?` (${n} aplicação(ões) × ${R$(it.valorAplic)}${num(it.valor)?' + medicamento '+R$(it.valor):''})`:''),total:v});
+    if(m.key==='consultas'&&num(it.kmrod)&&num(S.cfg.kmval))want.set(it.id+'-km',{mod:'consultas',tipo:'Deslocamento (km)',data:it.data||hoje(),desc:'Deslocamento: '+it.kmrod+' km',total:num(it.kmrod)*num(S.cfg.kmval),qtd:String(it.kmrod),unit:String(S.cfg.kmval)});
+  }}
+  const out=[];
+  for(const f of (p.fin||[])){
+    if(!f.ref){out.push(f);continue}
+    const w=want.get(f.ref);
+    if(!w){if(num(f.pago)>0)out.push({...f,orfao:1});continue}
+    want.delete(f.ref);const pago=num(f.pago);
+    out.push({...f,...w,auto:1,qtd:w.qtd||'1',unit:w.unit||String(w.total),total:String(w.total),desconto:'',sit:f.sit==='Orçamento'?'Orçamento':pago>=w.total?'Pago':pago>0?'Parcial':'Pendente'});
+  }
+  for(const [ref,w] of want)out.push({id:uid(),ref,auto:1,...w,qtd:w.qtd||'1',unit:w.unit||String(w.total),total:String(w.total),sit:'Pendente',pago:''});
+  return {...p,fin:out};
+}
+const secaoFin=f=>f.mod?(MODS.find(m=>m.key===f.mod)||{}).tab||'Outros':'Lançamentos avulsos';
+function resumoFin(p){
+  const l=(p.fin||[]).filter(x=>x.sit!=='Orçamento'),g={};
+  for(const f of l){const k=secaoFin(f);(g[k]=g[k]||{n:0,t:0,a:0});g[k].n++;g[k].t+=num(f.total);g[k].a+=saldo(f)}
+  const tot=l.reduce((s,x)=>s+num(x.total),0),ab=l.reduce((s,x)=>s+saldo(x),0),orc=(p.fin||[]).filter(x=>x.sit==='Orçamento').reduce((s,x)=>s+num(x.total),0);
+  return {g,tot,ab,rec:tot-ab,orc};
+}
+function rodapeFin(p){
+  const r=resumoFin(p),ks=Object.keys(r.g);
+  return `<section class="box fichafin" aria-label="Valores do animal"><div class="bar"><h3>Valores de ${esc(p.nome)}</h3><button class="btn sm" data-tab="fin">Ver lançamentos</button></div>
+  ${ks.length?`<div class="tw"><table><tr><th>Seção</th><th class="n">Itens</th><th class="n">Valor</th><th class="n">Em aberto</th></tr>${ks.map(k=>`<tr><td>${esc(k)}</td><td class="n">${r.g[k].n}</td><td class="n">${R$(r.g[k].t)}</td><td class="n ${r.g[k].a?'late':''}">${R$(r.g[k].a)}</td></tr>`).join('')}
+  <tr class="totrow"><td><b>Total</b></td><td></td><td class="n"><b>${R$(r.tot)}</b></td><td class="n ${r.ab?'late':'ok'}"><b>${R$(r.ab)}</b></td></tr></table></div>
+  <div class="counts" style="margin:12px 0 0"><div class="count"><b>${R$(r.tot)}</b><span>Total do animal</span></div><div class="count" style="color:var(--okc)"><b>${R$(r.rec)}</b><span>Recebido</span></div><div class="count" style="color:var(--warn)"><b>${R$(r.ab)}</b><span>Em aberto</span></div>${r.orc?`<div class="count"><b>${R$(r.orc)}</b><span>Em orçamento</span></div>`:''}</div>
+  ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button></div>`:''}`
+  :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a Tabela de preços em Conta para o valor entrar sozinho.</p>'}</section>`;
+}
 const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
 const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p));
 const saldo=x=>x.sit==='Orçamento'?0:Math.max(0,num(x.total)-num(x.pago));
@@ -392,7 +445,7 @@ function apagar(col,id){
   if(!db){LS.set(col==='pacientes'?'prontuario-vet':'samvet-'+col,col==='pacientes'?S.pac:S.est);render();return}
   db.collection(col).doc(id).delete().catch(()=>toast('Não foi possível excluir.'));render();
 }
-const salvar=p=>gravar('pacientes',p,S.pac);
+const salvar=p=>gravar('pacientes',syncFin(p),S.pac);
 const salvarEst=it=>gravar('estoque',it,S.est);
 function salvarCfg(c){S.cfg=c;if(!db){LS.set('samvet-config',c);render();return}db.doc('config/clinica').set(c).then(()=>toast('Dados da clínica salvos')).catch(e=>toast(errMsg(e)));render()}
 
@@ -519,10 +572,11 @@ function renderFerr(){
     <div class="fld h"><label for="lt_data">Data</label><input id="lt_data" type="date" value="${hoje()}"></div>
     <div class="fld h"><label for="lt_prox">Próxima dose</label><input id="lt_prox" type="date"></div>
     <div class="fld"><label>Animais</label><div class="ck" id="lt_anim"></div></div>
-    <div class="fld h"><label for="lt_valor">Valor por animal (R$, opcional)</label><input id="lt_valor" type="number" step="any" inputmode="decimal"></div>
+    <div class="fld h"><label for="lt_valor">Valor por animal (R$)</label><input id="lt_valor" type="number" step="any" inputmode="decimal" value="${preco('vacinas','Vacina')||''}"></div>
    </div><div class="acts"><button class="btn pri" data-lote>Registrar em lote</button></div></div>`;
   const anim=()=>{const pr=$('lt_prop').value;$('lt_anim').innerHTML=S.pac.filter(p=>ativo(p)&&(!pr||p.prop===pr)).map(p=>`<label><input type="checkbox" value="${esc(p.id)}" checked>${esc(p.nome)}</label>`).join('')||'<span class="meta">Nenhum animal ativo nessa propriedade.</span>'};
   $('lt_prop').onchange=anim;anim();
+  $('lt_tipo').onchange=()=>{const v=preco('vacinas',$('lt_tipo').value);if(v)$('lt_valor').value=v};
   const calc=()=>{
     const pe=num($('c_peso').value),mg=pe*num($('c_dose').value),c=num($('c_conc').value);
     $('r_dose').innerHTML=`${fx(mg,1)} mg${c?` = ${fx(mg/c,2)} mL`:''}<small>${fx(pe,1)} kg × ${esc($('c_dose').value)} mg/kg${c?' ÷ '+esc($('c_conc').value)+' mg/mL':''}</small>`;
@@ -558,9 +612,13 @@ function renderConta(){
    <form id="cfgf"><div class="f">
    ${[['clinica','Nome da clínica / serviço'],['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ'],['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
    </div><div class="acts"><button class="btn pri">Salvar dados da clínica</button></div></form></div>
+  <div class="box"><div class="bar"><h3>Tabela de preços</h3></div><p class="hint" style="margin:0 0 10px">Valor padrão de cada serviço. Ao criar um registro, o valor já vem preenchido e entra sozinho no Financeiro do animal. Você pode mudar em cada atendimento.</p>
+   <form id="prf"><div class="cols">${PRECOS.map(({m,nomes})=>`<fieldset class="pgrp"><legend>${esc(m.tab)}</legend>${nomes.map(n=>`<div class="prow"><label for="pr_${esc(m.key)}_${nomes.indexOf(n)}">${esc(n)}</label><input id="pr_${esc(m.key)}_${nomes.indexOf(n)}" data-pk="${esc(precoK(m.key,n))}" type="number" step="any" inputmode="decimal" placeholder="R$" value="${esc((c.precos||{})[precoK(m.key,n)]||'')}"></div>`).join('')}</fieldset>`).join('')}</div>
+   <div class="acts"><button class="btn pri">Salvar tabela de preços</button></div></form></div>
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}.</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
   if($('meName'))$('meName').textContent=nome?nome:'Conta Claude';
+  $('prf').onsubmit=e=>{e.preventDefault();const pr={};for(const el of $('prf').querySelectorAll('[data-pk]'))if(el.value.trim())pr[el.dataset.pk]=el.value.trim();salvarCfg({...S.cfg,precos:pr})};
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
 }
 
@@ -572,7 +630,7 @@ function renderFicha(p){
   <div class="head">${avatar(p)}<div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
-  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>`;
+  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${rodapeFin(p)}`;
   const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
   const at=document.querySelector('.tab[aria-selected=true]');if(at&&at.scrollIntoView)at.scrollIntoView({block:'nearest',inline:'nearest'});
 }
@@ -606,15 +664,18 @@ function modulo(m,p){
   const fs=campos(m.f,p).filter(f=>f.k),dk=m.dateK||'data';
   const l=ord(p[m.key],dk);
   let topo='';
+  if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const ids=new Set(l.map(x=>x.id)),fl=(p.fin||[]).filter(f=>f.ref&&(ids.has(f.ref)||ids.has(String(f.ref).replace(/-km$/,''))));if(fl.length)topo=`<p class="info">Subtotal de ${esc(m.tab)}: <b>${R$(fl.reduce((s,f)=>s+num(f.total),0))}</b>${fl.some(f=>saldo(f))?` · em aberto <b class="late">${R$(fl.reduce((s,f)=>s+saldo(f),0))}</b>`:''}</p>`}
   if(m.key==='fin'){const t=l.reduce((s,x)=>s+(x.sit==='Orçamento'?0:num(x.total)),0),sd=l.reduce((s,x)=>s+saldo(x),0);topo=`<div class="counts"><div class="count"><b>${R$(t)}</b><span>Total lançado</span></div><div class="count" style="color:var(--warn)"><b>${R$(sd)}</b><span>Em aberto</span></div></div>`}
   return `<div class="bar"><h3>${m.titulo}</h3><button class="btn pri sm" data-add="${m.key}">+ ${m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}${topo}`+
   (l.length?l.map(it=>{
-    const curto=fs.filter(f=>f.t!=='ta'&&![dk,m.titleK].includes(f.k)&&!vazio(it[f.k])).map(f=>`${f.l.replace(/ \(.*\)$/,'').replace(/^[A-Z](\s\/\s[A-Z])? · /,'')}: ${f.k==='unit'||f.k==='desconto'||f.k==='pago'||f.k==='valor'?R$(it[f.k]):fmt(f,it[f.k])}`);
+    const curto=fs.filter(f=>f.t!=='ta'&&![dk,m.titleK,'valor','valorAplic','kmrod'].includes(f.k)&&!vazio(it[f.k])).map(f=>`${f.l.replace(/ \(.*\)$/,'').replace(/^[A-Z](\s\/\s[A-Z])? · /,'')}: ${f.k==='unit'||f.k==='desconto'||f.k==='pago'||f.k==='valor'?R$(it[f.k]):fmt(f,it[f.k])}`);
     const longo=fs.filter(f=>f.t==='ta'&&!vazio(it[f.k]));
     let extra='';
     if(m.key==='meds'){const n=proxMed(it),a=it.aplic||[];extra=`<p><b class="${n&&n<new Date()&&medAtiva(it)?'late':''}">${n?'Próxima dose: '+hora(n.toISOString()):'Nenhuma aplicação registrada'}</b><br><span class="meta">${a.length} aplicação(ões)${a.length?' · última '+hora(a[a.length-1]):''}</span></p><div class="btns">${medAtiva(it)?`<button class="btn pri sm" data-aplic="${esc(it.id)}">Registrar aplicação agora</button>`:''}${a.length?`<button class="btn sm" data-desfaz="${esc(it.id)}">Desfazer última</button>`:''}</div>`}
     if(m.key==='oficiais'&&it.resultado==='Negativo'&&it.data&&+it.val){const v=addD(it.data,+it.val);extra=`<p class="${dias(v)<0?'late':''}">Válido até ${br(v)} (${quando(v)})</p>`}
     if(m.key==='fin')extra=`<p><b>Total ${R$(it.total)}</b> · <span class="${saldo(it)?'late':'ok'}">${saldo(it)?'em aberto '+R$(saldo(it)):it.sit==='Orçamento'?'orçamento':'pago'}</span></p>${saldo(it)?`<button class="btn sm" data-quitar="${esc(it.id)}" data-pid="${esc(p.id)}">Marcar como pago</button>`:''}`;
+    if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const fl=(p.fin||[]).filter(f=>f.ref===it.id||f.ref===it.id+'-km');if(fl.length)extra+=`<p class="vl">${fl.map(f=>`${esc(f.tipo==='Deslocamento (km)'?'Deslocamento':'Valor')} <b>${R$(f.total)}</b> <span class="pill" style="--c:var(--s-${saldo(f)?'tratamento':'alta'})">${saldo(f)?'em aberto':'pago'}</span>`).join(' · ')}</p>`;else if(!num(it.valor)&&!num(it.valorAplic))extra+=`<p class="meta">Sem valor lançado.</p>`}
+    if(m.key==='fin'&&it.auto)extra+=`<p class="meta">Gerado automaticamente por ${esc(secaoFin(it))}. Para mudar o valor, edite o registro de origem.</p>`;
     if(m.key==='agend')extra=`<div class="btns">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}. Confirmando ${it.tipo} de ${p.nome} em ${br(it.data)}${it.hora?' às '+it.hora:''}${it.local?' ('+it.local+')':''}. Pode confirmar?`)}</div>`;
     const tit=m.key==='agend'?`${br(it.data)} ${esc(it.hora||'')} · ${esc(it.tipo)} <span class="pill" style="--c:var(--s-${it.situacao==='Realizado'?'alta':it.situacao==='Confirmado'?'acompanhamento':['Faltou','Cancelado'].includes(it.situacao)?'obito':'tratamento'})">${esc(it.situacao||'')}</span>`:m.key==='evolucao'?`${br(it.data)} ${esc(it.hora||'')} · ${esc(it.turno||'')}`:`${br(it[dk])} · ${m.titleK==='grau'&&it.grau?'Grau ':''}${esc(String(it[m.titleK]||'').split(' – ')[0]||m.tab)}`;
     return `<article class="item"><header><h3>${tit}</h3><button class="btn sm" data-edit="${m.key}" data-iid="${esc(it.id)}">Editar</button></header>
@@ -707,18 +768,26 @@ function editarItem(p,key,id){
   const m=MODS.find(x=>x.key===key),lista=p[key]||[],dk=m.dateK||'data';
   const item=id?lista.find(x=>x.id===id):{id:uid(),[dk]:hoje(),...(m.def?m.def(p):{})};if(!item)return;
   if(!id&&key==='consultas'){const u=ult(p)[0];if(u&&u.retorno&&u.retorno<=hoje())item.tipo='Retorno'}
+  if(!id&&!SEMVALOR.includes(key)){
+    const jaDiaria=key==='evolucao'&&(p.evolucao||[]).some(x=>x.data===item.data&&num(x.valor));
+    const pr=precoDe(m,item);if(pr&&!jaDiaria&&key!=='meds')item.valor=String(pr);
+    if(key==='meds'&&preco('meds',m.priceFix))item.valorAplic=String(preco('meds',m.priceFix));
+    if(key==='consultas'&&item.tipo==='Atendimento a campo'&&p.km)item.kmrod=String(num(p.km)*2);
+  }
   abrirForm((id?'Editar · ':'')+(id?m.tab:m.add)+' · '+p.nome,m.f,item,p,o=>{
     if(m.save)m.save(o,p);
-    let np={...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]};
-    if(key==='consultas'&&num(o.valor)&&!(p.fin||[]).some(f=>f.ref===o.id)){np.fin=[...(p.fin||[]),{id:uid(),ref:o.id,data:o.data,tipo:'Serviço',desc:o.tipo+(o.diag?' — '+o.diag.slice(0,60):''),qtd:'1',unit:o.valor,total:String(num(o.valor)),sit:'Pendente',pago:''}];toast('Lançado no Financeiro')}
-    salvar(np)},
+    salvar({...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]});if(valorItem(m,o)>0&&!id)toast('Salvo · '+R$(valorItem(m,o))+' lançado no Financeiro')},
     id?()=>salvar({...p,[key]:lista.filter(x=>x.id!==id)}):null);
+  const sel=m.priceK&&$('f_'+m.priceK),fv=$('f_valor');
+  if(sel&&fv){let last=fv.value;sel.addEventListener('change',()=>{const np=preco(key,sel.value);if(np&&(!fv.value||fv.value===last)){fv.value=String(np);last=fv.value}
+    if(key==='consultas'&&sel.value==='Atendimento a campo'&&p.km&&$('f_kmrod')&&!$('f_kmrod').value)$('f_kmrod').value=String(num(p.km)*2)})}
 }
 function textoFicha(p){
   const L=[`${S.cfg.clinica||'SAMVET'} · FICHA CLÍNICA: ${p.nome}`];
   for(const f of campos(F_PAC,p))if(f.k&&!vazio(p[f.k]))L.push(`${f.l}: ${f.k==='status'?stLabel(p.status):fmt(f,p[f.k])}`);
   for(const m of MODS.filter(m=>modVis(m,p))){const l=ord(p[m.key],m.dateK||'data');if(!l.length)continue;L.push('',m.titulo.toUpperCase());
     for(const it of l){L.push('— '+br(it[m.dateK||'data'])+' · '+(it[m.titleK]||''));for(const f of campos(m.f,p))if(f.k&&f.k!==(m.dateK||'data')&&f.k!==m.titleK&&!vazio(it[f.k]))L.push(`${f.l}: ${fmt(f,it[f.k])}`);if(it.aplic&&it.aplic.length)L.push('Aplicações: '+it.aplic.map(hora).join(', '))}}
+  const r=resumoFin(p);if(Object.keys(r.g).length){L.push('','VALORES');for(const k in r.g)L.push(`${k}: ${R$(r.g[k].t)} (${r.g[k].n} item(ns))`);L.push(`TOTAL: ${R$(r.tot)} · Recebido: ${R$(r.rec)} · Em aberto: ${R$(r.ab)}`)}
   return L.join('\n');
 }
 function copiar(t,ok){navigator.clipboard.writeText(t).then(()=>toast(ok)).catch(()=>toast('Não foi possível copiar. Selecione o texto e copie manualmente.'))}
@@ -769,8 +838,8 @@ document.addEventListener('click',e=>{
   else if(d.estmv){const it=S.est.find(x=>x.id===d.eid);if(it){salvarEst({...it,qtd:String(Math.max(0,num(it.qtd)+(+d.estmv)))})}}
   else if('lote' in d){const ids=[...document.querySelectorAll('#lt_anim input:checked')].map(i=>i.value),nome=$('lt_nome').value.trim();
     if(!nome){toast('Preencha o produto');$('lt_nome').focus();return}if(!ids.length){toast('Marque ao menos um animal');return}
-    const reg={tipo:$('lt_tipo').value,nome,lote:$('lt_lote').value.trim(),data:$('lt_data').value||hoje(),prox:$('lt_prox').value,obs:'Atendimento em lote'},val=num($('lt_valor').value);
-    for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;const np={...q,vacinas:[...(q.vacinas||[]),{...reg,id:uid()}]};if(val)np.fin=[...(q.fin||[]),{id:uid(),data:reg.data,tipo:'Serviço',desc:reg.tipo+': '+nome,qtd:'1',unit:String(val),total:String(val),sit:'Pendente',pago:''}];salvar(np)}
+    const val=num($('lt_valor').value),reg={tipo:$('lt_tipo').value,nome,lote:$('lt_lote').value.trim(),data:$('lt_data').value||hoje(),prox:$('lt_prox').value,obs:'Atendimento em lote',valor:val?String(val):''};
+    for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;salvar({...q,vacinas:[...(q.vacinas||[]),{...reg,id:uid()}]})}
     toast(`Registrado em ${ids.length} animal(is)`)}
   else if('copylink' in d)copiar(LINK,'Link copiado');
   else if('backup' in d)baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,config:S.cfg},null,1),'application/json');
@@ -820,7 +889,7 @@ render();
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))render();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
   db.collection('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
-  db.doc('config/clinica').onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};if(idle()&&S.vis==='conta'&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf')))render()},()=>{});
+  db.doc('config/clinica').onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};if(idle()&&S.vis==='conta'&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#prf')))render()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render()},60000);
 })();
 }
