@@ -157,7 +157,10 @@ textarea.doc{width:100%;min-height:340px;font:15px/1.5 var(--body);padding:12px;
 @media(max-width:600px){.top .logo{width:34px;height:34px}.top h1{font-size:22px}.capa{grid-template-columns:1fr;justify-items:center;text-align:center;padding:20px 16px;gap:10px}.capa .logo{width:130px;height:130px}}
 .pgrp{border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;margin:0}
 .pgrp legend{font:800 14px var(--display);color:var(--brand);padding:0 6px}
-.prow{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;align-items:center;padding:4px 0;font-size:14px}
+.rs{font-size:13px;color:var(--mute)}
+.x{border:0;background:none;color:var(--warn);font-size:20px;min-width:32px;min-height:32px}
+.addrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.addrow input,.addrow select{flex:1 1 120px;min-height:38px;padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto 110px auto;gap:8px;align-items:center;padding:4px 0;font-size:14px}
 .prow input{min-height:38px;padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);text-align:right;width:100%}
 .fichafin{margin-top:20px;border-width:2px;border-color:var(--brand)}
 .totrow td{border-top:2px solid var(--line);border-bottom:0}
@@ -202,6 +205,7 @@ const fx=(v,d=1)=>isFinite(v)?(+v).toLocaleString('pt-BR',{maximumFractionDigits
 const telWa=t=>{let d=String(t||'').replace(/\D/g,'');if(!d)return'';if(d.length<=11)d='55'+d.replace(/^0+/,'');return d};
 const waLink=(t,msg)=>{const n=telWa(t);return n?`<a class="btn sm wa" href="https://wa.me/${n}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>`:''};
 
+const EXAMES_BASE=['Hemograma','Bioquímico','Fibrinogênio','Lactato','Gasometria','Radiografia','Ultrassonografia','Endoscopia','Coproparasitológico','Cultura e antibiograma','Citologia','Histopatológico'];
 const STATUS=[['tratamento','Em tratamento'],['internado','Internado'],['acompanhamento','Acompanhamento'],['alta','Alta'],['obito','Óbito']];
 const stLabel=k=>(STATUS.find(s=>s[0]===k)||STATUS[0])[1];
 const EQ=['Equino','Muar','Asinino'],RUM=['Bovino','Bubalino','Ovino','Caprino'],GR=[...EQ,...RUM,'Suíno'];
@@ -338,21 +342,22 @@ const MODS=[
    {k:'resultado',l:'Resultado',t:'select',o:['Aguardando','Negativo','Positivo','Inconclusivo'],h:1},{k:'val',l:'Validade (dias)',t:'number',h:1},
    {k:'lab',l:'Laboratório',h:1},{k:'laudo',l:'Nº do laudo / requisição',h:1},{k:'obs',l:'Observações',t:'ta'}]},
  {key:'exames',priceK:'nome',tab:'Exames',titulo:'Exames complementares',add:'Novo exame',titleK:'nome',
-  f:[{k:'nome',l:'Exame',req:1,h:1,list:['Hemograma','Bioquímico','Fibrinogênio','Lactato','Gasometria','Radiografia','Ultrassonografia','Endoscopia','Coproparasitológico','Cultura e antibiograma','Citologia','Histopatológico']},{k:'data',l:'Data',t:'date',h:1},{k:'res',l:'Resultado / laudo',t:'ta'}]},
+  f:[{k:'nome',l:'Exame',req:1,h:1,list:()=>[...EXAMES_BASE,...(S.cfg.examesExtra||[])]},{k:'data',l:'Data',t:'date',h:1},{k:'res',l:'Resultado / laudo',t:'ta'}]},
  {key:'fin',tab:'Financeiro',titulo:'Financeiro do paciente',add:'Novo lançamento',titleK:'desc',
   hint:'Serviços, medicamentos, exames e deslocamento. O total do paciente aparece no Caixa.',
   def:()=>({tipo:'Serviço',qtd:'1',sit:'Pendente'}),
   f:[{k:'data',l:'Data',t:'date',h:1},{k:'tipo',l:'Tipo',t:'select',o:['Serviço','Medicamento / produto','Exame','Cirurgia','Internação (diária)','Deslocamento (km)','Outro'],h:1},
-   {k:'desc',l:'Descrição',req:1},{k:'qtd',l:'Quantidade',t:'number',h:1},{k:'unit',l:'Valor unitário (R$)',t:'number',h:1},
+   {k:'desc',l:'Descrição',req:1,list:()=>(S.cfg.servicos||[]).map(x=>x.nome)},{k:'qtd',l:'Quantidade',t:'number',h:1},{k:'unit',l:'Valor unitário (R$)',t:'number',h:1},
    {k:'desconto',l:'Desconto (R$)',t:'number',h:1},{k:'venc',l:'Vencimento',t:'date',h:1},
    {k:'sit',l:'Situação',t:'select',o:['Pendente','Pago','Parcial','Orçamento'],h:1},{k:'pago',l:'Valor recebido (R$)',t:'number',h:1},
    {k:'forma',l:'Forma de pagamento',t:'select',o:FORMAS,h:1},{k:'obs',l:'Observações',t:'ta'}],
   save:o=>{o.total=String(Math.max(0,num(o.qtd||1)*num(o.unit)-num(o.desconto)));if(o.sit==='Pago')o.pago=o.total}}
 ];
 const SEMVALOR=['fin','agend'];
+
 for(const m of MODS)if(!SEMVALOR.includes(m.key)&&!m.f.some(f=>f.k==='valor'))m.f.push({sec:'Valor'},{k:'valor',l:m.key==='evolucao'?'Valor (diária / procedimentos do turno, R$)':'Valor (R$)',t:'number',h:1,hint2:'entra no Financeiro'});
-const optsDe=(m,k)=>{const f=m.f.find(x=>x.k===k);return ((f&&(f.o||f.list))||[]).filter(x=>typeof x==='string'&&x)};
-const PRECOS=MODS.filter(m=>!SEMVALOR.includes(m.key)).map(m=>({m,nomes:m.priceFix?[m.priceFix]:optsDe(m,m.priceK)}));
+const optsDe=(m,k)=>{const f=m.f.find(x=>x.k===k);const l=f&&(f.o||(typeof f.list==='function'?f.list({}):f.list));return (l||[]).filter(x=>typeof x==='string'&&x)};
+const PRECOS=()=>MODS.filter(m=>!SEMVALOR.includes(m.key)).map(m=>({m,nomes:m.priceFix?[m.priceFix]:optsDe(m,m.priceK)}));
 const precoK=(key,nome)=>key+'|'+nome;
 const preco=(key,nome)=>num((S.cfg.precos||{})[precoK(key,nome)]);
 const precoDe=(m,it)=>m.priceFix?preco(m.key,m.priceFix):preco(m.key,it[m.priceK]);
@@ -391,7 +396,7 @@ function rodapeFin(p){
   <tr class="totrow"><td><b>Total</b></td><td></td><td class="n"><b>${R$(r.tot)}</b></td><td class="n ${r.ab?'late':'ok'}"><b>${R$(r.ab)}</b></td></tr></table></div>
   <div class="counts" style="margin:12px 0 0"><div class="count"><b>${R$(r.tot)}</b><span>Total do animal</span></div><div class="count" style="color:var(--okc)"><b>${R$(r.rec)}</b><span>Recebido</span></div><div class="count" style="color:var(--warn)"><b>${R$(r.ab)}</b><span>Em aberto</span></div>${r.orc?`<div class="count"><b>${R$(r.orc)}</b><span>Em orçamento</span></div>`:''}</div>
   ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button></div>`:''}`
-  :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a Tabela de preços em Conta para o valor entrar sozinho.</p>'}</section>`;
+  :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a aba Preços para o valor entrar sozinho.</p>'}</section>`;
 }
 const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
 const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p));
@@ -447,10 +452,10 @@ function apagar(col,id){
 }
 const salvar=p=>gravar('pacientes',syncFin(p),S.pac);
 const salvarEst=it=>gravar('estoque',it,S.est);
-function salvarCfg(c){S.cfg=c;if(!db){LS.set('samvet-config',c);render();return}db.doc('config/clinica').set(c).then(()=>toast('Dados da clínica salvos')).catch(e=>toast(errMsg(e)));render()}
+function salvarCfg(c,msg='Dados da clínica salvos',quiet){S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}db.doc('config/clinica').set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
 
 /* ---------- navegação ---------- */
-const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['caixa','Caixa'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
+const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['caixa','Caixa'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
 function renderNav(){
   const n={agenda:S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=0&&x.tab!=='fin').length,
     intern:S.pac.filter(p=>p.status==='internado').length,
@@ -461,7 +466,7 @@ function render(){
   renderNav();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
   if(p)return renderFicha(p);
-  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,estoque:renderEstoque,ferr:renderFerr,conta:renderConta})[S.vis]();
+  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta})[S.vis]();
 }
 const avatar=p=>`<span class="av">${esc((p.especie||'?').slice(0,2))}</span>`;
 
@@ -589,6 +594,26 @@ function renderFerr(){
   $('c_pac').onchange=e=>{const p=S.pac.find(x=>x.id===e.target.value);if(p&&pesoAtual(p)){$('c_peso').value=pesoAtual(p);$('fl_peso').value=pesoAtual(p)}calc()};
   document.querySelectorAll('.calc input,.calc select').forEach(i=>i.addEventListener('input',calc));calc();
 }
+function renderPrecos(){
+  const c=S.cfg,pr=c.precos||{},sv=c.servicos||[];
+  const inp=(id,pk,v)=>`<input id="${id}" data-pk="${esc(pk)}" type="number" step="any" min="0" inputmode="decimal" placeholder="0,00" value="${esc(v||'')}" aria-label="Valor em reais">`;
+  const n=Object.values(pr).filter(v=>num(v)>0).length+sv.length;
+  $('view').innerHTML=`<div class="bar"><h2>Tabela de preços</h2><span class="meta">${n} valor(es) definido(s)</span></div>
+  <p class="hint">Digite quanto você cobra normalmente. Salva sozinho. Quando você adicionar algo na ficha do animal, o valor já vem preenchido e vai para o Financeiro. Na hora do atendimento dá para mudar se precisar.</p>
+  <div class="cols" id="precosv">${PRECOS().map(({m,nomes})=>`<fieldset class="pgrp"><legend>${esc(m.tab)}</legend>${nomes.map((nm,i)=>`<div class="prow"><label for="pr_${m.key}_${i}">${esc(nm)}${m.key==='meds'?' <span class="meta">(somado a cada dose)</span>':''}</label><span class="rs">R$</span>${inp(`pr_${m.key}_${i}`,precoK(m.key,nm),pr[precoK(m.key,nm)])}${m.key==='exames'&&(c.examesExtra||[]).includes(nm)?`<button class="x" data-rmexame="${esc(nm)}" aria-label="Remover ${esc(nm)}">×</button>`:''}</div>`).join('')}
+   ${m.key==='exames'?`<form class="addrow" id="addex"><input id="nx_nome" placeholder="Outro exame (ex.: Raio-X de boleto)" aria-label="Nome do exame"><button class="btn sm">Adicionar</button></form>`:''}</fieldset>`).join('')}
+   <fieldset class="pgrp"><legend>Outros serviços e produtos</legend><p class="meta" style="margin:0 0 6px">Aparecem como lançamento rápido na aba Financeiro da ficha.</p>
+   ${sv.map((x,i)=>`<div class="prow"><label for="sv_${i}">${esc(x.nome)} <span class="meta">${esc(x.tipo||'')}</span></label><span class="rs">R$</span><input id="sv_${i}" data-sv="${esc(x.id)}" type="number" step="any" min="0" inputmode="decimal" value="${esc(x.valor||'')}" aria-label="Valor de ${esc(x.nome)}"><button class="x" data-rmsv="${esc(x.id)}" aria-label="Remover ${esc(x.nome)}">×</button></div>`).join('')}
+   <form class="addrow" id="addsv"><input id="ns_nome" placeholder="Ex.: Diária de baia, Sedação, Curativo" aria-label="Nome do serviço"><select id="ns_tipo" aria-label="Tipo">${['Serviço','Medicamento / produto','Exame','Cirurgia','Internação (diária)','Deslocamento (km)','Outro'].map(o=>`<option>${o}</option>`).join('')}</select><input id="ns_valor" type="number" step="any" min="0" inputmode="decimal" placeholder="R$" aria-label="Valor"><button class="btn sm">Adicionar</button></form></fieldset>
+   <fieldset class="pgrp"><legend>Deslocamento</legend><div class="prow"><label for="pr_km">Valor do km rodado</label><span class="rs">R$</span><input id="pr_km" data-km="1" type="number" step="any" min="0" inputmode="decimal" value="${esc(c.kmval||'')}"></div></fieldset>
+  </div>`;
+  const v=$('view');
+  v.querySelectorAll('[data-pk]').forEach(el=>el.addEventListener('change',()=>{const p2={...(S.cfg.precos||{})};const x=el.value.trim();if(x)p2[el.dataset.pk]=x;else delete p2[el.dataset.pk];salvarCfg({...S.cfg,precos:p2},'Preço salvo',1)}));
+  v.querySelectorAll('[data-sv]').forEach(el=>el.addEventListener('change',()=>salvarCfg({...S.cfg,servicos:(S.cfg.servicos||[]).map(x=>x.id===el.dataset.sv?{...x,valor:el.value.trim()}:x)},'Preço salvo',1)));
+  $('pr_km').addEventListener('change',e=>salvarCfg({...S.cfg,kmval:e.target.value.trim()},'Preço salvo',1));
+  $('addsv').onsubmit=e=>{e.preventDefault();const nm=$('ns_nome').value.trim();if(!nm){toast('Digite o nome do serviço');$('ns_nome').focus();return}salvarCfg({...S.cfg,servicos:[...(S.cfg.servicos||[]),{id:uid(),nome:nm,tipo:$('ns_tipo').value,valor:$('ns_valor').value.trim()}]},'Serviço adicionado')};
+  $('addex').onsubmit=e=>{e.preventDefault();const nm=$('nx_nome').value.trim();if(!nm){toast('Digite o nome do exame');return}if(optsDe(MODS.find(m=>m.key==='exames'),'nome').includes(nm)){toast('Esse exame já está na lista');return}salvarCfg({...S.cfg,examesExtra:[...(S.cfg.examesExtra||[]),nm]},'Exame adicionado')};
+}
 function renderConta(){
   const c=S.cfg;
   const nome=me&&me.name;
@@ -612,13 +637,10 @@ function renderConta(){
    <form id="cfgf"><div class="f">
    ${[['clinica','Nome da clínica / serviço'],['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ'],['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
    </div><div class="acts"><button class="btn pri">Salvar dados da clínica</button></div></form></div>
-  <div class="box"><div class="bar"><h3>Tabela de preços</h3></div><p class="hint" style="margin:0 0 10px">Valor padrão de cada serviço. Ao criar um registro, o valor já vem preenchido e entra sozinho no Financeiro do animal. Você pode mudar em cada atendimento.</p>
-   <form id="prf"><div class="cols">${PRECOS.map(({m,nomes})=>`<fieldset class="pgrp"><legend>${esc(m.tab)}</legend>${nomes.map(n=>`<div class="prow"><label for="pr_${esc(m.key)}_${nomes.indexOf(n)}">${esc(n)}</label><input id="pr_${esc(m.key)}_${nomes.indexOf(n)}" data-pk="${esc(precoK(m.key,n))}" type="number" step="any" inputmode="decimal" placeholder="R$" value="${esc((c.precos||{})[precoK(m.key,n)]||'')}"></div>`).join('')}</fieldset>`).join('')}</div>
-   <div class="acts"><button class="btn pri">Salvar tabela de preços</button></div></form></div>
+  <div class="box"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}.</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
   if($('meName'))$('meName').textContent=nome?nome:'Conta Claude';
-  $('prf').onsubmit=e=>{e.preventDefault();const pr={};for(const el of $('prf').querySelectorAll('[data-pk]'))if(el.value.trim())pr[el.dataset.pk]=el.value.trim();salvarCfg({...S.cfg,precos:pr})};
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
 }
 
@@ -665,7 +687,7 @@ function modulo(m,p){
   const l=ord(p[m.key],dk);
   let topo='';
   if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const ids=new Set(l.map(x=>x.id)),fl=(p.fin||[]).filter(f=>f.ref&&(ids.has(f.ref)||ids.has(String(f.ref).replace(/-km$/,''))));if(fl.length)topo=`<p class="info">Subtotal de ${esc(m.tab)}: <b>${R$(fl.reduce((s,f)=>s+num(f.total),0))}</b>${fl.some(f=>saldo(f))?` · em aberto <b class="late">${R$(fl.reduce((s,f)=>s+saldo(f),0))}</b>`:''}</p>`}
-  if(m.key==='fin'){const t=l.reduce((s,x)=>s+(x.sit==='Orçamento'?0:num(x.total)),0),sd=l.reduce((s,x)=>s+saldo(x),0);topo=`<div class="counts"><div class="count"><b>${R$(t)}</b><span>Total lançado</span></div><div class="count" style="color:var(--warn)"><b>${R$(sd)}</b><span>Em aberto</span></div></div>`}
+  if(m.key==='fin'){const t=l.reduce((s,x)=>s+(x.sit==='Orçamento'?0:num(x.total)),0),sd=l.reduce((s,x)=>s+saldo(x),0);topo=`${(S.cfg.servicos||[]).length?`<div class="chips"><span class="meta" style="align-self:center">Lançar rápido:</span>${S.cfg.servicos.map(x=>`<button class="btn sm" data-quick="${esc(x.id)}">${esc(x.nome)} · ${R$(x.valor)}</button>`).join('')}</div>`:`<p class="hint">Cadastre seus serviços em Preços para lançar com um toque.</p>`}<div class="counts"><div class="count"><b>${R$(t)}</b><span>Total lançado</span></div><div class="count" style="color:var(--warn)"><b>${R$(sd)}</b><span>Em aberto</span></div></div>`}
   return `<div class="bar"><h3>${m.titulo}</h3><button class="btn pri sm" data-add="${m.key}">+ ${m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}${topo}`+
   (l.length?l.map(it=>{
     const curto=fs.filter(f=>f.t!=='ta'&&![dk,m.titleK,'valor','valorAplic','kmrod'].includes(f.k)&&!vazio(it[f.k])).map(f=>`${f.l.replace(/ \(.*\)$/,'').replace(/^[A-Z](\s\/\s[A-Z])? · /,'')}: ${f.k==='unit'||f.k==='desconto'||f.k==='pago'||f.k==='valor'?R$(it[f.k]):fmt(f,it[f.k])}`);
@@ -778,6 +800,7 @@ function editarItem(p,key,id){
     if(m.save)m.save(o,p);
     salvar({...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]});if(valorItem(m,o)>0&&!id)toast('Salvo · '+R$(valorItem(m,o))+' lançado no Financeiro')},
     id?()=>salvar({...p,[key]:lista.filter(x=>x.id!==id)}):null);
+  if(key==='fin'&&$('f_desc'))$('f_desc').addEventListener('change',()=>{const x=(S.cfg.servicos||[]).find(y=>y.nome===$('f_desc').value.trim());if(x){if(x.valor)$('f_unit').value=x.valor;if(x.tipo&&$('f_tipo'))$('f_tipo').value=x.tipo}});
   const sel=m.priceK&&$('f_'+m.priceK),fv=$('f_valor');
   if(sel&&fv){let last=fv.value;sel.addEventListener('change',()=>{const np=preco(key,sel.value);if(np&&(!fv.value||fv.value===last)){fv.value=String(np);last=fv.value}
     if(key==='consultas'&&sel.value==='Atendimento a campo'&&p.km&&$('f_kmrod')&&!$('f_kmrod').value)$('f_kmrod').value=String(num(p.km)*2)})}
@@ -841,6 +864,9 @@ document.addEventListener('click',e=>{
     const val=num($('lt_valor').value),reg={tipo:$('lt_tipo').value,nome,lote:$('lt_lote').value.trim(),data:$('lt_data').value||hoje(),prox:$('lt_prox').value,obs:'Atendimento em lote',valor:val?String(val):''};
     for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;salvar({...q,vacinas:[...(q.vacinas||[]),{...reg,id:uid()}]})}
     toast(`Registrado em ${ids.length} animal(is)`)}
+  else if(d.rmsv){salvarCfg({...S.cfg,servicos:(S.cfg.servicos||[]).filter(x=>x.id!==d.rmsv)},'Serviço removido')}
+  else if(d.rmexame){const pr={...(S.cfg.precos||{})};delete pr[precoK('exames',d.rmexame)];salvarCfg({...S.cfg,precos:pr,examesExtra:(S.cfg.examesExtra||[]).filter(x=>x!==d.rmexame)},'Exame removido')}
+  else if(d.quick&&p){const x=(S.cfg.servicos||[]).find(y=>y.id===d.quick);if(x){salvar({...p,fin:[...(p.fin||[]),{id:uid(),data:hoje(),tipo:x.tipo||'Serviço',desc:x.nome,qtd:'1',unit:String(num(x.valor)),total:String(num(x.valor)),sit:'Pendente',pago:''}]});toast(x.nome+' · '+R$(x.valor)+' lançado')}}
   else if('copylink' in d)copiar(LINK,'Link copiado');
   else if('backup' in d)baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,config:S.cfg},null,1),'application/json');
   else if('importar' in d)$('fileimp').click();
@@ -889,7 +915,7 @@ render();
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))render();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
   db.collection('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
-  db.doc('config/clinica').onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};if(idle()&&S.vis==='conta'&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#prf')))render()},()=>{});
+  db.doc('config/clinica').onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))render()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render()},60000);
 })();
 }
