@@ -60,7 +60,14 @@ a{color:inherit}
 .search{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:16px;margin-bottom:12px}
 .row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:var(--card);width:100%;text-align:left}
 .row:hover{background:var(--panel)}
-.av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--panel);font:800 15px var(--display);color:var(--brand);border:2px solid var(--line);flex:none}
+.av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--panel);font:800 15px var(--display);color:var(--brand);border:2px solid var(--line);flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.fotobtn{position:relative;border:0;background:none;padding:0;border-radius:50%;flex:none}
+.fotobtn .cam{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);background:var(--act);color:var(--actink);font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;white-space:nowrap}
+.fotobtn.grande .av{width:88px;height:88px;font-size:30px}
+.perfil{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.perfil .grow{flex:1 1 220px}
+.mini{width:26px;height:26px;border-radius:50%;object-fit:cover;vertical-align:-7px;margin-right:6px}
+.who img{object-fit:cover}
 .row h3{font-size:18px}
 .meta{font-size:14px;color:var(--mute)}
 .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
@@ -212,6 +219,7 @@ body.semrede .wrap{padding-bottom:200px}
 <div class="rede" id="rede" role="alert" hidden></div>
 <input type="file" id="fileup" hidden accept="image/*,application/pdf">
 <input type="file" id="fileimp" hidden accept="application/json,.json">
+<input type="file" id="fotoup" hidden accept="image/*">
 
 <script>
 {
@@ -560,12 +568,17 @@ function renderNav(){
   $('nav').innerHTML=VIEWS.map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
 }
 function render(){
-  renderNav();
+  renderNav();renderWho();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
   if(p)return renderFicha(p);
   ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,clientes:renderClientes,relat:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta})[S.vis]();
 }
-const avatar=p=>`<span class="av">${esc((p.especie||'?').slice(0,2))}</span>`;
+const fotoOk=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
+const avatar=p=>fotoOk(p.foto)?`<span class="av"><img src="${p.foto}" alt="Foto de ${esc(p.nome)}"></span>`:`<span class="av">${esc((p.especie||'?').slice(0,2))}</span>`;
+const fotoPerfil=()=>fotoOk(S.cfg.foto)?S.cfg.foto:'';
+let fotoAlvo=null;
+function escolherFoto(alvo){fotoAlvo=alvo;$('fotoup').click()}
+function reduzirFoto(file,lado=256,q=.82){return new Promise((ok,erro)=>{const fr=new FileReader();fr.onerror=erro;fr.onload=()=>{const im=new Image();im.onerror=()=>erro(new Error('imagem'));im.onload=()=>{const m=Math.min(im.width,im.height),cv=document.createElement('canvas');cv.width=cv.height=lado;const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,lado,lado);cx.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,lado,lado);ok(cv.toDataURL('image/jpeg',q))};im.src=fr.result};fr.readAsDataURL(file)})}
 
 function renderLista(){
   const inF=(p,k)=>k==='todos'?ativo(p):k==='grandes'?GR.includes(p.especie)&&ativo(p):p.status===k;
@@ -576,9 +589,9 @@ function renderLista(){
   if(!S.pac.length)rows=`<div class="empty"><h2>Nenhum paciente ainda</h2><p>Cadastre o primeiro animal para abrir a ficha clínica.</p><button class="btn pri" data-novo>+ Novo paciente</button></div>`;
   else if(!list.length)rows=`<div class="empty"><p>Nenhum paciente neste filtro.</p></div>`;
   else rows=list.map(({p,a})=>{const u=ult(p)[0];const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}${deb?` · <span class="late">deve ${R$(deb)}</span>`:''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
-  const hj=new Date(),hr=hj.getHours(),nm=(me&&me.name||S.cfg.vet||'').split(' ')[0];
+  const hj=new Date(),hr=hj.getHours(),nm=(S.cfg.apelido||me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
-  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo SAMVET"></span><div><h2>${esc(S.cfg.clinica||'SAMVET')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
+  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo SAMVET"></span><div><h2>${esc(S.cfg.clinica||'SAMVET')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
   $('view').innerHTML=capa+`<div class="counts">${[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('')}</div>
   <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro, microchip ou treinador" aria-label="Buscar paciente" value="${esc(S.q)}">
   <div id="rows">${rows}</div>`;
@@ -720,9 +733,13 @@ function renderConta(){
   const c=S.cfg;
   const nome=me&&me.name;
   $('view').innerHTML=`<div class="bar"><h2>Conta e acesso</h2></div>
+  <div class="box perfil"><button class="fotobtn grande" data-fotoperfil aria-label="${fotoPerfil()?'Trocar':'Adicionar'} sua foto de perfil">${fotoPerfil()?`<span class="av"><img src="${fotoPerfil()}" alt="Sua foto de perfil"></span>`:`<span class="av">${esc(((S.cfg.apelido||nome||S.cfg.vet||'?').trim()[0]||'?').toUpperCase())}</span>`}<span class="cam">${fotoPerfil()?'Trocar':'+ Foto'}</span></button>
+   <div class="grow"><h3>Seu perfil</h3><form id="perff" class="addrow"><input id="pf_apelido" placeholder="Como quer ser chamado(a)" aria-label="Nome de exibição" value="${esc(S.cfg.apelido||'')}"><button class="btn sm">Salvar nome</button></form>
+   <div class="btns" style="margin-top:8px"><button class="btn sm" data-fotoperfil>${fotoPerfil()?'Trocar foto':'Adicionar foto'}</button>${fotoPerfil()?'<button class="btn sm ghost" data-fotoperfilrm>Remover foto</button>':''}</div>
+   <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p></div></div>
   <div class="cols">
   <div class="box"><h3>${db?'Conectado':'Você está no modo local'}</h3>
-   ${db?`<p>${me&&me.avatarUrl?`<img src="${esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> Outras pessoas que usam este mesmo link têm o próprio SAMVET e não veem seus pacientes, clientes nem caixa.</p>`
+   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> Outras pessoas que usam este mesmo link têm o próprio SAMVET e não veem seus pacientes, clientes nem caixa.</p>`
    :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login do Claude e abra o SAMVET pelo link abaixo.</p>`}
    <span class="lbl">Link do SAMVET</span><p class="link" id="lnk">${LINK}</p>
    <div class="btns"><button class="btn sm" data-copylink>Copiar link</button><a class="btn sm" href="${LINK}" target="_blank" rel="noopener">Abrir em nova aba</a></div></div>
@@ -743,8 +760,9 @@ function renderConta(){
   <div class="box"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, clientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}. ${(()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último backup baixado neste aparelho: '+new Date(t).toLocaleDateString('pt-BR')+'.':'Nenhum backup baixado ainda neste aparelho.'})()}</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
+  $('perff').onsubmit=e=>{e.preventDefault();salvarCfg({...S.cfg,apelido:$('pf_apelido').value.trim()},'Nome salvo')};
   if($('padV'))window._padV=padAssin($('padV'));
-  if($('meName'))$('meName').textContent=nome?nome:'Conta Claude';
+  if($('meName'))$('meName').textContent=S.cfg.apelido||nome||'Conta Claude';
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
 }
 
@@ -914,7 +932,7 @@ function renderFicha(p){
   const tabs=[['resumo','Resumo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']];
   if(!tabs.some(t=>t[0]===S.tab))S.tab='resumo';
   $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Voltar</button>
-  <div class="head">${avatar(p)}<div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
+  <div class="head"><button class="fotobtn" data-fotopac aria-label="${p.foto?'Trocar':'Adicionar'} foto de ${esc(p.nome)}">${avatar(p)}<span class="cam">${p.foto?'Trocar':'+ Foto'}</span></button><div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
   <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${rodapeFin(p)}`;
@@ -971,7 +989,7 @@ function modulo(m,p){
     ${longo.map(f=>`<span class="lbl">${f.l}</span><p>${esc(it[f.k])}</p>`).join('')}${extra}</article>`}).join(''):'<div class="empty"><p>Nada registrado ainda.</p></div>');
 }
 function dados(p){
-  return `<div class="bar"><h3>Identificação e tutor</h3><button class="btn sm" data-editp>Editar dados</button></div><div class="tw"><table>${campos(F_PAC,p).filter(f=>f.k&&f.k!=='status').map(f=>`<tr><td><b>${f.l}</b></td><td style="white-space:pre-wrap">${vazio(p[f.k])?'—':esc(fmt(f,p[f.k]))}</td></tr>`).join('')}</table></div>`;
+  return `<div class="bar"><h3>Identificação e tutor</h3><div class="btns"><button class="btn sm" data-fotopac>${p.foto?'Trocar foto':'Adicionar foto'}</button>${p.foto?'<button class="btn sm ghost" data-fotopacrm>Remover foto</button>':''}<button class="btn sm" data-editp>Editar dados</button></div></div><div class="tw"><table>${campos(F_PAC,p).filter(f=>f.k&&f.k!=='status').map(f=>`<tr><td><b>${f.l}</b></td><td style="white-space:pre-wrap">${vazio(p[f.k])?'—':esc(fmt(f,p[f.k]))}</td></tr>`).join('')}</table></div>`;
 }
 /* ---------- documentos ---------- */
 const DOCS=[['receita','Receituário'],['precompra','Laudo de exame pré-compra'],['atestado','Atestado de saúde'],['termo_cir','Termo de consentimento (cirurgia / anestesia)'],['termo_int','Termo de internação'],['termo_euta','Termo de autorização para eutanásia'],['obito','Declaração de óbito'],['encam','Encaminhamento'],['orcamento','Orçamento'],['recibo','Recibo']];
@@ -1128,6 +1146,14 @@ $('fileup').onchange=async e=>{
   try{const r=await assets.upload(f);const q=cur()||p;salvar({...q,anexos:[...(q.anexos||[]),{id:uid(),assetId:r.id,nome:f.name,tipo:r.contentType||f.type,data:hoje()}]});toast('Anexo salvo')}
   catch(err){toast(err&&err.message?'Não foi possível anexar: '+err.message:'Não foi possível anexar.')}
 };
+$('fotoup').onchange=async e=>{
+  const f=e.target.files[0],alvo=fotoAlvo;e.target.value='';fotoAlvo=null;if(!f||!alvo)return;
+  if(!/^image\//.test(f.type)){toast('Escolha um arquivo de imagem (JPG ou PNG).');return}
+  try{
+    if(alvo.t==='perfil'){const u=await reduzirFoto(f,256);salvarCfg({...S.cfg,foto:u},'Foto de perfil salva')}
+    else{const u=await reduzirFoto(f,220);const q=S.pac.find(x=>x.id===alvo.id);if(q){salvar({...q,foto:u});toast('Foto de '+q.nome+' salva')}}
+  }catch(err){toast('Não foi possível ler essa imagem. Tente outra foto.')}
+};
 $('fileimp').onchange=e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const ps=Array.isArray(d)?d:d.pacientes||[];let n=0;
@@ -1157,6 +1183,8 @@ document.addEventListener('click',e=>{
   else if(d.fatura){const c=S.cli.find(x=>x.id===d.fatura);if(c)abrirDoc({nome:c.nome,tel:c.tel,tutor:c.contato||c.nome},'Fatura',textoFatura(c),null,{semFicha:1,nomeT:c.nome})}
   else if(d.fatreceber){const c=S.cli.find(x=>x.id===d.fatreceber);if(!c)return;const its=itensFatura(c,S.fatMes||hoje().slice(0,7),S.fatAnt!==false).filter(x=>saldo(x.f)>0),tot=its.reduce((s,x)=>s+saldo(x.f),0);
     abrirForm(`Receber ${R$(tot)} · ${c.nome}`,[{k:'forma',l:'Forma de pagamento',t:'select',o:FORMAS.filter(Boolean),h:1},{k:'dataPag',l:'Data do pagamento',t:'date',h:1}],{forma:'Pix',dataPag:hoje()},{},o=>{const ids=new Set(its.map(x=>x.f.id));for(const pid of new Set(its.map(x=>x.p.id))){const q=S.pac.find(x=>x.id===pid);if(q)salvar({...q,fin:q.fin.map(f=>ids.has(f.id)?{...f,pago:String(num(f.total)),sit:'Pago',forma:o.forma,dataPag:o.dataPag}:f)})}toast('Fatura recebida: '+R$(tot))})}
+  else if('fotoperfil' in d)escolherFoto({t:'perfil'});
+  else if('fotoperfilrm' in d){const c={...S.cfg};delete c.foto;salvarCfg(c,'Foto removida')}
   else if('csv' in d)baixar(`samvet-lancamentos-${hoje()}.csv`,csvLanc(),'text/csv');
   else if('reenviar' in d)reenviar();
   else if('protnovo' in d)editarProtocolo(null);
@@ -1189,6 +1217,8 @@ document.addEventListener('click',e=>{
   else if(d.edit)editarItem(p,d.edit,d.iid);
   else if(d.aplic)aplicar(p,d.aplic);
   else if('protapl' in d)escolherProtocolo(p);
+  else if('fotopac' in d)escolherFoto({t:'pac',id:p.id});
+  else if('fotopacrm' in d){const q={...p};delete q.foto;salvar(q);toast('Foto removida')}
   else if(d.anexoedit){const a=(p.anexos||[]).find(x=>x.id===d.anexoedit);if(a)abrirForm('Legenda do anexo',[{k:'desc',l:'Descrição'},{k:'regiao',l:'Região do corpo',h:1,list:[...REG_CORPO,...MEMB.flatMap(mb=>REG_MEMBRO.map(r=>mb+' · '+r))]},{k:'data',l:'Data',t:'date',h:1}],a,p,o=>salvar({...p,anexos:p.anexos.map(x=>x.id===a.id?o:x)}))}
   else if(d.desfaz){const m=p.meds.find(x=>x.id===d.desfaz);salvar({...p,meds:p.meds.map(x=>x.id===d.desfaz?{...x,aplic:(x.aplic||[]).slice(0,-1)}:x)});if(m&&num(m.consumo)&&moverEstoque(m.estId||m.med,-num(m.consumo),'Estorno · '+p.nome))toast('Aplicação desfeita · estoque devolvido')}
   else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>apagar('pacientes',p.id));
@@ -1202,7 +1232,9 @@ document.addEventListener('click',e=>{
 
 function renderWho(){
   const w=$('who');
-  if(db&&me){w.innerHTML=`<img src="${esc(me.avatarUrl)}" alt=""><span></span>`;w.querySelector('span').textContent=(me.name||'Conectado').split(' ')[0]}
+  const f=fotoPerfil(),nm=(S.cfg.apelido||me&&me.name||'').split(' ')[0];
+  if(db&&me){w.innerHTML=`<img src="${f||esc(me.avatarUrl)}" alt=""><span></span>`;w.querySelector('span').textContent=nm||'Conectado'}
+  else if(f){w.innerHTML=`<img src="${f}" alt=""><span></span>`;w.querySelector('span').textContent=nm||'Modo local'}
   else w.innerHTML='<span class="dot"></span>Entrar';
 }
 
