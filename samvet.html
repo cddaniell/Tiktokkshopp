@@ -259,7 +259,7 @@ const VAC_BOV=['Brucelose (B19 / RB51)','Raiva','Clostridioses','Leptospirose','
 const FORMAS=['','Pix','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência'];
 
 const S={pac:[],est:[],cli:[],cliSel:null,cfg:{},sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac',finF:'pend'};
-let BASE='',PFX='samvet-',db=null,dict=null,user=null,assets=null,dl=null,me=null,micBtn=null,micTa=null,timer=null;
+let BASE='',PFX='samvet-',isDono=false,db=null,dict=null,user=null,assets=null,dl=null,me=null,micBtn=null,micTa=null,timer=null;
 const queue={};
 
 const F_PAC=[
@@ -512,7 +512,7 @@ function alertas(p){
 
 /* ---------- gravação ---------- */
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const errMsg=e=>e&&e.code==='invalid_argument'?'Você não tem permissão para editar.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
+const errMsg=e=>e&&e.code==='invalid_argument'?'Seu acesso não permite salvar. Peça ao dono do SAMVET para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
 const COLS={pacientes:'pac',estoque:'est',clientes:'cli'};
 const colRef=c=>db.collection(BASE+'/'+c);
 const cfgRef=()=>db.doc(BASE+'/config/clinica');
@@ -737,6 +737,7 @@ function renderConta(){
    <div class="grow"><h3>Seu perfil</h3><form id="perff" class="addrow"><input id="pf_apelido" placeholder="Como quer ser chamado(a)" aria-label="Nome de exibição" value="${esc(S.cfg.apelido||'')}"><button class="btn sm">Salvar nome</button></form>
    <div class="btns" style="margin-top:8px"><button class="btn sm" data-fotoperfil>${fotoPerfil()?'Trocar foto':'Adicionar foto'}</button>${fotoPerfil()?'<button class="btn sm ghost" data-fotoperfilrm>Remover foto</button>':''}</div>
    <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p></div></div>
+  ${db?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
   <div class="cols">
   <div class="box"><h3>${db?'Conectado':'Você está no modo local'}</h3>
    ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> Outras pessoas que usam este mesmo link têm o próprio SAMVET e não veem seus pacientes, clientes nem caixa.</p>`
@@ -1242,7 +1243,7 @@ render();
 (async()=>{
   const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
   [db,dict,user,assets,dl]=await Promise.all([use('db'),use('dictation'),use('user'),use('assets'),use('downloads')]);
-  if(user){try{me=await user.me()}catch(e){me=null}}
+  if(user){try{me=await user.me()}catch(e){me=null}try{isDono=!!(await user.isOwner())}catch(e){isDono=false}}
   const uid=me&&me.id;
   if(db&&!uid){db=null;window.__semId=1}
   if(db){BASE=`data/users/${uid}/samvet`;PFX='samvet-'+uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-';
