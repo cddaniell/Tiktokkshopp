@@ -208,6 +208,12 @@ body.semrede .wrap{padding-bottom:200px}
 @media(max-width:600px){.ohead{display:none}.oline{grid-template-columns:1fr 1fr 32px;padding:8px;border:1px solid var(--line);border-radius:10px}.oline [data-f=desc]{grid-column:1/-1}.oline .otot{grid-column:1/3;text-align:left}}
 .ototais{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel);display:grid;gap:4px;max-width:420px;margin-left:auto}.ototais div{display:flex;justify-content:space-between;gap:12px}.ototais .otg{border-top:2px solid var(--line);padding-top:6px;font-size:18px}.ototais .otg b{color:var(--brand)}
 .btn.ok{color:var(--okc)}
+.ocard{border:1px solid var(--line);border-radius:14px;background:var(--card);margin-bottom:10px;overflow:hidden}
+.ocard.venc{border-color:var(--s-tratamento)}
+.ocab{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;border:0;background:none;padding:12px 14px}.ocab:hover{background:var(--panel)}
+.ocab>span:first-child{display:grid;gap:2px}.oval{display:grid;justify-items:end;align-content:start;gap:4px;flex:none}.oval .pill{align-self:start;line-height:1.3}.oval b{font-size:17px}
+.oacts{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px}
+.btn.del{color:var(--warn)}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}.pulso{animation:none}}
 </style>
 
@@ -941,7 +947,7 @@ async function htmlDoc(titulo,texto,assT,nomeT){
 
 /* ---------- orçamentos ---------- */
 const salvarOrc=o=>gravar('orcamentos',o,S.orc);
-const ORC_ST=['Rascunho','Enviado','Aprovado','Recusado'];
+const ORC_ST=['Rascunho','Enviado','Aprovado'];
 const orcValidade=o=>addD(o.data||hoje(),+o.validade||15);
 const orcStatus=o=>(o.status==='Enviado'||o.status==='Rascunho')&&dias(orcValidade(o))<0?'Vencido':o.status||'Rascunho';
 const ORC_COR={Rascunho:'obito',Enviado:'acompanhamento',Aprovado:'alta',Recusado:'internado',Vencido:'tratamento'};
@@ -960,17 +966,20 @@ function catalogo(){
   return out;
 }
 function renderOrcamentos(){
-  const q=(S.qo||'').toLowerCase(),f=S.orcF||'abertos';
-  const l=[...S.orc].map(o=>({o,st:orcStatus(o),t:orcTotais(o)})).sort((a,b)=>String(b.o.numero).localeCompare(String(a.o.numero)));
-  const fil=l.filter(x=>(f==='todos'||(f==='abertos'?['Rascunho','Enviado'].includes(x.st):x.st===f))&&(!q||[x.o.numero,x.o.cliente,x.o.animal].join(' ').toLowerCase().includes(q)));
-  const mes=hoje().slice(0,7),doMes=l.filter(x=>(x.o.data||'').startsWith(mes));
-  const ab=l.filter(x=>['Rascunho','Enviado'].includes(x.st)),apM=doMes.filter(x=>x.st==='Aprovado'),dec=doMes.filter(x=>['Aprovado','Recusado'].includes(x.st));
-  $('view').innerHTML=`<div class="bar"><h2>Orçamentos</h2><div class="btns">${dl&&S.orc.length?'<button class="btn sm" data-orccsv>Exportar lista (.csv)</button>':''}<button class="btn pri sm" data-orcnovo>+ Novo orçamento</button></div></div>
-  <div class="counts"><div class="count"><b>${ab.length}</b><span>Em aberto · ${R$(ab.reduce((s,x)=>s+x.t.total,0))}</span></div><div class="count" style="color:var(--okc)"><b>${R$(apM.reduce((s,x)=>s+x.t.total,0))}</b><span>Aprovado no mês</span></div><div class="count"><b>${dec.length?Math.round(apM.length/dec.length*100)+'%':'—'}</b><span>Aprovação no mês</span></div><div class="count" style="color:var(--s-tratamento)"><b>${l.filter(x=>x.st==='Vencido').length}</b><span>Vencidos</span></div></div>
-  <div class="chips">${[['abertos','Em aberto'],['Aprovado','Aprovados'],['Recusado','Recusados'],['Vencido','Vencidos'],['todos','Todos']].map(([k,t])=>`<button class="btn sm${f===k?' pri':''}" data-orcf="${k}">${t}</button>`).join('')}</div>
-  <input class="search" id="qo" type="search" placeholder="Buscar número, cliente ou animal" aria-label="Buscar orçamento" value="${esc(S.qo||'')}">
-  ${fil.length?fil.map(({o,st,t})=>`<button class="row" data-orc="${esc(o.id)}"><span class="av">${esc(String(o.numero||'').slice(-2)||'Or')}</span><span><h3>${esc(o.numero)} · ${esc(o.cliente||'Sem cliente')}</h3><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''} · ${(o.itens||[]).filter(i=>i.desc).length} item(ns) · válido até ${br(orcValidade(o))}</span></span><span class="end"><b class="tnum">${R$(t.total)}</b><br><span class="pill" style="--c:var(--s-${ORC_COR[st]})">${st}</span></span></button>`).join(''):`<div class="empty"><h2>${S.orc.length?'Nenhum orçamento neste filtro':'Nenhum orçamento ainda'}</h2><p>Monte o orçamento com os serviços da sua tabela de preços, mande pelo WhatsApp e exporte em PDF.</p><button class="btn pri" data-orcnovo>+ Novo orçamento</button></div>`}`;
-  $('qo').oninput=e=>{S.qo=e.target.value;const pos=e.target.selectionStart;renderOrcamentos();$('qo').focus();try{$('qo').setSelectionRange(pos,pos)}catch(_){}};
+  const q=(S.qo||'').toLowerCase();
+  const l=[...S.orc].map(o=>({o,st:orcStatus(o),t:orcTotais(o)})).filter(x=>!q||[x.o.numero,x.o.cliente,x.o.animal].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(b.o.numero).localeCompare(String(a.o.numero)));
+  const pend=l.filter(x=>x.st!=='Aprovado'),apr=l.filter(x=>x.st==='Aprovado');
+  const mes=hoje().slice(0,7),aprM=S.orc.filter(o=>o.status==='Aprovado'&&String(o.aprovadoEm||'').startsWith(mes));
+  const card=({o,st,t})=>`<article class="ocard${st==='Vencido'?' venc':''}"><button class="ocab" data-orc="${esc(o.id)}"><span><b>${esc(o.numero)} · ${esc(o.cliente||'Sem cliente')}</b><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''} · ${t.its.length} item(ns)${st==='Aprovado'?' · aprovado em '+br(o.aprovadoEm):' · válido até '+br(orcValidade(o))}</span></span><span class="oval"><b class="tnum">${R$(t.total)}</b><span class="pill" style="--c:var(--s-${ORC_COR[st]})">${st}</span></span></button>
+   ${st!=='Aprovado'?`<div class="oacts"><button class="btn sm pri" data-orcapr="${esc(o.id)}">Aprovado</button><button class="btn sm del" data-orcrec="${esc(o.id)}">Recusado</button><button class="btn sm" data-orcpdf="${esc(o.id)}">PDF</button>${waLink(o.tel,textoOrc(o))}</div>`:`<div class="oacts">${o.lancado&&S.pac.some(p=>p.id===o.lancado)?`<button class="btn sm" data-id="${esc(o.lancado)}" data-gotab="fin">Ver no Financeiro</button>`:''}<button class="btn sm" data-orcpdf="${esc(o.id)}">PDF</button></div>`}</article>`;
+  $('view').innerHTML=`<div class="bar"><h2>Orçamentos</h2><div class="btns">${dl&&S.orc.length?'<button class="btn sm" data-orccsv>Exportar lista (.csv)</button>':''}<button class="btn pri" data-orcnovo>+ Novo orçamento</button></div></div>
+  <div class="counts"><div class="count"><b>${pend.length}</b><span>Aguardando resposta · ${R$(pend.reduce((s,x)=>s+x.t.total,0))}</span></div><div class="count" style="color:var(--okc)"><b>${R$(aprM.reduce((s,o)=>s+orcTotais(o).total,0))}</b><span>Aprovado no mês · ${aprM.length} orçamento(s)</span></div></div>
+  ${S.orc.length?`<input class="search" id="qo" type="search" placeholder="Buscar número, cliente ou animal" aria-label="Buscar orçamento" value="${esc(S.qo||'')}">`:''}
+  <h3 class="dayh">Aguardando resposta do cliente</h3>
+  <p class="hint">Cliente aceitou: toque em <b>Aprovado</b> e o cliente, o animal e os valores entram no sistema. Não aceitou: toque em <b>Recusado</b> e o orçamento é apagado.</p>
+  ${pend.length?pend.map(card).join(''):`<div class="empty"><p>${S.orc.length?'Nenhum orçamento aguardando resposta.':'Nenhum orçamento ainda. Monte com os serviços da sua tabela de preços, mande pelo WhatsApp ou em PDF.'}</p><button class="btn pri" data-orcnovo>+ Novo orçamento</button></div>`}
+  ${apr.length?`<h3 class="dayh">Aprovados</h3>${apr.slice(0,S.orcMais?999:10).map(card).join('')}${apr.length>10&&!S.orcMais?`<button class="btn sm" data-orcmais>Ver todos os ${apr.length} aprovados</button>`:''}`:''}`;
+  if($('qo'))$('qo').oninput=e=>{S.qo=e.target.value;const pos=e.target.selectionStart;renderOrcamentos();$('qo').focus();try{$('qo').setSelectionRange(pos,pos)}catch(_){}};
 }
 function novoOrc(pre={}){
   const o={id:uid(),numero:proxNumOrc(),data:hoje(),validade:S.cfg.orcValidade||'15',status:'Rascunho',itens:[{desc:'',qtd:'1',unit:''}],descTipo:'R$',descValor:'',km:'',cond:S.cfg.orcCond||'Pagamento à vista via Pix ou transferência.',obs:'',por:meId(),...pre};
@@ -1010,7 +1019,8 @@ function editarOrc(o0,novo){
     return{...o,clienteId:$('o_cli').value,pacienteId:$('o_pac').value,cliente:$('o_cliente').value.trim(),tel:$('o_tel').value.trim(),doc:$('o_doc').value.trim(),animal:$('o_animal').value.trim(),data:$('o_data').value||hoje(),validade:$('o_val').value||'15',itens:its,descTipo:$('o_dt').value,descValor:$('o_dv').value.trim(),km:$('o_km').value.trim(),kmval:num(S.cfg.kmval)?String(S.cfg.kmval):'',cond:$('o_cond').value.trim(),obs:$('o_obs').value.trim(),status:$('o_st').value}};
   const calc=()=>{const x=ler(),t=orcTotais(x);$('o_itens').querySelectorAll('.oline').forEach(r=>{const q=num(r.querySelector('[data-f=qtd]').value||1),u=num(r.querySelector('[data-f=unit]').value);r.querySelector('.otot').textContent=r.querySelector('[data-f=desc]').value.trim()?R$(q*u):''});
     $('o_tot').innerHTML=`<div><span>Subtotal</span><b class="tnum">${R$(t.sub)}</b></div>${t.desc?`<div><span>Desconto${x.descTipo==='%'?' ('+esc(x.descValor)+'%)':''}</span><b class="tnum">− ${R$(t.desc)}</b></div>`:''}${t.km?`<div><span>Deslocamento (${esc(x.km)} km)</span><b class="tnum">${R$(t.km)}</b></div>`:''}<div class="otg"><span>Total</span><b class="tnum">${R$(t.total)}</b></div>`};
-  const bind=()=>{$('o_itens').querySelectorAll('[data-f=desc]').forEach(inp=>inp.onchange=()=>{const c=cat.find(z=>z.nome===inp.value.trim());const u=inp.closest('.oline').querySelector('[data-f=unit]');if(c&&!u.value)u.value=c.valor;calc()});
+  const bind=()=>{$('o_itens').querySelectorAll('[data-f=desc]').forEach(inp=>{inp.oninput=inp.onchange=()=>{const c=cat.find(z=>z.nome===inp.value.trim());const u=inp.closest('.oline').querySelector('[data-f=unit]');if(c&&!u.value)u.value=c.valor;calc()}});
+    $('o_itens').querySelectorAll('input[type=number]').forEach(n=>n.onfocus=()=>{try{n.select()}catch(e){}});
     $('o_itens').querySelectorAll('[data-rmi]').forEach(b=>b.onclick=()=>{b.closest('.oline').remove();if(!$('o_itens').children.length)addLinha({});calc()})};
   const addLinha=i=>{$('o_itens').insertAdjacentHTML('beforeend',linha(i,uid()));bind();calc()};
   $('card').oninput=()=>{if($('o_itens'))calc()};bind();calc();
@@ -1039,7 +1049,7 @@ function verOrc(o){
   <tr><td colspan="3">Subtotal</td><td class="n">${R$(t.sub)}</td></tr>${t.desc?`<tr><td colspan="3">Desconto</td><td class="n">− ${R$(t.desc)}</td></tr>`:''}${t.km?`<tr><td colspan="3">Deslocamento (${esc(o.km)} km)</td><td class="n">${R$(t.km)}</td></tr>`:''}<tr class="totrow"><td colspan="3"><b>Total</b></td><td class="n"><b>${R$(t.total)}</b></td></tr></table></div>
   ${o.cond?`<p><span class="lbl">Pagamento</span>${esc(o.cond)}</p>`:''}${o.obs?`<p><span class="lbl">Observações</span>${esc(o.obs)}</p>`:''}
   <div class="acts" style="justify-content:flex-start"><button class="btn pri sm" id="v_pdf">Baixar PDF</button>${waLink(o.tel,textoOrc(o))}<button class="btn sm" id="v_copy">Copiar texto</button><button class="btn sm" id="v_edit">Editar</button><button class="btn sm" id="v_dup">Duplicar</button></div>
-  <div class="acts" style="justify-content:flex-start">${st!=='Aprovado'?'<button class="btn sm" id="v_env">Marcar como enviado</button><button class="btn sm ok" id="v_apr">Aprovar</button><button class="btn sm ghost del" id="v_rec">Recusado</button>':''}<button class="btn sm" id="cancel" style="margin-left:auto">Fechar</button></div>`;
+  <div class="acts" style="justify-content:flex-start">${st!=='Aprovado'?'<button class="btn sm pri" id="v_apr">Aprovado</button><button class="btn sm del" id="v_rec">Recusado</button><button class="btn sm" id="v_env">Marcar como enviado</button>':''}<button class="btn sm" id="cancel" style="margin-left:auto">Fechar</button></div>`;
   $('sheet').classList.add('on');$('card').scrollTop=0;
   $('cancel').onclick=fechar;
   $('v_pdf').onclick=()=>exportarPdfOrc(o);
@@ -1048,25 +1058,55 @@ function verOrc(o){
   $('v_dup').onclick=()=>editarOrc({...JSON.parse(JSON.stringify(o)),id:uid(),numero:proxNumOrc(),data:hoje(),status:'Rascunho',aprovadoEm:'',lancado:'',por:meId()},true);
   const mudar=(s2,msg)=>{const x={...o,status:s2};if(s2==='Enviado'&&!o.enviadoEm)x.enviadoEm=hoje();salvarOrc(x);fechar();toast(msg)};
   if($('v_env'))$('v_env').onclick=()=>mudar('Enviado','Marcado como enviado');
-  if($('v_rec'))$('v_rec').onclick=()=>mudar('Recusado','Marcado como recusado');
+  if($('v_rec'))$('v_rec').onclick=()=>recusarOrc($('v_rec'),o.id);
   if($('v_apr'))$('v_apr').onclick=()=>aprovarOrc(o);
 }
+function nomesAnimais(txt){return String(txt||'').replace(/\([^)]*\)/g,'').split(/\s*[,;/]\s*|\s+e\s+/).map(x=>x.trim()).filter(Boolean)}
 function aprovarOrc(o){
-  const t=orcTotais(o),p=o.pacienteId&&S.pac.find(x=>x.id===o.pacienteId);
-  const fim=(q,lancar)=>{const x={...o,status:'Aprovado',aprovadoEm:hoje()};
-    if(q&&lancar){const novos=t.its.map(i=>({id:uid(),data:hoje(),tipo:'Serviço',desc:i.desc+' ('+o.numero+')',qtd:String(num(i.qtd||1)),unit:String(num(i.unit)),total:String(num(i.qtd||1)*num(i.unit)),sit:'Pendente',pago:'',orc:o.id,por:meId()}));
-      let resto=t.desc;for(const e of [...novos].sort((a,b)=>num(b.total)-num(a.total))){if(resto<=0)break;const ab=Math.min(resto,num(e.total));e.desconto=String(ab);e.total=String(num(e.total)-ab);resto-=ab}
-      const fin=[...(q.fin||[]),...novos];
-      if(t.km)fin.push({id:uid(),data:hoje(),tipo:'Deslocamento (km)',desc:'Deslocamento ('+o.km+' km) · '+o.numero,qtd:String(num(o.km)),unit:String(num(o.kmval||S.cfg.kmval)),total:String(t.km),sit:'Pendente',pago:'',orc:o.id});
-      salvar({...q,fin});x.lancado=q.id}
-    salvarOrc(x);fechar();toast(lancar&&q?'Aprovado e lançado no Financeiro de '+q.nome:'Orçamento aprovado')};
-  $('card').innerHTML=`<h2>Aprovar ${esc(o.numero)}</h2><p>Total de <b>${R$(t.total)}</b>.</p>
-  ${p?`<p>Lançar os itens como "em aberto" no Financeiro de <b>${esc(p.nome)}</b>? Eles passam a contar no Caixa e na ficha.</p>`:`<p class="meta">Este orçamento não está ligado a um animal cadastrado. Você pode escolher um agora para lançar os itens no Financeiro dele, ou só aprovar.</p>`}
-  <div class="acts">${p?'<button class="btn" id="a_so">Só aprovar</button><button class="btn pri" id="a_lan">Aprovar e lançar</button>':'<button class="btn" id="a_so">Só aprovar</button><button class="btn pri" id="a_esc">Escolher animal e lançar</button>'}<button class="btn ghost" id="cancel">Cancelar</button></div>`;
-  $('cancel').onclick=()=>verOrc(o);
-  $('a_so').onclick=()=>fim(null,false);
-  if($('a_lan'))$('a_lan').onclick=()=>fim(p,true);
-  if($('a_esc'))$('a_esc').onclick=()=>escolherPaciente('Lançar em qual animal?',q=>fim(q,true));
+  const t=orcTotais(o),low=s=>String(s||'').trim().toLowerCase();
+  const cli=(o.clienteId&&S.cli.find(c=>c.id===o.clienteId))||S.cli.find(c=>low(c.nome)===low(o.cliente));
+  const pacO=o.pacienteId&&S.pac.find(p=>p.id===o.pacienteId);
+  const doCli=p=>cli?(p.clienteId===cli.id||(!p.clienteId&&low(p.tutor)===low(cli.nome))):low(p.tutor)===low(o.cliente);
+  const par=String(o.animal||'').match(/\(([^)]*)\)/),espTxt=par?par[1].split(',')[0].trim():'',raca=par&&par[1].includes(',')?par[1].split(',').slice(1).join(',').trim():'';
+  const animais=pacO?[{p:pacO}]:nomesAnimais(o.animal).map(n=>{const p=S.pac.find(x=>low(x.nome)===low(n)&&doCli(x));return p?{p}:{novo:n}});
+  $('card').innerHTML=`<h2>Aprovar ${esc(o.numero)}</h2><p>Total de <b>${R$(t.total)}</b> · ${esc(o.cliente)}</p>
+  <div class="box"><h3>O que vai entrar no sistema</h3><div class="ck" style="flex-direction:column;align-items:stretch">
+   ${cli?`<p class="ok" style="margin:0">Cliente já cadastrado: ${esc(cli.nome)}</p>`:`<label><input type="checkbox" id="ap_cli" checked><span>Cadastrar o cliente <b>${esc(o.cliente)}</b>${o.tel?' · '+esc(o.tel):''}</span></label>`}
+   ${animais.map((a,i)=>a.p?`<p class="ok" style="margin:0">Animal já cadastrado: ${esc(a.p.nome)}</p>`:`<label><input type="checkbox" data-apnovo="${i}" checked><span>Cadastrar o animal <b>${esc(a.novo)}</b>${espTxt&&animais.length===1?' ('+esc([espTxt,raca].filter(Boolean).join(', '))+')':''}</span></label>`).join('')}
+   ${animais.length?'':`<p class="meta" style="margin:0">Nenhum animal informado no orçamento.</p>`}
+  </div>
+  <div class="fld" style="margin-top:10px"><label for="ap_lanc">Lançar ${R$(t.total)} no Financeiro de</label><select id="ap_lanc">${animais.map((a,i)=>`<option value="${i}">${esc(a.p?a.p.nome:a.novo)}</option>`).join('')}${S.pac.filter(doCli).filter(p=>!animais.some(a=>a.p&&a.p.id===p.id)).map(p=>`<option value="p:${esc(p.id)}">${esc(p.nome)}</option>`).join('')}<option value="">Não lançar valores</option></select></div>
+  ${animais.length>1?'<p class="meta">Com mais de um animal, o valor total entra no animal escolhido acima.</p>':''}</div>
+  <div class="acts"><button class="btn ghost" id="cancel">Voltar</button><button class="btn pri" id="ap_ok">Aprovar e cadastrar</button></div>`;
+  $('sheet').classList.add('on');$('card').scrollTop=0;
+  $('cancel').onclick=fechar;
+  $('ap_ok').onclick=()=>{
+    $('ap_ok').disabled=true;
+    let c=cli;if(!c&&$('ap_cli')&&$('ap_cli').checked){c={id:uid(),nome:o.cliente,tipo:'Pessoa física',tel:o.tel||'',doc:o.doc||'',fech:'Por atendimento',origem:o.numero,por:meId()};salvarCli(c)}
+    const esp=ESP.includes(espTxt)?espTxt:'Equino';
+    const lista=animais.map((a,i)=>{if(a.p)return a.p;const ck=$('card').querySelector(`[data-apnovo="${i}"]`);if(!ck||!ck.checked)return null;
+      return{id:uid(),nome:a.novo,especie:esp,raca:animais.length===1?raca:'',sexo:'Macho',castrado:'Não',status:'tratamento',tutor:c?c.nome:o.cliente,tel:o.tel||'',cpf:o.doc||'',clienteId:c?c.id:'',criado:Date.now(),origem:o.numero,por:meId(),_novo:1}});
+    const v=$('ap_lanc').value;let alvo=v===''?null:v.startsWith('p:')?S.pac.find(p=>p.id===v.slice(2)):lista[+v];
+    if(v!==''&&!alvo){toast('Marque o cadastro do animal ou escolha outro para lançar.');$('ap_ok').disabled=false;return}
+    let novos=0;
+    for(const p of lista.filter(Boolean)){let q={...p};delete q._novo;if(c&&!q.clienteId&&!p._novo)q.clienteId=c.id;
+      if(alvo&&p.id===alvo.id)q=lancarOrc(q,o,t);
+      if(p._novo||alvo&&p.id===alvo.id||q.clienteId!==p.clienteId){salvar(q);if(p._novo)novos++}}
+    if(alvo&&!lista.some(p=>p&&p.id===alvo.id))salvar(lancarOrc({...alvo},o,t));
+    salvarOrc({...o,status:'Aprovado',aprovadoEm:hoje(),clienteId:c?c.id:o.clienteId||'',pacienteId:alvo?alvo.id:o.pacienteId||'',lancado:alvo?alvo.id:''});
+    fechar();
+    toast(['Orçamento aprovado',!cli&&c?'cliente cadastrado':'',novos?novos+' animal(is) cadastrado(s)':'',alvo?R$(t.total)+' no Financeiro de '+alvo.nome:''].filter(Boolean).join(' · '));
+  };
+}
+function lancarOrc(q,o,t){
+  const novos=t.its.map(i=>({id:uid(),data:hoje(),tipo:'Serviço',desc:i.desc+' ('+o.numero+')',qtd:String(num(i.qtd||1)),unit:String(num(i.unit)),total:String(num(i.qtd||1)*num(i.unit)),sit:'Pendente',pago:'',orc:o.id,por:meId()}));
+  let resto=t.desc;for(const e of [...novos].sort((a,b)=>num(b.total)-num(a.total))){if(resto<=0)break;const ab=Math.min(resto,num(e.total));e.desconto=String(ab);e.total=String(num(e.total)-ab);resto-=ab}
+  if(t.km)novos.push({id:uid(),data:hoje(),tipo:'Deslocamento (km)',desc:'Deslocamento ('+o.km+' km) · '+o.numero,qtd:String(num(o.km)),unit:String(num(o.kmval||S.cfg.kmval)),total:String(t.km),sit:'Pendente',pago:'',orc:o.id});
+  return{...q,fin:[...(q.fin||[]).filter(f=>f.orc!==o.id),...novos]};
+}
+function recusarOrc(btn,id){
+  if(btn.dataset.arm!=='1'){btn.dataset.arm='1';btn.textContent='Toque de novo para apagar';setTimeout(()=>{if(btn.isConnected){btn.dataset.arm='';btn.textContent='Recusado'}},4000);return}
+  const o=S.orc.find(x=>x.id===id);apagar('orcamentos',id);if($('sheet').classList.contains('on'))fechar();toast('Orçamento '+(o?o.numero+' ':'')+'recusado e apagado');
 }
 function csvOrc(){
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',m=v=>num(v).toFixed(2).replace('.',',');
@@ -1400,6 +1440,10 @@ document.addEventListener('click',e=>{
   else if('fotoperfil' in d)escolherFoto({t:'perfil'});
   else if('fotoperfilrm' in d){const c={...S.cfg};delete c.foto;salvarCfg(c,'Foto removida')}
   else if('orcnovo' in d)novoOrc();
+  else if(d.orcapr){const o=S.orc.find(x=>x.id===d.orcapr);if(o)aprovarOrc(o)}
+  else if(d.orcrec)recusarOrc(t,d.orcrec);
+  else if(d.orcpdf){const o=S.orc.find(x=>x.id===d.orcpdf);if(o)exportarPdfOrc(o)}
+  else if('orcmais' in d){S.orcMais=1;render()}
   else if(d.orc){const o=S.orc.find(x=>x.id===d.orc);if(o)verOrc(o)}
   else if(d.orcf){S.orcF=d.orcf;render()}
   else if('orccsv' in d)baixar(`samvet-orcamentos-${hoje()}.csv`,csvOrc(),'text/csv');
