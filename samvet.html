@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SAMVET</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: clínico, calmo, rápido de ler no meio do atendimento, no haras ou no curral.
+   IDEA: a ficha clínica de papel com abas de pasta, agora no celular.
+   PICTURE: a lista de pacientes, a agenda e a ficha aberta são a imagem.
+   COLOUR and TYPE: branco, tinta azul-petróleo profunda, coral para ação; status em pílulas. Archivo + Atkinson Hyperlegible.
+   LAYOUT: barra fixa, contadores, lista ou agenda; ficha com abas roláveis; formulários em painel, uma coluna no celular. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0b1a22);--panel:light-dark(#f3f7f8,#12262f);--line:light-dark(#d9e3e6,#22404b);--ink:light-dark(#0e2833,#e6f0f2);--mute:light-dark(#557079,#93aeb6);--brand:light-dark(#0d4a5c,#7fd0de);--act:light-dark(#e2543b,#ff7a61);--actink:#fff;
+--s-tratamento:light-dark(#b35c00,#ffb15c);--s-internado:light-dark(#c4262e,#ff7b80);--s-acompanhamento:light-dark(#1f5fbf,#86b4ff);--s-alta:light-dark(#1d7a46,#6fd39a);--s-obito:light-dark(#5b6670,#a7b1ba);--warn:light-dark(#c4262e,#ff7b80)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Archivo,system-ui,sans-serif;line-height:1.05;margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--act);outline-offset:2px}
+.top{position:sticky;top:0;z-index:5;background:var(--brand);color:light-dark(#fff,#08161c);padding:12px max(4vw,16px);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top h1{font-size:26px;font-weight:800;letter-spacing:.02em;flex:1}
+.top h1 small{display:block;font:400 13px "Atkinson Hyperlegible",sans-serif;letter-spacing:0;opacity:.85}
+.btn{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn.pri{background:var(--act);color:var(--actink);border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px max(4vw,16px) 80px}
+.note{display:none;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:light-dark(#fff4e5,#2b2010);font-size:14px}
+.note.on{display:block}
+.seg{display:flex;gap:4px;background:var(--panel);padding:4px;border-radius:12px;margin-bottom:12px;width:max-content;max-width:100%}
+.seg button{border:0;background:none;min-height:40px;padding:0 16px;border-radius:9px;font-weight:700;color:var(--mute)}
+.seg button[aria-pressed=true]{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0/.12)}
+.counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.count{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);text-align:left;min-height:64px}
+.count b{display:block;font:800 26px Archivo,sans-serif}
+.count span{font-size:13px;color:var(--mute)}
+.count[aria-pressed=true]{border-color:currentColor;box-shadow:inset 0 0 0 1px currentColor}
+.search{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-size:16px;margin-bottom:12px}
+.row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:var(--bg);width:100%;text-align:left}
+.row:hover{background:var(--panel)}
+.av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--panel);font:800 15px Archivo,sans-serif;color:var(--brand);border:2px solid var(--line);flex:none}
+.row h3{font-size:18px}
+.meta{font-size:14px;color:var(--mute)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.flag{display:inline-block;font:700 12px "Atkinson Hyperlegible",sans-serif;color:var(--warn);margin-left:6px}
+.empty{padding:32px 16px;text-align:center;color:var(--mute);border:2px dashed var(--line);border-radius:16px;margin-bottom:12px}
+.empty h2{color:var(--ink);font-size:24px;margin-bottom:8px}
+.ag{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px;border-bottom:1px solid var(--line);width:100%;text-align:left;background:none;border-inline:0;border-top:0}
+.ag:hover{background:var(--panel)}
+.ag .d{font:800 18px Archivo,sans-serif;white-space:nowrap}
+.ag .d small{display:block;font:700 12px "Atkinson Hyperlegible",sans-serif;color:var(--mute)}
+.ag.late .d,.ag.late .d small{color:var(--warn)}
+.head{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin:8px 0 14px}
+.head .av{width:64px;height:64px;font-size:20px}
+.head h2{font-size:clamp(28px,6vw,40px)}
+.head .grow{flex:1}
+.stsel{min-height:44px;border-radius:10px;border:2px solid var(--c);color:var(--c);background:var(--bg);font-weight:700;padding:0 10px}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:2px solid var(--line);margin-bottom:16px;scrollbar-width:thin}
+.tab{border:0;background:none;padding:10px 12px;min-height:44px;font-weight:700;color:var(--mute);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;flex:none}
+.tab[aria-selected=true]{color:var(--ink);border-color:var(--act)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:16px}
+.vit{background:var(--panel);border-radius:12px;padding:10px 12px}
+.vit span{font-size:13px;color:var(--mute);display:block}
+.vit b{font:800 22px Archivo,sans-serif;white-space:nowrap}
+.vit small{display:block;font-size:12px;color:var(--mute)}
+.vit.out{background:color-mix(in srgb,var(--warn) 12%,transparent)}.vit.out b{color:var(--warn)}
+.alert{border-left:4px solid var(--warn);background:color-mix(in srgb,var(--warn) 9%,transparent);padding:10px 14px;border-radius:0 10px 10px 0;margin-bottom:8px}
+.info{border-left:4px solid var(--s-acompanhamento);background:color-mix(in srgb,var(--s-acompanhamento) 9%,transparent);padding:10px 14px;border-radius:0 10px 10px 0;margin-bottom:8px}
+.box{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.box h3{font-size:16px;margin-bottom:8px}
+.box p{margin:0 0 6px;white-space:pre-wrap}
+.lbl{font-size:13px;font-weight:700;color:var(--mute);display:block}
+.fig{position:relative;height:170px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.bar h3{font-size:20px}
+.hint{font-size:13px;color:var(--mute);margin:-4px 0 12px}
+.item{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.item header{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.item h3{font-size:17px}
+.item .vl{font-size:14px;color:var(--mute);margin-bottom:6px}
+.item p{margin:0 0 8px;white-space:pre-wrap}
+.late{color:var(--warn);font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+table{width:100%;border-collapse:collapse}
+td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.sheet{position:fixed;inset:0;z-index:20;background:rgb(0 0 0/.45);display:none;align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.card{background:var(--bg);width:min(680px,100%);max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px max(4vw,16px) 24px}
+@media(min-width:700px){.sheet{align-items:center}.card{border-radius:18px}}
+.card h2{font-size:24px;margin-bottom:12px}
+.f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.fld{grid-column:span 2}.fld.h{grid-column:span 1}
+.sec{grid-column:span 2;font-size:15px;color:var(--brand);border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.fld>label{font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px}
+.fld input:not([type=checkbox]),.fld select,.fld textarea{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:16px}
+.fld textarea{min-height:84px;resize:vertical}
+.ck{display:flex;flex-wrap:wrap;gap:6px}
+.ck label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:6px 12px;min-height:40px;font-size:14px;background:var(--panel)}
+.ck input{width:18px;height:18px;accent-color:var(--act)}
+.mic{border:1px solid var(--line);background:var(--bg);border-radius:99px;min-height:32px;padding:0 10px;font-size:13px;font-weight:700}
+.mic.on{background:var(--act);color:var(--actink)}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.acts .del{margin-right:auto;color:var(--warn)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media(max-width:600px){.row{grid-template-columns:40px minmax(0,1fr)}.row .av{width:40px;height:40px}.row .end{grid-column:2}.fld.h{grid-column:span 2}.ag{grid-template-columns:76px minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>SAMVET<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1>
+  <button class="btn pri" id="novo">+ Novo paciente</button>
+</div>
+<div class="wrap">
+  <p class="note" id="note"></p>
+  <div id="lista">
+    <div class="seg" role="group" aria-label="Visão"><button data-vis="pac" aria-pressed="true">Pacientes</button><button data-vis="agenda" aria-pressed="false">Agenda</button></div>
+    <div id="vpac">
+      <div class="counts" id="counts"></div>
+      <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro ou microchip" aria-label="Buscar paciente">
+      <div id="rows"></div>
+    </div>
+    <div id="vagenda" hidden></div>
+  </div>
+  <div id="ficha" hidden></div>
+</div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="card" id="card"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const hoje=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const br=d=>d?String(d).slice(0,10).split('-').reverse().join('/'):'—';
+const addD=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
+const dias=d=>Math.round((new Date(d+'T12:00:00')-new Date(hoje()+'T12:00:00'))/864e5);
+const quando=d=>{const n=dias(d);return n<0?`vencido há ${-n} d`:n===0?'hoje':n===1?'amanhã':`em ${n} d`};
+const hora=iso=>{const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+
+const STATUS=[['tratamento','Em tratamento'],['internado','Internado'],['acompanhamento','Acompanhamento'],['alta','Alta'],['obito','Óbito']];
+const stLabel=k=>(STATUS.find(s=>s[0]===k)||STATUS[0])[1];
+const EQ=['Equino','Muar','Asinino'],RUM=['Bovino','Bubalino','Ovino','Caprino'],GR=[...EQ,...RUM,'Suíno'];
+const ESP=[...EQ,'Bovino','Bubalino','Ovino','Caprino','Suíno','Cão','Gato','Ave','Outro'];
+const GRUPO={eq:EQ,rum:RUM,gr:GR,cas:[...EQ,'Bovino','Bubalino']};
+const spOk=(sp,p)=>!sp||(GRUPO[sp]||[]).includes(p.especie);
+const GEST={Equino:340,Muar:360,Asinino:365,Bovino:283,Bubalino:310,Ovino:150,Caprino:150,'Suíno':114,'Cão':63,Gato:65};
+/* Temperatura: Manual MSD (adulto em repouso). FC/FR: faixas usuais de referência. */
+const REF={Equino:{temp:[37.2,38.2],fc:[28,44],fr:[8,16]},Muar:{temp:[37.2,38.2],fc:[28,44],fr:[8,16]},Asinino:{temp:[37.2,38.2],fc:[28,44],fr:[8,16]},Bovino:{temp:[36.7,39.3],fc:[48,84],fr:[26,50]},Bubalino:{temp:[36.7,39.3]},Ovino:{temp:[38.3,39.9]},Caprino:{temp:[38.5,39.7]},'Suíno':{temp:[38.7,39.8]},'Cão':{temp:[37.5,39.2]},Gato:{temp:[38.1,39.2]}};
+const AAEP=['','0 – Sem claudicação perceptível','1 – Difícil de observar, inconsistente','2 – Difícil ao passo/trote em linha reta; aparece em círculo, piso duro ou com cavaleiro','3 – Evidente ao trote em todas as situações','4 – Evidente ao passo','5 – Apoio mínimo ou incapaz de se mover'];
+const MEMB=['MAE','MAD','MPE','MPD'];
+const MOT=['','Normal','Diminuída','Aumentada','Ausente'];
+const COB=['Cobertura (monta)','Inseminação artificial','Transferência de embrião'];
+const VAC_EQ=['Influenza equina','Encefalomielite (leste/oeste)','Tétano','Raiva','Herpesvírus EHV-1/4 (rinopneumonite)','Garrotilho (Streptococcus equi)','Leptospirose','Botulismo'];
+const VAC_BOV=['Brucelose (B19 / RB51)','Raiva','Clostridioses','Leptospirose','IBR / BVD','Botulismo'];
+
+const S={pac:[],sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac'};
+let db=null,dict=null,micBtn=null,micTa=null,timer=null;
+const queue={};
+
+const F_PAC=[
+ {sec:'Identificação'},
+ {k:'nome',l:'Nome do animal',req:1,h:1},{k:'especie',l:'Espécie',t:'select',o:ESP,h:1,re:1},
+ {k:'raca',l:'Raça',h:1},{k:'sexo',l:'Sexo',t:'select',o:['Macho','Fêmea'],h:1,re:1},
+ {k:'categoria',l:'Categoria',h:1,list:['Potro(a)','Égua','Garanhão','Castrado','Vaca','Novilha','Touro','Bezerro(a)','Filhote','Adulto']},{k:'nasc',l:'Nascimento',t:'date',h:1},
+ {k:'castrado',l:'Castrado',t:'select',o:['Não','Sim'],h:1},{k:'pelagem',l:'Pelagem',h:1},
+ {k:'chip',l:'Microchip / brinco / tatuagem',h:1},{k:'registro',l:'Registro / associação',h:1,sp:'gr'},
+ {k:'finalidade',l:'Finalidade',t:'select',o:['','Esporte','Trabalho','Reprodução','Lazer','Corte','Leite','Companhia'],h:1},
+ {k:'modalidade',l:'Modalidade',h:1,sp:'eq',list:['Vaquejada','Tambor','Baliza','Laço','Rédeas','Apartação','Hipismo','Adestramento','CCE','Enduro','Corrida','Marcha','Cavalgada','Equoterapia','Polo']},
+ {k:'altura',l:'Altura na cernelha (cm)',t:'number',h:1,sp:'eq'},{k:'pai',l:'Pai',h:1,sp:'gr'},{k:'mae',l:'Mãe',h:1,sp:'gr'},
+ {k:'resenha',l:'Resenha: marcas e particularidades',t:'ta',sp:'eq'},
+ {sec:'Tutor e local'},
+ {k:'tutor',l:'Tutor / proprietário',req:1,h:1},{k:'tel',l:'Telefone',t:'tel',h:1},
+ {k:'prop',l:'Propriedade / haras / fazenda',h:1},{k:'lote',l:'Baia / piquete / lote',h:1,sp:'gr'},
+ {k:'end',l:'Município / endereço'},
+ {sec:'Saúde'},
+ {k:'alergias',l:'Alergias e reações a medicamentos',t:'ta'},
+ {k:'cronicas',l:'Doenças crônicas e observações gerais',t:'ta'},
+ {k:'status',l:'Status',t:'select',o:STATUS}];
+
+const MODS=[
+ {key:'consultas',tab:'Consultas',titulo:'Histórico clínico',add:'Nova consulta',titleK:'tipo',
+  def:()=>({tipo:'Consulta'}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'tipo',l:'Tipo',t:'select',o:['Consulta','Retorno','Emergência','Atendimento a campo','Cirurgia','Internação','Exame pré-compra'],h:1},
+   {k:'queixa',l:'Queixa principal / anamnese',t:'ta'},
+   {sec:'Parâmetros vitais'},
+   {k:'peso',l:'Peso (kg)',t:'number',h:1},{k:'temp',l:'Temperatura (°C)',t:'number',h:1},
+   {k:'fc',l:'FC (bpm)',t:'number',h:1},{k:'fr',l:'FR (mpm)',t:'number',h:1},
+   {k:'tpc',l:'TPC (s)',t:'number',h:1},{k:'ecc',l:'Escore corporal',h:1,hint:{eq:'1 a 9 (Henneke)',rum:'1 a 5'}},
+   {k:'mucosas',l:'Mucosas',t:'select',o:['','Normocoradas','Hipocoradas','Hipercoradas','Congestas','Ictéricas','Cianóticas'],h:1},
+   {k:'hidr',l:'Hidratação',t:'select',o:['','Normal','Desidratação leve','Desidratação moderada','Desidratação grave'],h:1},
+   {k:'pulso',l:'Pulso digital',t:'select',o:['','Normal','Aumentado em anteriores','Aumentado em posteriores','Aumentado nos 4 membros'],h:1,sp:'eq'},
+   {k:'rumen',l:'Mov. ruminais (/2 min)',t:'number',h:1,sp:'rum'},
+   {k:'perim',l:'Perímetro torácico (cm)',t:'number',h:1,sp:'eq'},{k:'comp',l:'Comprimento corporal (cm)',t:'number',h:1,sp:'eq'},
+   {sec:'Abdome / cólica',sp:'eq'},
+   {k:'dor',l:'Grau de dor',t:'select',o:['','Sem dor','Leve','Moderada','Severa','Intratável'],h:1,sp:'eq'},
+   {k:'sonda',l:'Sondagem nasogástrica',t:'select',o:['','Não realizada','Sem refluxo','Com refluxo'],h:1,sp:'eq'},
+   {k:'refluxo',l:'Refluxo (litros)',t:'number',h:1,sp:'eq'},{k:'fezes',l:'Fezes',t:'select',o:['','Normais','Ressecadas','Pastosas','Diarreicas','Ausentes'],h:1,sp:'eq'},
+   {k:'motSE',l:'Motilidade sup. esq.',t:'select',o:MOT,h:1,sp:'eq'},{k:'motSD',l:'Motilidade sup. dir.',t:'select',o:MOT,h:1,sp:'eq'},
+   {k:'motIE',l:'Motilidade inf. esq.',t:'select',o:MOT,h:1,sp:'eq'},{k:'motID',l:'Motilidade inf. dir.',t:'select',o:MOT,h:1,sp:'eq'},
+   {k:'palp',l:'Palpação retal',t:'ta',sp:'gr'},
+   {k:'parac',l:'Paracentese (aspecto, proteína, lactato)',sp:'eq'},
+   {sec:'Avaliação'},
+   {k:'exame',l:'Exame físico: achados',t:'ta'},{k:'diag',l:'Diagnóstico / suspeita',t:'ta'},
+   {k:'trat',l:'Tratamento / prescrição',t:'ta'},{k:'retorno',l:'Retorno marcado',t:'date',h:1}],
+  save:(o,p)=>{if(!o.peso&&o.perim&&o.comp)o.peso=String(Math.round(o.perim*o.perim*o.comp/11880))}},
+ {key:'meds',tab:'Medicação',titulo:'Medicação e internação',add:'Nova medicação',titleK:'med',dateK:'inicio',
+  hint:'Toque em "Registrar aplicação" a cada dose. O app avisa quando a próxima atrasar.',
+  def:()=>({inicio:hoje(),via:'IV',freq:'12'}),
+  f:[{k:'med',l:'Medicamento',req:1},{k:'dose',l:'Dose (mg/kg, mL…)',h:1},{k:'via',l:'Via',t:'select',o:['IV','IM','SC','VO','Tópica','Intra-articular','Nebulização','Retal'],h:1},
+   {k:'freq',l:'A cada (horas)',t:'number',h:1},{k:'inicio',l:'Início',t:'date',h:1},{k:'fim',l:'Término',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}]},
+ {key:'locomotor',tab:'Locomotor',titulo:'Exame de claudicação',add:'Nova avaliação',titleK:'grau',sp:'eq',
+  hint:'Grau segundo a escala da AAEP (0 a 5).',
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'grau',l:'Grau de claudicação (AAEP)',t:'select',o:AAEP,h:1},
+   {k:'membro',l:'Membro(s)',t:'checks',o:MEMB},
+   {k:'flexao',l:'Teste de flexão',t:'select',o:['','Não realizado','Negativo','Positivo'],h:1},{k:'pinca',l:'Pinça de casco',t:'select',o:['','Não realizado','Negativo','Positivo'],h:1},
+   {k:'bloq',l:'Bloqueios anestésicos'},{k:'imagem',l:'Imagem (RX / US)',t:'ta'},
+   {k:'diag',l:'Diagnóstico',t:'ta'},{k:'conduta',l:'Conduta / repouso / fisioterapia',t:'ta'},{k:'prox',l:'Reavaliação',t:'date',h:1}]},
+ {key:'odonto',tab:'Odonto',titulo:'Odontologia',add:'Novo atendimento',titleK:'proc',sp:'eq',
+  def:()=>({proc:'Avaliação'}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'proc',l:'Procedimento',t:'select',o:['Avaliação','Odontoplastia / nivelamento','Extração','Remoção de dente de lobo','Remoção de capa','Tratamento periodontal'],h:1},
+   {k:'achados',l:'Achados',t:'checks',o:['Pontas de esmalte','Ganchos','Rampas','Ondas','Degraus','Diastemas','Úlceras na bochecha','Dente de lobo','Capas retidas','Fratura','Doença periodontal']},
+   {k:'dentes',l:'Dentes envolvidos (Triadan)'},{k:'sedacao',l:'Sedação',h:1},{k:'prox',l:'Próxima revisão',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}],
+  save:o=>{if(!o.prox&&o.data)o.prox=addD(o.data,180)}},
+ {key:'casco',tab:'Casco',titulo:'Casqueamento e ferrageamento',add:'Novo registro',titleK:'tipo',sp:'cas',
+  hint:'Sem data de próximo, o app sugere 6 semanas.',def:()=>({tipo:'Casqueamento'}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'tipo',l:'Tipo',t:'select',o:['Casqueamento','Ferrageamento','Ferradura ortopédica','Retirada de ferradura','Tratamento de casco'],h:1},
+   {k:'membros',l:'Membros',t:'checks',o:MEMB},
+   {k:'achados',l:'Achados',t:'checks',o:['Sem alterações','Rachadura','Abscesso','Laminite','Broca','Desequilíbrio médio-lateral','Talões baixos','Contratura de talões','Pododermatite']},
+   {k:'ferrador',l:'Ferrador / casqueador',h:1},{k:'prox',l:'Próximo',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}],
+  save:o=>{if(!o.prox&&o.data)o.prox=addD(o.data,42)}},
+ {key:'repro',tab:'Reprodução',titulo:'Controle reprodutivo',add:'Novo evento',titleK:'evento',fem:1,
+  hint:'Com resultado "Prenhe", o app calcula o parto previsto a partir da última cobertura ou inseminação.',def:()=>({evento:'Exame / ultrassom'}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'evento',l:'Evento',t:'select',o:['Exame / ultrassom',...COB,'Diagnóstico de gestação','Indução de ovulação','Tratamento uterino','Parto','Aborto'],h:1},
+   {k:'ovE',l:'Ovário esquerdo (folículo mm / CL)',h:1},{k:'ovD',l:'Ovário direito (folículo mm / CL)',h:1},
+   {k:'edema',l:'Edema uterino (0–3)',t:'select',o:['','0','1','2','3'],h:1},{k:'reprodutor',l:'Reprodutor / sêmen',h:1},
+   {k:'resultado',l:'Resultado',t:'select',o:['','Prenhe','Vazia'],h:1},{k:'parto',l:'Parto previsto',t:'date',h:1},{k:'obs',l:'Observações',t:'ta'}],
+  save:(o,p)=>{if(o.resultado==='Prenhe'&&!o.parto){const c=(p.repro||[]).filter(r=>COB.includes(r.evento)&&r.data<=o.data).sort((a,b)=>b.data.localeCompare(a.data))[0];if(c&&GEST[p.especie])o.parto=addD(c.data,GEST[p.especie])}}},
+ {key:'vacinas',tab:'Sanidade',titulo:'Vacinas, vermífugos e OPG',add:'Adicionar',titleK:'nome',
+  def:()=>({tipo:'Vacina'}),
+  f:[{k:'tipo',l:'Tipo',t:'select',o:['Vacina','Vermífugo','Exame de fezes (OPG)'],h:1},{k:'nome',l:'Produto / princípio ativo',req:1,h:1,list:p=>EQ.includes(p.especie)?VAC_EQ:RUM.includes(p.especie)?VAC_BOV:[]},
+   {k:'data',l:'Data',t:'date',h:1},{k:'prox',l:'Próxima dose',t:'date',h:1},
+   {k:'opg',l:'OPG (ovos por grama)',t:'number',h:1},{k:'lote',l:'Lote / fabricante',h:1},{k:'obs',l:'Observações',t:'ta'}]},
+ {key:'oficiais',tab:'Exames oficiais',titulo:'Exames oficiais e GTA',add:'Novo exame',titleK:'tipo',sp:'gr',
+  hint:'AIE e mormo valem 60 dias para trânsito na maioria dos estados; passaporte equestre pode ter outro prazo. Ajuste a validade conforme seu estado.',
+  def:p=>({tipo:EQ.includes(p.especie)?'AIE (Anemia Infecciosa Equina)':'Brucelose',resultado:'Aguardando',val:'60'}),
+  f:[{k:'tipo',l:'Exame',t:'select',o:['AIE (Anemia Infecciosa Equina)','Mormo','Brucelose','Tuberculose','Atestado de influenza','Outro'],h:1},{k:'data',l:'Data da colheita',t:'date',h:1},
+   {k:'resultado',l:'Resultado',t:'select',o:['Aguardando','Negativo','Positivo','Inconclusivo'],h:1},{k:'val',l:'Validade (dias)',t:'number',h:1},
+   {k:'lab',l:'Laboratório',h:1},{k:'laudo',l:'Nº do laudo / requisição',h:1},{k:'obs',l:'Observações',t:'ta'}]},
+ {key:'exames',tab:'Exames',titulo:'Exames complementares',add:'Novo exame',titleK:'nome',
+  f:[{k:'nome',l:'Exame',req:1,h:1,list:['Hemograma','Bioquímico','Fibrinogênio','Lactato','Gasometria','Radiografia','Ultrassonografia','Endoscopia','Coproparasitológico','Cultura e antibiograma','Citologia','Histopatológico']},{k:'data',l:'Data',t:'date',h:1},{k:'res',l:'Resultado / laudo',t:'ta'}]}
+];
+const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea');
+const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p));
+
+const note=t=>{$('note').textContent=t;$('note').classList.toggle('on',!!t)};
+let tt;const toast=t=>{$('toast').textContent=t;$('toast').classList.add('on');clearTimeout(tt);tt=setTimeout(()=>$('toast').classList.remove('on'),2200)};
+const cur=()=>S.pac.find(p=>p.id===S.sel);
+const idade=n=>{if(!n)return'';const a=new Date(n),h=new Date();let m=(h.getFullYear()-a.getFullYear())*12+h.getMonth()-a.getMonth();if(h.getDate()<a.getDate())m--;if(m<0)return'';return m<12?m+(m===1?' mês':' meses'):Math.floor(m/12)+(m<24?' ano':' anos')+(m%12?' e '+m%12+' m':'')};
+const ord=(l,k='data')=>[...(l||[])].sort((a,b)=>(b[k]||'').localeCompare(a[k]||''));
+const ult=p=>ord(p.consultas);
+const ativo=p=>!['alta','obito'].includes(p.status);
+const gestacao=p=>{const r=ord(p.repro).find(x=>x.resultado||['Parto','Aborto'].includes(x.evento));return r&&r.resultado==='Prenhe'&&r.parto?r:null};
+const proxMed=m=>{const a=m.aplic||[];if(!a.length)return null;return new Date(new Date(a[a.length-1]).getTime()+(+m.freq||0)*36e5)};
+const medAtiva=m=>!m.fim||m.fim>=hoje();
+
+function pendencias(p){
+  const out=[],add=(d,txt,tab,warn=0)=>d&&out.push({d,txt,tab,warn,p});
+  if(ativo(p)){const r=ult(p)[0];if(r&&r.retorno)add(r.retorno,'Retorno','consultas')}
+  const ultPor=(l,k)=>{const m={};for(const x of ord(l))if(!m[x[k]])m[x[k]]=x;return Object.values(m)};
+  for(const v of ultPor(p.vacinas,'nome'))if(v.prox)add(v.prox,(v.tipo==='Vacina'?'Vacina: ':v.tipo==='Vermífugo'?'Vermífugo: ':'OPG: ')+v.nome,'vacinas');
+  for(const k of ['locomotor','odonto','casco']){const m=MODS.find(x=>x.key===k);if(!modVis(m,p))continue;const x=ord(p[k])[0];if(x&&x.prox)add(x.prox,{locomotor:'Reavaliação locomotora',odonto:'Revisão odontológica',casco:'Casco / ferrageamento'}[k],k)}
+  if(spOk('gr',p))for(const x of ultPor(p.oficiais,'tipo'))if(x.resultado==='Negativo'&&x.data&&+x.val)add(addD(x.data,+x.val),x.tipo.split(' (')[0]+' vence','oficiais',10);
+  const g=gestacao(p);if(g)add(g.parto,'Parto previsto','repro',15);
+  return out;
+}
+function alertas(p){
+  const a=pendencias(p).filter(x=>dias(x.d)<=(x.warn||0)).map(x=>x.txt+' · '+quando(x.d));
+  for(const m of (p.meds||[]).filter(medAtiva)){const n=proxMed(m);if(n&&n<new Date())a.unshift('Medicação atrasada: '+m.med)}
+  return a;
+}
+
+function saveLocal(){try{localStorage.setItem('prontuario-vet',JSON.stringify(S.pac))}catch(e){}}
+function salvar(p){
+  p.atualizado=Date.now();
+  const i=S.pac.findIndex(x=>x.id===p.id);i<0?S.pac.push(p):S.pac[i]=p;
+  if(!db){saveLocal();render();return Promise.resolve()}
+  render();
+  const body=JSON.parse(JSON.stringify(p));delete body.id;
+  queue[p.id]=(queue[p.id]||Promise.resolve()).then(()=>db.collection('pacientes').doc(p.id).set(body)).catch(e=>{toast(e&&e.code==='invalid_argument'?'Você não tem permissão para editar.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.')});
+  return queue[p.id];
+}
+function excluir(p){
+  S.pac=S.pac.filter(x=>x.id!==p.id);S.sel=null;
+  if(!db){saveLocal();render();return}
+  db.collection('pacientes').doc(p.id).delete().catch(()=>toast('Não foi possível excluir.'));render();
+}
+
+function render(){
+  const p=cur();$('lista').hidden=!!p;$('ficha').hidden=!p;
+  if(p)return renderFicha(p);
+  document.querySelectorAll('[data-vis]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.vis===S.vis));
+  $('vpac').hidden=S.vis!=='pac';$('vagenda').hidden=S.vis!=='agenda';
+  S.vis==='pac'?renderLista():renderAgenda();
+}
+const avatar=p=>`<span class="av">${esc((p.especie||'?').slice(0,2))}</span>`;
+function renderLista(){
+  const inF=(p,k)=>k==='todos'?ativo(p):k==='grandes'?GR.includes(p.especie)&&ativo(p):p.status===k;
+  $('counts').innerHTML=[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('');
+  const q=S.q.toLowerCase();
+  const list=S.pac.filter(p=>inF(p,S.filtro)&&(!q||[p.nome,p.tutor,p.raca,p.chip,p.especie,p.prop,p.registro,p.lote].join(' ').toLowerCase().includes(q)))
+    .map(p=>({p,a:alertas(p)})).sort((x,y)=>y.a.length-x.a.length||(y.p.atualizado||0)-(x.p.atualizado||0));
+  if(!S.pac.length){$('rows').innerHTML=`<div class="empty"><h2>Nenhum paciente ainda</h2><p>Cadastre o primeiro animal para abrir a ficha clínica.</p><button class="btn pri" data-novo>+ Novo paciente</button></div>`;return}
+  if(!list.length){$('rows').innerHTML=`<div class="empty"><p>Nenhum paciente neste filtro.</p></div>`;return}
+  $('rows').innerHTML=list.map(({p,a})=>{const u=ult(p)[0];return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
+}
+function renderAgenda(){
+  const lim=30,its=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=lim).sort((a,b)=>a.d.localeCompare(b.d));
+  $('vagenda').innerHTML=`<p class="hint">Pendências vencidas e dos próximos ${lim} dias: retornos, vacinas, vermífugos, casco, dentes, AIE/mormo e partos.</p>`+
+   (its.length?its.map(x=>`<button class="ag${dias(x.d)<0?' late':''}" data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>`).join(''):'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>');
+}
+
+function renderFicha(p){
+  const tabs=[['resumo','Resumo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['dados','Dados']];
+  if(!tabs.some(t=>t[0]===S.tab))S.tab='resumo';
+  $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Pacientes</button>
+  <div class="head">${avatar(p)}<div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
+  <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
+  <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
+  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='dados'?dados(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>`;
+  const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
+  const at=document.querySelector('.tab[aria-selected=true]');if(at&&at.scrollIntoView)at.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+function resumo(p){
+  const u=ult(p)[0]||{},h=hoje(),R=REF[p.especie]||{};
+  const vit=[['Peso',u.peso,'kg'],['Temp.',u.temp,'°C','temp'],['FC',u.fc,'bpm','fc'],['FR',u.fr,'mpm','fr'],['TPC',u.tpc,'s'],['Mucosas',u.mucosas,'']];
+  if(spOk('eq',p)&&u.dor)vit.push(['Dor',u.dor,'']);if(spOk('rum',p)&&u.rumen)vit.push(['Rúmen',u.rumen,'/2min']);
+  const out=(k,v)=>R[k]&&v!==undefined&&v!==''&&(+v<R[k][0]||+v>R[k][1]);
+  const g=gestacao(p),meds=(p.meds||[]).filter(medAtiva),pend=pendencias(p).sort((a,b)=>a.d.localeCompare(b.d)).slice(0,6);
+  const ofi={};for(const x of ord(p.oficiais))if(!ofi[x.tipo])ofi[x.tipo]=x;
+  return `${p.alergias?`<div class="alert"><b>Alergias:</b> ${esc(p.alergias)}</div>`:''}
+  ${alertas(p).map(a=>`<div class="alert"><b>${esc(a)}</b></div>`).join('')}
+  ${g?`<div class="info"><b>Prenhe</b> · parto previsto ${br(g.parto)} (${quando(g.parto)})</div>`:''}
+  ${spOk('gr',p)&&Object.keys(ofi).length?`<div class="chips">${Object.values(ofi).map(x=>{const v=x.resultado==='Negativo'&&x.data&&+x.val?addD(x.data,+x.val):null;const c=x.resultado==='Positivo'?'internado':!v?'obito':dias(v)<0?'internado':dias(v)<=10?'tratamento':'alta';return`<span class="pill" style="--c:var(--s-${c})">${esc(x.tipo.split(' (')[0])}: ${esc(x.resultado)}${v?' · até '+br(v):''}</span>`}).join('')}</div>`:''}
+  <div class="bar"><h3>Último exame${u.data?' · '+br(u.data):''}</h3><button class="btn pri sm" data-add="consultas">+ Nova consulta</button></div>
+  ${u.data?`<div class="grid">${vit.map(([l,v,un,k])=>`<div class="vit${out(k,v)?' out':''}"><span>${l}</span><b>${v?esc(v)+(un?' '+un:''):'—'}</b>${k&&R[k]?`<small>ref. ${R[k][0]}–${R[k][1]}</small>`:''}</div>`).join('')}</div>`:'<div class="empty"><p>Nenhuma consulta registrada.</p></div>'}
+  ${u.diag?`<div class="box"><span class="lbl">Diagnóstico atual</span><p>${esc(u.diag)}</p>${u.trat?`<span class="lbl">Tratamento</span><p>${esc(u.trat)}</p>`:''}</div>`:''}
+  ${meds.length?`<div class="box"><h3>Medicação em curso</h3>${meds.map(m=>{const n=proxMed(m);return`<p>${esc(m.med)} ${esc(m.dose||'')} ${esc(m.via||'')} a cada ${esc(m.freq||'?')} h · <span class="${n&&n<new Date()?'late':''}">${n?'próxima '+hora(n.toISOString()):'sem aplicação registrada'}</span></p>`}).join('')}</div>`:''}
+  ${pend.length?`<div class="box"><h3>Próximas datas</h3>${pend.map(x=>`<p class="${dias(x.d)<0?'late':''}">${br(x.d)} · ${esc(x.txt)} <span class="meta">(${quando(x.d)})</span></p>`).join('')}</div>`:''}
+  ${ult(p).filter(c=>c.peso).length>1?`<div class="box"><h3>Evolução do peso (kg)</h3><div class="fig"><svg role="img" aria-label="Gráfico de peso"></svg></div></div>`:''}
+  ${p.cronicas?`<div class="box"><h3>Observações gerais</h3><p>${esc(p.cronicas)}</p></div>`:''}
+  <button class="btn sm" data-copy>Copiar ficha completa</button>`;
+}
+const fmt=(f,v)=>Array.isArray(v)?v.join(', '):f.t==='date'?br(v):v;
+const vazio=v=>v===undefined||v===null||v===''||(Array.isArray(v)&&!v.length);
+function modulo(m,p){
+  const fs=campos(m.f,p).filter(f=>f.k),dk=m.dateK||'data';
+  const l=ord(p[m.key],dk);
+  return `<div class="bar"><h3>${m.titulo}</h3><button class="btn pri sm" data-add="${m.key}">+ ${m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}`+
+  (l.length?l.map(it=>{
+    const curto=fs.filter(f=>f.t!=='ta'&&![dk,m.titleK].includes(f.k)&&!vazio(it[f.k])).map(f=>`${f.l.replace(/ \(.*\)$/,'')}: ${fmt(f,it[f.k])}`);
+    const longo=fs.filter(f=>f.t==='ta'&&!vazio(it[f.k]));
+    let extra='';
+    if(m.key==='meds'){const n=proxMed(it),a=it.aplic||[];extra=`<p><b class="${n&&n<new Date()&&medAtiva(it)?'late':''}">${n?'Próxima dose: '+hora(n.toISOString()):'Nenhuma aplicação registrada'}</b><br><span class="meta">${a.length} aplicação(ões)${a.length?' · última '+hora(a[a.length-1]):''}</span></p>${medAtiva(it)?`<button class="btn pri sm" data-aplic="${esc(it.id)}">Registrar aplicação agora</button> `:''}${a.length?`<button class="btn sm" data-desfaz="${esc(it.id)}">Desfazer última</button>`:''}`}
+    if(m.key==='oficiais'&&it.resultado==='Negativo'&&it.data&&+it.val){const v=addD(it.data,+it.val);extra=`<p class="${dias(v)<0?'late':''}">Válido até ${br(v)} (${quando(v)})</p>`}
+    return `<article class="item"><header><h3>${br(it[dk])} · ${m.titleK==='grau'&&it.grau?'Grau ':''}${esc(String(it[m.titleK]||'').split(' – ')[0]||m.tab)}</h3><button class="btn sm" data-edit="${m.key}" data-iid="${esc(it.id)}">Editar</button></header>
+    ${m.titleK==='grau'&&it.grau?`<div class="vl">${esc(it.grau)}</div>`:''}${curto.length?`<div class="vl">${esc(curto.join(' · '))}</div>`:''}
+    ${longo.map(f=>`<span class="lbl">${f.l}</span><p>${esc(it[f.k])}</p>`).join('')}${extra}</article>`}).join(''):'<div class="empty"><p>Nada registrado ainda.</p></div>');
+}
+function dados(p){
+  return `<div class="bar"><h3>Identificação e tutor</h3><button class="btn sm" data-editp>Editar dados</button></div><table>${campos(F_PAC,p).filter(f=>f.k&&f.k!=='status').map(f=>`<tr><td><b>${f.l}</b></td><td style="white-space:pre-wrap">${vazio(p[f.k])?'—':esc(fmt(f,p[f.k]))}</td></tr>`).join('')}</table>`;
+}
+function desenhaPeso(s,p){
+  const pts=ult(p).filter(c=>c.peso).reverse().map(c=>({d:c.data,v:+c.peso}));
+  const draw=()=>{const W=s.clientWidth,H=s.clientHeight,pad=28;if(!W)return;const vs=pts.map(x=>x.v),mn=Math.min(...vs),mx=Math.max(...vs),r=mx-mn||1;
+    const X=i=>pad+i*(W-pad*2)/(pts.length-1),Y=v=>H-pad-(v-mn)/r*(H-pad*2);
+    s.innerHTML=`<polyline fill="none" stroke="var(--brand)" stroke-width="3" points="${pts.map((x,i)=>X(i)+','+Y(x.v)).join(' ')}"/>`+pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x.v)}" r="5" fill="var(--act)"/>${W>520||i===0||i===pts.length-1?`<text x="${X(i)}" y="${Y(x.v)-10}" text-anchor="middle" font-size="13" fill="var(--ink)">${esc(x.v)}</text><text x="${X(i)}" y="${H-6}" text-anchor="middle" font-size="12" fill="var(--mute)">${esc(br(x.d).slice(0,5))}</text>`:''}`).join('')};
+  const ro=new ResizeObserver(draw);ro.observe(s);
+}
+
+function abrirForm(titulo,todos,val,p,onSave,onDel){
+  const fs=campos(todos,p);
+  const fld=f=>{
+    if(f.sec)return `<h3 class="sec">${f.sec}</h3>`;
+    const v=val[f.k]??'',id='f_'+f.k;let inp;
+    if(f.t==='select')inp=`<select id="${id}">${f.o.map(o=>{const[k,l]=Array.isArray(o)?o:[o,o||'—'];return`<option value="${esc(k)}"${String(v)===k?' selected':''}>${esc(l)}</option>`}).join('')}</select>`;
+    else if(f.t==='ta')inp=`<textarea id="${id}">${esc(v)}</textarea>`;
+    else if(f.t==='checks')inp=`<div class="ck" id="${id}">${f.o.map(o=>`<label><input type="checkbox" value="${esc(o)}"${(Array.isArray(v)?v:[]).includes(o)?' checked':''}>${esc(o)}</label>`).join('')}</div>`;
+    else{const lst=typeof f.list==='function'?f.list(p):f.list;
+      inp=`<input id="${id}" type="${f.t||'text'}" ${f.t==='number'?'step="any" inputmode="decimal"':''} value="${esc(v)}"${lst&&lst.length?` list="dl_${f.k}"`:''}>${lst&&lst.length?`<datalist id="dl_${f.k}">${lst.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:''}`}
+    const hint=f.hint?(f.hint.eq&&spOk('eq',p)?f.hint.eq:f.hint.rum&&spOk('rum',p)?f.hint.rum:''):'';
+    return `<div class="fld${f.h?' h':''}"><label for="${id}">${f.l}${f.req?' *':''}${hint?` <span class="meta">${hint}</span>`:''}${f.t==='ta'&&dict?`<button type="button" class="mic" data-mic="${id}">Ditar</button>`:''}</label>${inp}</div>`};
+  $('card').innerHTML=`<h2>${esc(titulo)}</h2><form id="frm" novalidate><div class="f">${fs.map(fld).join('')}</div><div class="acts">${onDel?'<button type="button" class="btn ghost del" id="del">Excluir</button>':''}<button type="button" class="btn" id="cancel">Cancelar</button><button class="btn pri">Salvar</button></div></form>`;
+  $('sheet').classList.add('on');$('card').scrollTop=0;
+  const ler=()=>{const o={...val};for(const f of fs){if(!f.k)continue;const el=$('f_'+f.k);o[f.k]=f.t==='checks'?[...el.querySelectorAll('input:checked')].map(c=>c.value):el.value.trim()}return o};
+  for(const f of fs.filter(f=>f.re))$('f_'+f.k).onchange=()=>{const o=ler();abrirForm(titulo,todos,o,{...p,...o},onSave,onDel)};
+  $('cancel').onclick=fechar;
+  if(onDel){let arm=0;$('del').onclick=()=>{if(!arm){arm=1;$('del').textContent='Toque de novo para excluir';return}onDel();fechar()}}
+  $('frm').onsubmit=e=>{e.preventDefault();const o=ler();
+    const falta=fs.find(f=>f.req&&!o[f.k]);if(falta){toast('Preencha: '+falta.l);$('f_'+falta.k).focus();return}
+    onSave(o);fechar();toast('Salvo')};
+}
+function fechar(){pararMic();$('sheet').classList.remove('on');render()}
+function pararMic(){if(dict&&micBtn)dict.stop().catch(()=>{})}
+
+function editarItem(p,key,id){
+  const m=MODS.find(x=>x.key===key),lista=p[key]||[],dk=m.dateK||'data';
+  const item=id?lista.find(x=>x.id===id):{id:uid(),[dk]:hoje(),...(m.def?m.def(p):{})};if(!item)return;
+  if(!id&&key==='consultas'){const u=ult(p)[0];if(u&&u.retorno&&u.retorno<=hoje())item.tipo='Retorno'}
+  abrirForm((id?'Editar · ':'')+(id?m.tab:m.add),m.f,item,p,o=>{if(m.save)m.save(o,p);salvar({...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]})},
+    id?()=>salvar({...p,[key]:lista.filter(x=>x.id!==id)}):null);
+}
+function textoFicha(p){
+  const L=[`SAMVET · FICHA CLÍNICA: ${p.nome}`];
+  for(const f of campos(F_PAC,p))if(f.k&&!vazio(p[f.k]))L.push(`${f.l}: ${f.k==='status'?stLabel(p.status):fmt(f,p[f.k])}`);
+  for(const m of MODS.filter(m=>modVis(m,p))){const l=ord(p[m.key],m.dateK||'data');if(!l.length)continue;L.push('',m.titulo.toUpperCase());
+    for(const it of l){L.push('— '+br(it[m.dateK||'data'])+' · '+(it[m.titleK]||''));for(const f of campos(m.f,p))if(f.k&&f.k!==(m.dateK||'data')&&f.k!==m.titleK&&!vazio(it[f.k]))L.push(`${f.l}: ${fmt(f,it[f.k])}`);if(it.aplic&&it.aplic.length)L.push('Aplicações: '+it.aplic.map(hora).join(', '))}}
+  return L.join('\n');
+}
+const novoPaciente=()=>{const b={especie:'Equino',sexo:'Macho',castrado:'Não',status:'tratamento'};abrirForm('Novo paciente',F_PAC,b,b,o=>{o.id=uid();o.criado=Date.now();salvar(o);S.sel=o.id;S.tab='resumo'})};
+
+$('novo').onclick=novoPaciente;
+$('q').oninput=e=>{S.q=e.target.value;renderLista()};
+$('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))fechar()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sheet').classList.contains('on'))fechar()});
+document.addEventListener('change',e=>{if(e.target.id==='st'){const p=cur();if(p){salvar({...p,status:e.target.value});toast('Status atualizado')}}});
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;const d=t.dataset,p=cur();
+  if(d.mic){if(micBtn===t){pararMic();return}pararMic();micBtn=t;micTa=$(d.mic);
+    dict.start().catch(err=>{toast(err&&err.code==='not_granted'?'Microfone não autorizado.':'Ditado indisponível.');micBtn=null});return}
+  if(d.vis){S.vis=d.vis;render()}
+  else if(d.f){S.filtro=d.f;renderLista()}
+  else if(d.id){S.sel=d.id;S.tab=d.gotab||'resumo';render();scrollTo(0,0)}
+  else if('novo' in d)novoPaciente();
+  else if('back' in d){S.sel=null;render()}
+  else if(d.tab){S.tab=d.tab;render()}
+  else if(!p)return;
+  else if(d.add)editarItem(p,d.add,null);
+  else if(d.edit)editarItem(p,d.edit,d.iid);
+  else if(d.aplic){salvar({...p,meds:p.meds.map(m=>m.id===d.aplic?{...m,aplic:[...(m.aplic||[]),new Date().toISOString()]}:m)});toast('Aplicação registrada')}
+  else if(d.desfaz){salvar({...p,meds:p.meds.map(m=>m.id===d.desfaz?{...m,aplic:(m.aplic||[]).slice(0,-1)}:m)})}
+  else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>excluir(p));
+  else if('copy' in d)navigator.clipboard.writeText(textoFicha(p)).then(()=>toast('Ficha copiada')).catch(()=>toast('Não foi possível copiar'));
+});
+
+render();
+(async()=>{
+  const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
+  [db,dict]=await Promise.all([use('db'),use('dictation')]);
+  if(dict){
+    dict.onState(({state})=>{if(micBtn){micBtn.classList.toggle('on',state==='listening');micBtn.textContent=state==='listening'?'Parar':'Ditar';if(state==='idle')micBtn=null}});
+    dict.onFinal(({text})=>{if(micTa&&text)micTa.value=(micTa.value?micTa.value.replace(/\s*$/,' '):'')+text});
+  }
+  if(!db){try{S.pac=JSON.parse(localStorage.getItem('prontuario-vet')||'[]')}catch(e){S.pac=[]}note('Modo local: os dados ficam só neste navegador. Abra pelo link do Claude, com login, para salvar na nuvem.');render();return}
+  note('Carregando pacientes…');
+  timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
+  db.collection('pacientes').onSnapshot(snap=>{
+    if(!snap.metadata.fromCache){clearTimeout(timer);note('')}
+    S.pac=snap.docs.map(d=>({...d.data(),id:d.id}));
+    if(S.sel&&!cur())S.sel=null;
+    if(!$('sheet').classList.contains('on'))render();
+  },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
+  setInterval(()=>{if(!$('sheet').classList.contains('on'))render()},60000);
+})();
+}
+</script>
+</body>
+</html>
