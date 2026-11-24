@@ -23,6 +23,7 @@
  --s-tratamento:#f0a75a;--s-internado:#ff8086;--s-acompanhamento:#8db6ff;--s-alta:#78d49c;--s-obito:#b3aaa1;--warn:#ff8086;--okc:#78d49c;
  --note:#3a2a17;--shadow:rgb(0 0 0/.4);color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);overflow-x:clip}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
 h1,h2,h3{font-family:var(--display);line-height:1.05;margin:0;text-wrap:balance}
@@ -181,7 +182,16 @@ p.info{margin:0 0 12px}
 .dente{width:27px;height:34px;border:1px solid var(--line);border-radius:8px 8px 12px 12px;background:var(--card);font-size:11px;font-weight:700;padding:0;font-variant-numeric:tabular-nums}
 .dente[aria-pressed=true]{background:var(--act);color:var(--actink);border-color:transparent}
 .hb:hover path{opacity:1}
-@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+.rede{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 24px));display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:16px;padding:14px 16px;z-index:19;box-shadow:0 8px 28px var(--shadow)}
+.rede{flex-wrap:wrap}.rede .rtxt{flex:1 1 220px}.rede p{margin:3px 0 0;font-size:14px;line-height:1.4}.rede .rq{opacity:.8;font-size:13px}
+.rede .btn{flex:none;background:var(--bg);color:var(--ink);border-color:transparent}
+.pulso{width:12px;height:12px;border-radius:50%;background:var(--s-tratamento);flex:none;margin-top:5px;animation:pulso 1.4s ease-in-out infinite}.pulso.ok{background:var(--okc)}
+@keyframes pulso{50%{opacity:.25}}
+body.semrede .toast{bottom:auto;top:calc(118px + env(safe-area-inset-top,0px))}
+body.semrede .wrap{padding-bottom:200px}
+.sheet.on~.rede{top:calc(6px + env(safe-area-inset-top,0px));bottom:auto;z-index:21;padding:6px 14px;align-items:center;width:auto;max-width:calc(100% - 24px)}
+.sheet.on~.rede p,.sheet.on~.rede .btn{display:none}.sheet.on~.rede .pulso{margin-top:0}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}.pulso{animation:none}}
 </style>
 
 <header class="top"><div class="topin">
@@ -199,6 +209,7 @@ p.info{margin:0 0 12px}
 </main>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="card" id="card"></div></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="rede" id="rede" role="alert" hidden></div>
 <input type="file" id="fileup" hidden accept="image/*,application/pdf">
 <input type="file" id="fileimp" hidden accept="application/json,.json">
 
@@ -311,7 +322,7 @@ const MODS=[
   hint:'Toque em "Registrar aplicação" a cada dose. O app avisa quando a próxima atrasar e mostra tudo no quadro de Internação.',
   def:()=>({inicio:hoje(),via:'IV',freq:'12'}),
   f:[{k:'med',l:'Medicamento',req:1,listEst:1},{k:'dose',l:'Dose (mg/kg, mL…)',h:1},{k:'via',l:'Via',t:'select',o:['IV','IM','SC','VO','Tópica','Intra-articular','Nebulização','Retal','Intrauterina','Oftálmica'],h:1},
-   {k:'freq',l:'A cada (horas)',t:'number',h:1},{k:'inicio',l:'Início',t:'date',h:1},{k:'fim',l:'Término',t:'date',h:1},{k:'carencia',l:'Carência (dias, abate/leite/competição)',t:'number',h:1},{k:'consumo',l:'Baixa no estoque por dose',t:'number',h:1,hint2:'unidade do estoque'},{k:'obs',l:'Observações',t:'ta'},
+   {k:'freq',l:'A cada (horas)',t:'number',h:1},{k:'inicio',l:'Início',t:'date',h:1},{k:'fim',l:'Término',t:'date',h:1},{k:'carencia',l:'Carência (dias, abate/leite/competição)',t:'number',h:1},{sec:'Estoque'},{k:'estId',l:'Produto do estoque (para dar baixa)',t:'select',o:()=>estOpts()},{k:'consumo',l:'Quantidade por dose',t:'number',h:1,hint2:'na unidade do produto'},{k:'obs',l:'Observações',t:'ta'},
    {sec:'Valor'},{k:'valor',l:'Valor do medicamento (R$)',t:'number',h:1,hint2:'fornecimento'},{k:'valorAplic',l:'Valor por aplicação (R$)',t:'number',h:1,hint2:'soma a cada dose'}]},
  {key:'agend',tab:'Agendamentos',titulo:'Agendamentos',add:'Agendar',titleK:'tipo',dateK:'data',
   hint:'Horários marcados aparecem na Agenda com botão de lembrete por WhatsApp.',
@@ -352,7 +363,7 @@ const MODS=[
   def:()=>({tipo:'Vacina',consumo:'1'}),
   f:[{k:'tipo',l:'Tipo',t:'select',o:['Vacina','Vermífugo','Exame de fezes (OPG)'],h:1},{k:'nome',l:'Produto / princípio ativo',req:1,h:1,list:p=>EQ.includes(p.especie)?VAC_EQ:RUM.includes(p.especie)?VAC_BOV:[]},
    {k:'data',l:'Data',t:'date',h:1},{k:'prox',l:'Próxima dose',t:'date',h:1},
-   {k:'opg',l:'OPG (ovos por grama)',t:'number',h:1},{k:'lote',l:'Lote / fabricante',h:1},{k:'consumo',l:'Doses a baixar do estoque',t:'number',h:1},{k:'obs',l:'Observações',t:'ta'}]},
+   {k:'opg',l:'OPG (ovos por grama)',t:'number',h:1},{k:'lote',l:'Lote / fabricante',h:1},{sec:'Estoque'},{k:'estId',l:'Produto do estoque (para dar baixa)',t:'select',o:()=>estOpts()},{k:'consumo',l:'Doses a baixar',t:'number',h:1},{k:'obs',l:'Observações',t:'ta'}]},
  {key:'oficiais',priceK:'tipo',tab:'Exames oficiais',titulo:'Exames oficiais e GTA',add:'Novo exame',titleK:'tipo',sp:'gr',
   hint:'AIE e mormo valem 60 dias para trânsito na maioria dos estados; passaporte equestre pode ter outro prazo. Ajuste a validade conforme seu estado.',
   def:p=>({tipo:EQ.includes(p.especie)?'AIE (Anemia Infecciosa Equina)':'Brucelose',resultado:'Aguardando',val:'60'}),
@@ -435,7 +446,8 @@ const cliDe=p=>p&&p.clienteId?S.cli.find(c=>c.id===p.clienteId):null;
 const nomeCli=p=>(cliDe(p)||{}).nome||p.tutor||'—';
 const pacsDoCli=c=>S.pac.filter(p=>p.clienteId===c.id||(!p.clienteId&&String(p.tutor||'').trim().toLowerCase()===String(c.nome||'').trim().toLowerCase()));
 const estPorNome=n=>S.est.find(x=>String(x.nome||'').trim().toLowerCase()===String(n||'').trim().toLowerCase());
-function moverEstoque(nome,q,motivo){const it=estPorNome(nome);if(!it||!q)return false;const mov=[...(it.mov||[]),{d:new Date().toISOString(),q:-q,motivo,por:meId()}].slice(-300);salvarEst({...it,qtd:String(Math.max(0,num(it.qtd)-q)),mov});return true}
+const estOpts=()=>[['',S.est.length?'— não dar baixa —':'— estoque vazio: cadastre em Estoque —'],...[...S.est].sort((a,b)=>String(a.nome).localeCompare(String(b.nome))).map(x=>[x.id,`${x.nome} · ${fx(num(x.qtd),2)} ${x.un||''} em estoque${x.lote?' · lote '+x.lote:''}`])];
+function moverEstoque(ref,q,motivo){const it=S.est.find(x=>x.id===ref)||estPorNome(ref);if(!it||!q)return false;const mov=[...(it.mov||[]),{d:new Date().toISOString(),q:-q,motivo,por:meId()}].slice(-300);salvarEst({...it,qtd:String(Math.max(0,num(it.qtd)-q)),mov});return true}
 const meId=()=>me&&me.id||'';
 function vincCli(p){const c=cliDe(p);if(!c)return p;const o={...p,tutor:c.nome};if(!o.tel)o.tel=c.tel||'';if(!o.cpf)o.cpf=c.doc||'';if(!o.email)o.email=c.email||'';if(!o.prop&&c.tipo&&c.tipo!=='Pessoa física')o.prop=c.nome;return o}
 const salvarCli=c=>gravar('clientes',c,S.cli);
@@ -497,16 +509,22 @@ const COLS={pacientes:'pac',estoque:'est',clientes:'cli'};
 const lsKey=col=>col==='pacientes'?'prontuario-vet':'samvet-'+col;
 const PERM=['invalid_argument','quota_exceeded','revoked','not_granted','permission_denied'];
 function pendentes(){return LS.get('samvet-pendentes',[])}
-function enfileirar(op){const l=pendentes().filter(x=>!(x.col===op.col&&x.id===op.id));l.push(op);LS.set('samvet-pendentes',l);avisoPend()}
-function avisoPend(){const n=pendentes().length;if(n)note(`Sem conexão: ${n} alteração(ões) guardada(s) neste aparelho. Elas são enviadas sozinhas quando a internet voltar.`,'<button class="btn sm" data-reenviar>Tentar agora</button>');else if(db&&$('note').textContent.startsWith('Sem conexão'))note('')}
+function enfileirar(op){semRede=true;const l=pendentes().filter(x=>!(x.col===op.col&&x.id===op.id));l.push(op);LS.set('samvet-pendentes',l);avisoPend()}
+let semRede=false,balaoVisto=false;
+function avisoPend(){
+  const n=pendentes().length,off=!!db&&(!navigator.onLine||semRede),el=$('rede');
+  if(!db||(!off&&!n)){el.hidden=true;document.body.classList.remove('semrede');if(balaoVisto){balaoVisto=false;toast('Internet de volta. Tudo foi enviado.')}return}
+  balaoVisto=true;el.hidden=false;document.body.classList.add('semrede');
+  el.innerHTML=`<span class="pulso${off?'':' ok'}" aria-hidden="true"></span><div class="rtxt"><b>${off?'Você está sem rede, sem sinal':'Internet de volta. Enviando…'}</b><p>${off?'Pode continuar lançando. Tudo fica guardado e será enviado quando a internet voltar.':'Enviando o que ficou guardado.'}</p><p><b>Não feche o SAMVET.</b> Deixe aberto em segundo plano até este aviso sumir.</p>${n?`<p class="rq">${n} alteração(ões) aguardando envio</p>`:''}</div>${off?'<button class="btn sm" data-reenviar>Tentar agora</button>':''}`;
+}
 let enviando=false;
 async function reenviar(){
-  if(!db||enviando)return;enviando=true;
+  if(!db||enviando)return;if(!navigator.onLine){avisoPend();return}enviando=true;let falhou=false;
   try{for(const op of pendentes()){
     try{if(op.del)await db.collection(op.col).doc(op.id).delete();else await db.collection(op.col).doc(op.id).set(op.body);
       LS.set('samvet-pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id&&x.t===op.t)))}
-    catch(e){if(e&&PERM.includes(e.code)){LS.set('samvet-pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id)));toast(errMsg(e))}else break}
-  }}finally{enviando=false;avisoPend()}
+    catch(e){if(e&&PERM.includes(e.code)){LS.set('samvet-pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id)));toast(errMsg(e))}else{falhou=true;break}}
+  }}finally{enviando=false;semRede=falhou;avisoPend()}
 }
 function enviar(col,id,body,del){
   const k=col+'/'+id,op={col,id,body,del:!!del,t:Date.now()};
@@ -652,6 +670,7 @@ function renderFerr(){
     <div class="fld h"><label for="lt_prop">Propriedade</label><select id="lt_prop"><option value="">Todas</option>${[...new Set(S.pac.map(p=>p.prop).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
     <div class="fld h"><label for="lt_tipo">Tipo</label><select id="lt_tipo"><option>Vacina</option><option>Vermífugo</option><option>Exame de fezes (OPG)</option></select></div>
     <div class="fld h"><label for="lt_nome">Produto</label><input id="lt_nome" list="dl_lt"><datalist id="dl_lt">${[...VAC_EQ,...VAC_BOV].map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div>
+    <div class="fld h"><label for="lt_est">Produto do estoque (baixa de 1 dose por animal)</label><select id="lt_est">${estOpts().map(([k,l])=>`<option value="${esc(k)}">${esc(l)}</option>`).join('')}</select></div>
     <div class="fld h"><label for="lt_lote">Lote / fabricante</label><input id="lt_lote"></div>
     <div class="fld h"><label for="lt_data">Data</label><input id="lt_data" type="date" value="${hoje()}"></div>
     <div class="fld h"><label for="lt_prox">Próxima dose</label><input id="lt_prox" type="date"></div>
@@ -660,6 +679,8 @@ function renderFerr(){
    </div><div class="acts"><button class="btn pri" data-lote>Registrar em lote</button></div></div>`;
   const anim=()=>{const pr=$('lt_prop').value;$('lt_anim').innerHTML=S.pac.filter(p=>ativo(p)&&(!pr||p.prop===pr)).map(p=>`<label><input type="checkbox" value="${esc(p.id)}" checked>${esc(p.nome)}</label>`).join('')||'<span class="meta">Nenhum animal ativo nessa propriedade.</span>'};
   $('lt_prop').onchange=anim;anim();
+  $('lt_est').onchange=()=>{const it=S.est.find(x=>x.id===$('lt_est').value);if(it){if(!$('lt_nome').value.trim())$('lt_nome').value=it.nome;if(!$('lt_lote').value.trim()&&it.lote)$('lt_lote').value=it.lote}};
+  $('lt_nome').addEventListener('change',()=>{const it=estPorNome($('lt_nome').value);if(it&&!$('lt_est').value)$('lt_est').value=it.id});
   $('lt_tipo').onchange=()=>{const v=preco('vacinas',$('lt_tipo').value);if(v)$('lt_valor').value=v};
   const calc=()=>{
     const pe=num($('c_peso').value),mg=pe*num($('c_dose').value),c=num($('c_conc').value);
@@ -852,7 +873,7 @@ function confirmarProtocolo(p,pr){
   $('papl').onclick=()=>{
     const sel=[...$('card').querySelectorAll('input:checked')].map(x=>pr.itens[+x.value]);const q={...p},h=hoje(),por=meId();let est=0;
     for(const it of sel){const v=valorProt(it);
-      if(it.t==='Medicação')q.meds=[...(q.meds||[]),{id:uid(),med:it.nome,dose:it.dose||'',via:it.via||'IV',freq:it.freq||'24',inicio:h,fim:it.dias?addD(h,+it.dias-1):'',valorAplic:v?String(v):'',consumo:estPorNome(it.nome)?'1':'',obs:'Protocolo: '+pr.nome,por}];
+      if(it.t==='Medicação')q.meds=[...(q.meds||[]),{id:uid(),med:it.nome,dose:it.dose||'',via:it.via||'IV',freq:it.freq||'24',inicio:h,fim:it.dias?addD(h,+it.dias-1):'',valorAplic:v?String(v):'',estId:(estPorNome(it.nome)||{}).id||'',consumo:estPorNome(it.nome)?'1':'',obs:'Protocolo: '+pr.nome,por}];
       else if(it.t==='Vacina'||it.t==='Vermífugo'){q.vacinas=[...(q.vacinas||[]),{id:uid(),tipo:it.t,nome:it.nome,data:h,valor:v?String(v):'',consumo:'1',obs:'Protocolo: '+pr.nome+(it.dose?' · '+it.dose:''),por}];if(moverEstoque(it.nome,1,'Protocolo · '+p.nome))est++}
       else if(it.t==='Exame')q.exames=[...(q.exames||[]),{id:uid(),nome:it.nome,data:h,valor:v?String(v):'',por}];
       else q.fin=[...(q.fin||[]),{id:uid(),data:h,tipo:'Serviço',desc:it.nome,qtd:'1',unit:String(v),total:String(v),sit:'Pendente',pago:'',por}];
@@ -1059,12 +1080,16 @@ function editarItem(p,key,id){
   }
   abrirForm((id?'Editar · ':'')+(id?m.tab:m.add)+' · '+p.nome,m.f,item,p,o=>{
     if(!o.por)o.por=meId();if(id)o.editPor=meId();
-    if(!id&&key==='vacinas'&&num(o.consumo)&&moverEstoque(o.nome,num(o.consumo),'Sanidade · '+p.nome))setTimeout(()=>toast('Salvo · baixa no estoque: '+o.nome),50);
+    if(!id&&key==='vacinas'&&num(o.consumo)&&moverEstoque(o.estId||o.nome,num(o.consumo),'Sanidade · '+p.nome))setTimeout(()=>toast('Salvo · baixa no estoque: '+((S.est.find(x=>x.id===o.estId)||{}).nome||o.nome)),50);
     if(m.save)m.save(o,p);
     salvar({...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]});if(valorItem(m,o)>0&&!id)toast('Salvo · '+R$(valorItem(m,o))+' lançado no Financeiro')},
     id?()=>salvar({...p,[key]:lista.filter(x=>x.id!==id)}):null);
   if(key==='fin'&&$('f_desc'))$('f_desc').addEventListener('change',()=>{const x=(S.cfg.servicos||[]).find(y=>y.nome===$('f_desc').value.trim());if(x){if(x.valor)$('f_unit').value=x.valor;if(x.tipo&&$('f_tipo'))$('f_tipo').value=x.tipo}});
-  if(key==='meds'&&$('f_med'))$('f_med').addEventListener('change',()=>{const it=estPorNome($('f_med').value);if(it&&!$('f_consumo').value)$('f_consumo').value='1';if(it&&num(it.preco)&&!$('f_valor').value&&$('f_valor'))toast('No estoque: '+it.nome+' · '+fx(num(it.qtd),2)+' '+(it.un||''))});
+  const nf=key==='meds'?'f_med':key==='vacinas'?'f_nome':null;
+  if(nf&&$(nf)&&$('f_estId')){
+    $(nf).addEventListener('change',()=>{const it=estPorNome($(nf).value);if(it&&!$('f_estId').value){$('f_estId').value=it.id;if(!$('f_consumo').value)$('f_consumo').value='1';toast('Produto do estoque selecionado: '+it.nome)}});
+    $('f_estId').addEventListener('change',()=>{const it=S.est.find(x=>x.id===$('f_estId').value);if(!it)return;if(!$(nf).value.trim())$(nf).value=it.nome;if(!$('f_consumo').value)$('f_consumo').value='1'});
+  }
   const sel=m.priceK&&$('f_'+m.priceK),fv=$('f_valor');
   if(sel&&fv){let last=fv.value;sel.addEventListener('change',()=>{const np=preco(key,sel.value);if(np&&(!fv.value||fv.value===last)){fv.value=String(np);last=fv.value}
     if(key==='consultas'&&sel.value==='Atendimento a campo'&&p.km&&$('f_kmrod')&&!$('f_kmrod').value)$('f_kmrod').value=String(num(p.km)*2)})}
@@ -1079,7 +1104,7 @@ function textoFicha(p){
 }
 function copiar(t,ok){navigator.clipboard.writeText(t).then(()=>toast(ok)).catch(()=>toast('Não foi possível copiar. Selecione o texto e copie manualmente.'))}
 function baixar(nome,data,tipo){if(!dl){toast('Download indisponível aqui.');return}dl.save({filename:nome,data:new Blob([data],{type:tipo})}).then(r=>{if(r&&r.status==='saved')toast('Arquivo salvo')}).catch(e=>{if(e&&e.code!=='cancelled'&&e.code!=='declined')toast('Não foi possível baixar.')})}
-function aplicar(q,mid){const m=(q.meds||[]).find(x=>x.id===mid);if(!m)return;salvar({...q,meds:q.meds.map(x=>x.id===mid?{...x,aplic:[...(x.aplic||[]),new Date().toISOString()],aplicPor:[...(x.aplicPor||[]),meId()]}:x)});const b=num(m.consumo)&&moverEstoque(m.med,num(m.consumo),'Aplicação · '+q.nome);toast('Aplicação registrada'+(b?' · baixa no estoque':''))}
+function aplicar(q,mid){const m=(q.meds||[]).find(x=>x.id===mid);if(!m)return;salvar({...q,meds:q.meds.map(x=>x.id===mid?{...x,aplic:[...(x.aplic||[]),new Date().toISOString()],aplicPor:[...(x.aplicPor||[]),meId()]}:x)});const b=num(m.consumo)&&moverEstoque(m.estId||m.med,num(m.consumo),'Aplicação · '+q.nome);toast('Aplicação registrada'+(b?' · baixa no estoque':''))}
 const novoPaciente=(pre={})=>{const b={especie:'Equino',sexo:'Macho',castrado:'Não',status:'tratamento',...pre};abrirForm('Novo paciente',F_PAC,b,b,o=>{o.id=uid();o.criado=Date.now();salvar(o);S.sel=o.id;S.tab='resumo'})};
 function escolherPaciente(titulo,cb){
   const ps=S.pac.filter(ativo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
@@ -1146,7 +1171,8 @@ document.addEventListener('click',e=>{
   else if('lote' in d){const ids=[...document.querySelectorAll('#lt_anim input:checked')].map(i=>i.value),nome=$('lt_nome').value.trim();
     if(!nome){toast('Preencha o produto');$('lt_nome').focus();return}if(!ids.length){toast('Marque ao menos um animal');return}
     const val=num($('lt_valor').value),reg={tipo:$('lt_tipo').value,nome,lote:$('lt_lote').value.trim(),data:$('lt_data').value||hoje(),prox:$('lt_prox').value,obs:'Atendimento em lote',valor:val?String(val):''};
-    for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;salvar({...q,vacinas:[...(q.vacinas||[]),{...reg,id:uid(),consumo:'1',por:meId()}]});moverEstoque(nome,1,'Lote · '+q.nome)}
+    const eid=$('lt_est').value;
+    for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;salvar({...q,vacinas:[...(q.vacinas||[]),{...reg,id:uid(),estId:eid,consumo:eid?'1':'',por:meId()}]});if(eid)moverEstoque(eid,1,'Lote · '+q.nome)}
     toast(`Registrado em ${ids.length} animal(is)`)}
   else if(d.rmsv){salvarCfg({...S.cfg,servicos:(S.cfg.servicos||[]).filter(x=>x.id!==d.rmsv)},'Serviço removido')}
   else if(d.rmexame){const pr={...(S.cfg.precos||{})};delete pr[precoK('exames',d.rmexame)];salvarCfg({...S.cfg,precos:pr,examesExtra:(S.cfg.examesExtra||[]).filter(x=>x!==d.rmexame)},'Exame removido')}
@@ -1162,7 +1188,7 @@ document.addEventListener('click',e=>{
   else if(d.aplic)aplicar(p,d.aplic);
   else if('protapl' in d)escolherProtocolo(p);
   else if(d.anexoedit){const a=(p.anexos||[]).find(x=>x.id===d.anexoedit);if(a)abrirForm('Legenda do anexo',[{k:'desc',l:'Descrição'},{k:'regiao',l:'Região do corpo',h:1,list:[...REG_CORPO,...MEMB.flatMap(mb=>REG_MEMBRO.map(r=>mb+' · '+r))]},{k:'data',l:'Data',t:'date',h:1}],a,p,o=>salvar({...p,anexos:p.anexos.map(x=>x.id===a.id?o:x)}))}
-  else if(d.desfaz){const m=p.meds.find(x=>x.id===d.desfaz);salvar({...p,meds:p.meds.map(x=>x.id===d.desfaz?{...x,aplic:(x.aplic||[]).slice(0,-1)}:x)});if(m&&num(m.consumo)&&moverEstoque(m.med,-num(m.consumo),'Estorno · '+p.nome))toast('Aplicação desfeita · estoque devolvido')}
+  else if(d.desfaz){const m=p.meds.find(x=>x.id===d.desfaz);salvar({...p,meds:p.meds.map(x=>x.id===d.desfaz?{...x,aplic:(x.aplic||[]).slice(0,-1)}:x)});if(m&&num(m.consumo)&&moverEstoque(m.estId||m.med,-num(m.consumo),'Estorno · '+p.nome))toast('Aplicação desfeita · estoque devolvido')}
   else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>apagar('pacientes',p.id));
   else if('copy' in d)copiar(textoFicha(p),'Ficha copiada');
   else if('baixarficha' in d)baixar(`Ficha ${p.nome}.txt`.replace(/[\/\\:*?"<>|]/g,'-'),textoFicha(p),'text/plain');
@@ -1205,7 +1231,10 @@ render();
   db.collection('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set('samvet-cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
   db.doc('config/clinica').onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set('samvet-cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))render()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render();if(pendentes().length&&navigator.onLine)reenviar()},60000);
-  addEventListener('online',()=>reenviar());addEventListener('offline',()=>note('Sem internet. Pode continuar lançando: as alterações ficam guardadas neste aparelho e são enviadas quando a conexão voltar.'));
+  addEventListener('online',()=>{avisoPend();reenviar()});addEventListener('offline',avisoPend);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&pendentes().length)reenviar()});
+  addEventListener('beforeunload',e=>{if(pendentes().length){e.preventDefault();e.returnValue=''}});
+  setInterval(()=>{if(pendentes().length&&navigator.onLine)reenviar()},15000);avisoPend();
   reenviar();
 })();
 }
