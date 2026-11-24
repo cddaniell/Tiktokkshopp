@@ -200,6 +200,14 @@ body.semrede .wrap{padding-bottom:200px}
 .sheet.on~.rede{top:calc(6px + env(safe-area-inset-top,0px));bottom:auto;z-index:21;padding:6px 14px;align-items:center;width:auto;max-width:calc(100% - 24px)}
 .sheet.on~.rede p,.sheet.on~.rede .btn{display:none}.sheet.on~.rede .pulso{margin-top:0}
 @media(max-width:370px){#novo .nl{display:none}.top h1{font-size:20px}}
+.tnum{font-variant-numeric:tabular-nums}
+.ohead,.oline{display:grid;grid-template-columns:minmax(0,1fr) 64px 100px 96px 32px;gap:6px;align-items:center}
+.ohead{font-size:12px;color:var(--mute);font-weight:700;margin-bottom:4px}.ohead span:nth-child(n+2){text-align:right}
+.oline{margin-bottom:6px}.oline input{min-height:40px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);width:100%}.oline input[type=number]{text-align:right}
+.otot{text-align:right;font-weight:700;font-size:14px}
+@media(max-width:600px){.ohead{display:none}.oline{grid-template-columns:1fr 1fr 32px;padding:8px;border:1px solid var(--line);border-radius:10px}.oline [data-f=desc]{grid-column:1/-1}.oline .otot{grid-column:1/3;text-align:left}}
+.ototais{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel);display:grid;gap:4px;max-width:420px;margin-left:auto}.ototais div{display:flex;justify-content:space-between;gap:12px}.ototais .otg{border-top:2px solid var(--line);padding-top:6px;font-size:18px}.ototais .otg b{color:var(--brand)}
+.btn.ok{color:var(--okc)}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}.pulso{animation:none}}
 </style>
 
@@ -260,7 +268,7 @@ const VAC_EQ=['Influenza equina','Encefalomielite (leste/oeste)','Tétano','Raiv
 const VAC_BOV=['Brucelose (B19 / RB51)','Raiva','Clostridioses','Leptospirose','IBR / BVD','Botulismo'];
 const FORMAS=['','Pix','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência'];
 
-const S={pac:[],est:[],cli:[],cliSel:null,cfg:{},sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac',finF:'pend'};
+const S={pac:[],est:[],cli:[],orc:[],cliSel:null,cfg:{},sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac',finF:'pend'};
 let BASE='',PFX='samvet-',isDono=false,db=null,dict=null,user=null,assets=null,dl=null,me=null,micBtn=null,micTa=null,timer=null;
 const queue={};
 
@@ -515,7 +523,7 @@ function alertas(p){
 /* ---------- gravação ---------- */
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const errMsg=e=>e&&e.code==='invalid_argument'?'Seu acesso não permite salvar. Peça ao dono do SAMVET para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
-const COLS={pacientes:'pac',estoque:'est',clientes:'cli'};
+const COLS={pacientes:'pac',estoque:'est',clientes:'cli',orcamentos:'orc'};
 const colRef=c=>db.collection(BASE+'/'+c);
 const cfgRef=()=>db.doc(BASE+'/config/clinica');
 const lsKey=col=>col==='pacientes'?'prontuario-vet':'samvet-'+col;
@@ -562,7 +570,7 @@ const salvarEst=it=>gravar('estoque',it,S.est);
 function salvarCfg(c,msg='Dados da clínica salvos',quiet){S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}LS.set(PFX+'cache-config',c);cfgRef().set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
 
 /* ---------- navegação ---------- */
-const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['clientes','Clientes'],['caixa','Caixa'],['relat','Relatórios'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
+const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['clientes','Clientes'],['caixa','Caixa'],['orc','Orçamentos'],['relat','Relatórios'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
 function renderNav(){
   const n={agenda:S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=0&&x.tab!=='fin').length,
     intern:S.pac.filter(p=>p.status==='internado').length,
@@ -573,7 +581,7 @@ function render(){
   renderNav();renderWho();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
   if(p)return renderFicha(p);
-  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,clientes:renderClientes,relat:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta})[S.vis]();
+  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,orc:renderOrcamentos,clientes:renderClientes,relat:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta})[S.vis]();
 }
 const fotoOk=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
 const avatar=p=>fotoOk(p.foto)?`<span class="av"><img src="${p.foto}" alt="Foto de ${esc(p.nome)}"></span>`:`<span class="av">${esc((p.especie||'?').slice(0,2))}</span>`;
@@ -793,9 +801,10 @@ function renderCliente(c){
   const its=itensFatura(c,mes,ant),tot=its.reduce((s,x)=>s+num(x.f.total),0),ab=its.reduce((s,x)=>s+saldo(x.f),0);
   $('view').innerHTML=`<button class="btn ghost sm" data-clivolta>← Clientes</button>
   <div class="head"><span class="av">${esc(String(c.nome).slice(0,2).toUpperCase())}</span><div class="grow"><h2>${esc(c.nome)}</h2><div class="meta">${esc([c.tipo,c.doc,c.tel,c.email,c.cidade].filter(Boolean).join(' · '))}${c.contato?'<br>Contato: '+esc(c.contato):''}</div></div>
-  <div class="btns"><button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button>${waLink(c.tel,`Olá, ${c.contato||c.nome}! Aqui é da ${S.cfg.clinica||'SAMVET'}.`)}</div></div>
+  <div class="btns"><button class="btn sm" data-orccli="${esc(c.id)}">Novo orçamento</button><button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button>${waLink(c.tel,`Olá, ${c.contato||c.nome}! Aqui é da ${S.cfg.clinica||'SAMVET'}.`)}</div></div>
   <div class="box"><div class="bar"><h3>Animais (${ps.length})</h3><button class="btn sm" data-clipac="${esc(c.id)}">+ Animal deste cliente</button></div>
   ${ps.length?ps.map(p=>`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}</h3><span class="meta">${esc([p.especie,p.raca,p.lote].filter(Boolean).join(' · '))}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`).join(''):'<p class="meta">Nenhum animal vinculado.</p>'}</div>
+  ${(()=>{const os=S.orc.filter(o=>o.clienteId===c.id).sort((a,b)=>String(b.numero).localeCompare(String(a.numero)));return os.length?`<div class="box"><h3>Orçamentos (${os.length})</h3>${os.map(o=>`<button class="row" data-orc="${esc(o.id)}"><span class="av">Or</span><span><h3>${esc(o.numero)}</h3><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''}</span></span><span class="end"><b class="tnum">${R$(orcTotais(o).total)}</b><br><span class="pill" style="--c:var(--s-${ORC_COR[orcStatus(o)]})">${orcStatus(o)}</span></span></button>`).join('')}</div>`:''})()}
   <div class="box"><div class="bar"><h3>Fatura</h3><div class="btns"><label class="meta" for="fat_mes">Mês</label><input id="fat_mes" type="month" value="${esc(mes)}" class="minp"><label class="ck"><label><input type="checkbox" id="fat_ant"${ant?' checked':''}>Incluir em aberto de meses anteriores</label></label></div></div>
   ${its.length?`<div class="tw"><table><tr><th>Animal</th><th>Data</th><th>Descrição</th><th class="n">Valor</th><th class="n">Em aberto</th></tr>${its.map(({f,p})=>`<tr><td>${esc(p.nome)}</td><td>${br(f.data)}</td><td>${esc(f.desc)}</td><td class="n">${R$(f.total)}</td><td class="n ${saldo(f)?'late':'ok'}">${R$(saldo(f))}</td></tr>`).join('')}<tr class="totrow"><td colspan="3"><b>Total</b></td><td class="n"><b>${R$(tot)}</b></td><td class="n ${ab?'late':'ok'}"><b>${R$(ab)}</b></td></tr></table></div>
   <div class="btns" style="margin-top:10px"><button class="btn pri sm" data-fatura="${esc(c.id)}">Gerar fatura</button>${ab?`<button class="btn sm" data-fatreceber="${esc(c.id)}">Receber tudo</button>`:''}</div>`:'<p class="meta">Nada lançado neste período.</p>'}</div>`;
@@ -930,6 +939,207 @@ async function htmlDoc(titulo,texto,assT,nomeT){
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${e(titulo)}</title><style>body{font:15px/1.55 Georgia,serif;max-width:720px;margin:40px auto;padding:0 24px;color:#222}pre{white-space:pre-wrap;font:inherit}.as{display:flex;gap:40px;flex-wrap:wrap;margin-top:30px}.as div{text-align:center}.as img{height:80px;display:block;margin:0 auto}.as span{display:block;border-top:1px solid #444;padding-top:4px;min-width:220px}</style></head><body><pre>${e(texto)}</pre>${v||t?`<div class="as">${t?`<div><img src="${t}" alt=""><span>${e(nomeT||'Tutor / responsável')}</span></div>`:''}${v?`<div><img src="${v}" alt=""><span>${e(S.cfg.vet||'Médico(a)-veterinário(a)')}${S.cfg.crmv?' · CRMV '+e(S.cfg.crmv):''}</span></div>`:''}</div>`:''}</body></html>`;
 }
 
+/* ---------- orçamentos ---------- */
+const salvarOrc=o=>gravar('orcamentos',o,S.orc);
+const ORC_ST=['Rascunho','Enviado','Aprovado','Recusado'];
+const orcValidade=o=>addD(o.data||hoje(),+o.validade||15);
+const orcStatus=o=>(o.status==='Enviado'||o.status==='Rascunho')&&dias(orcValidade(o))<0?'Vencido':o.status||'Rascunho';
+const ORC_COR={Rascunho:'obito',Enviado:'acompanhamento',Aprovado:'alta',Recusado:'internado',Vencido:'tratamento'};
+function orcTotais(o){
+  const its=(o.itens||[]).filter(i=>i.desc);const sub=its.reduce((s,i)=>s+num(i.qtd||1)*num(i.unit),0);
+  const desc=o.descTipo==='%'?sub*num(o.descValor)/100:num(o.descValor);
+  const km=num(o.km)*num(o.kmval!==undefined&&o.kmval!==''?o.kmval:S.cfg.kmval);
+  return{its,sub,desc:Math.min(desc,sub),km,total:Math.max(0,sub-Math.min(desc,sub)+km)};
+}
+function proxNumOrc(){const ano=hoje().slice(0,4);const n=S.orc.map(o=>String(o.numero||'')).filter(x=>x.startsWith('ORC-'+ano)).map(x=>+x.split('-')[2]||0);return `ORC-${ano}-${String((n.length?Math.max(...n):0)+1).padStart(4,'0')}`}
+function catalogo(){
+  const out=[];
+  for(const {m,nomes} of PRECOS())for(const n of nomes){const v=preco(m.key,n);if(v)out.push({g:m.tab,nome:m.key==='meds'?'Aplicação de medicação':n,valor:v})}
+  for(const x of (S.cfg.servicos||[]))out.push({g:'Serviços e produtos',nome:x.nome,valor:num(x.valor)});
+  for(const x of S.est)if(num(x.preco))out.push({g:'Estoque',nome:x.nome+(x.un?' ('+x.un+')':''),valor:num(x.preco)});
+  return out;
+}
+function renderOrcamentos(){
+  const q=(S.qo||'').toLowerCase(),f=S.orcF||'abertos';
+  const l=[...S.orc].map(o=>({o,st:orcStatus(o),t:orcTotais(o)})).sort((a,b)=>String(b.o.numero).localeCompare(String(a.o.numero)));
+  const fil=l.filter(x=>(f==='todos'||(f==='abertos'?['Rascunho','Enviado'].includes(x.st):x.st===f))&&(!q||[x.o.numero,x.o.cliente,x.o.animal].join(' ').toLowerCase().includes(q)));
+  const mes=hoje().slice(0,7),doMes=l.filter(x=>(x.o.data||'').startsWith(mes));
+  const ab=l.filter(x=>['Rascunho','Enviado'].includes(x.st)),apM=doMes.filter(x=>x.st==='Aprovado'),dec=doMes.filter(x=>['Aprovado','Recusado'].includes(x.st));
+  $('view').innerHTML=`<div class="bar"><h2>Orçamentos</h2><div class="btns">${dl&&S.orc.length?'<button class="btn sm" data-orccsv>Exportar lista (.csv)</button>':''}<button class="btn pri sm" data-orcnovo>+ Novo orçamento</button></div></div>
+  <div class="counts"><div class="count"><b>${ab.length}</b><span>Em aberto · ${R$(ab.reduce((s,x)=>s+x.t.total,0))}</span></div><div class="count" style="color:var(--okc)"><b>${R$(apM.reduce((s,x)=>s+x.t.total,0))}</b><span>Aprovado no mês</span></div><div class="count"><b>${dec.length?Math.round(apM.length/dec.length*100)+'%':'—'}</b><span>Aprovação no mês</span></div><div class="count" style="color:var(--s-tratamento)"><b>${l.filter(x=>x.st==='Vencido').length}</b><span>Vencidos</span></div></div>
+  <div class="chips">${[['abertos','Em aberto'],['Aprovado','Aprovados'],['Recusado','Recusados'],['Vencido','Vencidos'],['todos','Todos']].map(([k,t])=>`<button class="btn sm${f===k?' pri':''}" data-orcf="${k}">${t}</button>`).join('')}</div>
+  <input class="search" id="qo" type="search" placeholder="Buscar número, cliente ou animal" aria-label="Buscar orçamento" value="${esc(S.qo||'')}">
+  ${fil.length?fil.map(({o,st,t})=>`<button class="row" data-orc="${esc(o.id)}"><span class="av">${esc(String(o.numero||'').slice(-2)||'Or')}</span><span><h3>${esc(o.numero)} · ${esc(o.cliente||'Sem cliente')}</h3><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''} · ${(o.itens||[]).filter(i=>i.desc).length} item(ns) · válido até ${br(orcValidade(o))}</span></span><span class="end"><b class="tnum">${R$(t.total)}</b><br><span class="pill" style="--c:var(--s-${ORC_COR[st]})">${st}</span></span></button>`).join(''):`<div class="empty"><h2>${S.orc.length?'Nenhum orçamento neste filtro':'Nenhum orçamento ainda'}</h2><p>Monte o orçamento com os serviços da sua tabela de preços, mande pelo WhatsApp e exporte em PDF.</p><button class="btn pri" data-orcnovo>+ Novo orçamento</button></div>`}`;
+  $('qo').oninput=e=>{S.qo=e.target.value;const pos=e.target.selectionStart;renderOrcamentos();$('qo').focus();try{$('qo').setSelectionRange(pos,pos)}catch(_){}};
+}
+function novoOrc(pre={}){
+  const o={id:uid(),numero:proxNumOrc(),data:hoje(),validade:S.cfg.orcValidade||'15',status:'Rascunho',itens:[{desc:'',qtd:'1',unit:''}],descTipo:'R$',descValor:'',km:'',cond:S.cfg.orcCond||'Pagamento à vista via Pix ou transferência.',obs:'',por:meId(),...pre};
+  editarOrc(o,true);
+}
+function orcDePaciente(p){const c=cliDe(p);return{pacienteId:p.id,animal:p.nome+(p.especie?' ('+[p.especie,p.raca].filter(Boolean).join(', ')+')':''),clienteId:c?c.id:'',cliente:c?c.nome:(p.tutor||''),tel:c?c.tel:(p.tel||''),doc:c?c.doc:(p.cpf||''),km:(p.km||c&&c.km)?String(num(p.km||c.km)*2):''}}
+function editarOrc(o0,novo){
+  const o=JSON.parse(JSON.stringify(o0));const cat=catalogo();
+  const linha=(i,k)=>`<div class="oline" data-k="${k}"><input data-f="desc" list="dl_cat" placeholder="Serviço, exame, medicamento…" aria-label="Descrição do item" value="${esc(i.desc||'')}"><input data-f="qtd" type="number" step="any" min="0" inputmode="decimal" aria-label="Quantidade" value="${esc(i.qtd||'1')}"><input data-f="unit" type="number" step="any" min="0" inputmode="decimal" placeholder="R$" aria-label="Valor unitário" value="${esc(i.unit||'')}"><span class="otot tnum"></span><button type="button" class="x" data-rmi="${k}" aria-label="Remover item">×</button></div>`;
+  const pacs=[...S.pac].sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
+  $('card').innerHTML=`<h2>${novo?'Novo orçamento':'Editar orçamento'} · ${esc(o.numero)}</h2>
+  <div class="f">
+   <div class="fld h"><label for="o_cli">Cliente cadastrado</label><select id="o_cli"><option value="">— digitar abaixo —</option>${[...S.cli].sort((a,b)=>String(a.nome).localeCompare(String(b.nome))).map(c=>`<option value="${esc(c.id)}"${o.clienteId===c.id?' selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+   <div class="fld h"><label for="o_pac">Animal cadastrado</label><select id="o_pac"><option value="">— nenhum / digitar —</option>${pacs.map(p=>`<option value="${esc(p.id)}"${o.pacienteId===p.id?' selected':''}>${esc(p.nome)}${p.tutor?' · '+esc(p.tutor):''}</option>`).join('')}</select></div>
+   <div class="fld h"><label for="o_cliente">Cliente *</label><input id="o_cliente" value="${esc(o.cliente||'')}"></div>
+   <div class="fld h"><label for="o_tel">Telefone / WhatsApp</label><input id="o_tel" type="tel" value="${esc(o.tel||'')}"></div>
+   <div class="fld h"><label for="o_doc">CPF / CNPJ</label><input id="o_doc" value="${esc(o.doc||'')}"></div>
+   <div class="fld h"><label for="o_animal">Animal(is)</label><input id="o_animal" value="${esc(o.animal||'')}" placeholder="Ex.: Trovão e Estrela"></div>
+   <div class="fld h"><label for="o_data">Data</label><input id="o_data" type="date" value="${esc(o.data)}"></div>
+   <div class="fld h"><label for="o_val">Validade (dias)</label><input id="o_val" type="number" min="1" inputmode="numeric" value="${esc(o.validade)}"></div>
+   <h3 class="sec">Itens</h3>
+   <div class="fld"><datalist id="dl_cat">${cat.map(c=>`<option value="${esc(c.nome)}">${esc(c.g)} · ${R$(c.valor)}</option>`).join('')}</datalist>
+    <div class="ohead"><span>Descrição</span><span>Qtd.</span><span>Valor unit.</span><span>Total</span><span></span></div>
+    <div id="o_itens">${(o.itens||[]).map(linha).join('')}</div>
+    <div class="btns" style="margin-top:8px"><button type="button" class="btn sm" id="o_add">+ Item</button>${cat.length?`<select id="o_tab" class="minp" aria-label="Adicionar da tabela de preços"><option value="">+ Da tabela de preços…</option>${[...new Set(cat.map(c=>c.g))].map(g=>`<optgroup label="${esc(g)}">${cat.map((c,i)=>c.g===g?`<option value="${i}">${esc(c.nome)} · ${R$(c.valor)}</option>`:'').join('')}</optgroup>`).join('')}</select>`:'<span class="meta">Preencha a aba Preços para escolher itens prontos.</span>'}</div></div>
+   <h3 class="sec">Totais</h3>
+   <div class="fld h"><label for="o_dv">Desconto</label><div class="addrow" style="margin:0"><select id="o_dt" aria-label="Tipo de desconto"><option${o.descTipo==='R$'?' selected':''}>R$</option><option${o.descTipo==='%'?' selected':''}>%</option></select><input id="o_dv" type="number" step="any" min="0" inputmode="decimal" value="${esc(o.descValor||'')}"></div></div>
+   <div class="fld h"><label for="o_km">Deslocamento (km) <span class="meta">${num(S.cfg.kmval)?R$(S.cfg.kmval)+'/km':'defina o valor do km em Preços'}</span></label><input id="o_km" type="number" step="any" min="0" inputmode="decimal" value="${esc(o.km||'')}"></div>
+   <div class="fld"><div class="ototais" id="o_tot"></div></div>
+   <div class="fld"><label for="o_cond">Condições de pagamento</label><textarea id="o_cond">${esc(o.cond||'')}</textarea></div>
+   <div class="fld"><label for="o_obs">Observações</label><textarea id="o_obs" placeholder="Ex.: valores de medicação podem variar conforme a resposta ao tratamento.">${esc(o.obs||'')}</textarea></div>
+   <div class="fld h"><label for="o_st">Situação</label><select id="o_st">${ORC_ST.map(x=>`<option${o.status===x?' selected':''}>${x}</option>`).join('')}</select></div>
+  </div>
+  <div class="acts">${novo?'':'<button type="button" class="btn ghost del" id="del">Excluir</button>'}<button type="button" class="btn" id="cancel">Cancelar</button><button type="button" class="btn" id="o_save">Salvar</button><button type="button" class="btn pri" id="o_pdf">Salvar e gerar PDF</button></div>`;
+  $('sheet').classList.add('on');$('card').scrollTop=0;
+  const ler=()=>{const its=[...$('o_itens').querySelectorAll('.oline')].map(r=>{const x={};r.querySelectorAll('[data-f]').forEach(e=>x[e.dataset.f]=e.value.trim());return x});
+    return{...o,clienteId:$('o_cli').value,pacienteId:$('o_pac').value,cliente:$('o_cliente').value.trim(),tel:$('o_tel').value.trim(),doc:$('o_doc').value.trim(),animal:$('o_animal').value.trim(),data:$('o_data').value||hoje(),validade:$('o_val').value||'15',itens:its,descTipo:$('o_dt').value,descValor:$('o_dv').value.trim(),km:$('o_km').value.trim(),kmval:num(S.cfg.kmval)?String(S.cfg.kmval):'',cond:$('o_cond').value.trim(),obs:$('o_obs').value.trim(),status:$('o_st').value}};
+  const calc=()=>{const x=ler(),t=orcTotais(x);$('o_itens').querySelectorAll('.oline').forEach(r=>{const q=num(r.querySelector('[data-f=qtd]').value||1),u=num(r.querySelector('[data-f=unit]').value);r.querySelector('.otot').textContent=r.querySelector('[data-f=desc]').value.trim()?R$(q*u):''});
+    $('o_tot').innerHTML=`<div><span>Subtotal</span><b class="tnum">${R$(t.sub)}</b></div>${t.desc?`<div><span>Desconto${x.descTipo==='%'?' ('+esc(x.descValor)+'%)':''}</span><b class="tnum">− ${R$(t.desc)}</b></div>`:''}${t.km?`<div><span>Deslocamento (${esc(x.km)} km)</span><b class="tnum">${R$(t.km)}</b></div>`:''}<div class="otg"><span>Total</span><b class="tnum">${R$(t.total)}</b></div>`};
+  const bind=()=>{$('o_itens').querySelectorAll('[data-f=desc]').forEach(inp=>inp.onchange=()=>{const c=cat.find(z=>z.nome===inp.value.trim());const u=inp.closest('.oline').querySelector('[data-f=unit]');if(c&&!u.value)u.value=c.valor;calc()});
+    $('o_itens').querySelectorAll('[data-rmi]').forEach(b=>b.onclick=()=>{b.closest('.oline').remove();if(!$('o_itens').children.length)addLinha({});calc()})};
+  const addLinha=i=>{$('o_itens').insertAdjacentHTML('beforeend',linha(i,uid()));bind();calc()};
+  $('card').oninput=()=>{if($('o_itens'))calc()};bind();calc();
+  $('o_add').onclick=()=>{addLinha({qtd:'1'});const ls=$('o_itens').querySelectorAll('[data-f=desc]');ls[ls.length-1].focus()};
+  if($('o_tab'))$('o_tab').onchange=e=>{const c=cat[+e.target.value];if(!c)return;const vazia=[...$('o_itens').querySelectorAll('.oline')].find(r=>!r.querySelector('[data-f=desc]').value.trim());if(vazia){vazia.querySelector('[data-f=desc]').value=c.nome;vazia.querySelector('[data-f=unit]').value=c.valor;calc()}else addLinha({desc:c.nome,qtd:'1',unit:String(c.valor)});e.target.value=''};
+  $('o_cli').onchange=()=>{const c=S.cli.find(x=>x.id===$('o_cli').value);if(!c)return;$('o_cliente').value=c.nome;if(c.tel)$('o_tel').value=c.tel;if(c.doc)$('o_doc').value=c.doc;if(c.km&&!$('o_km').value)$('o_km').value=String(num(c.km)*2);calc()};
+  $('o_pac').onchange=()=>{const p=S.pac.find(x=>x.id===$('o_pac').value);if(!p)return;const d=orcDePaciente(p);$('o_animal').value=d.animal;if(!$('o_cliente').value)$('o_cliente').value=d.cliente;if(!$('o_tel').value)$('o_tel').value=d.tel;if(!$('o_doc').value)$('o_doc').value=d.doc;if(d.clienteId&&!$('o_cli').value)$('o_cli').value=d.clienteId;if(d.km&&!$('o_km').value)$('o_km').value=d.km;calc()};
+  $('cancel').onclick=fechar;
+  const gravarOrc=()=>{const x=ler();if(!x.cliente){toast('Preencha o nome do cliente');$('o_cliente').focus();return null}x.itens=x.itens.filter(i=>i.desc);if(!x.itens.length){toast('Adicione ao menos um item');return null}x.total=String(orcTotais(x).total);salvarOrc(x);return x};
+  $('o_save').onclick=()=>{const x=gravarOrc();if(x){fechar();toast('Orçamento '+x.numero+' salvo')}};
+  $('o_pdf').onclick=()=>{const x=gravarOrc();if(x){fechar();exportarPdfOrc(x)}};
+  if(!novo){let arm=0;$('del').onclick=()=>{if(!arm){arm=1;$('del').textContent='Toque de novo para excluir';return}apagar('orcamentos',o.id);fechar();toast('Orçamento excluído')}}
+}
+function textoOrc(o){
+  const t=orcTotais(o),c=S.cfg;
+  return `*${c.clinica||'SAMVET'}* · Orçamento ${o.numero}\nCliente: ${o.cliente}${o.animal?'\nAnimal: '+o.animal:''}\nData: ${br(o.data)} · Válido até ${br(orcValidade(o))}\n\n`+
+   t.its.map(i=>`• ${i.desc}${num(i.qtd||1)!==1?' ('+fx(num(i.qtd),2)+' × '+R$(i.unit)+')':''}: ${R$(num(i.qtd||1)*num(i.unit))}`).join('\n')+
+   `\n\nSubtotal: ${R$(t.sub)}${t.desc?'\nDesconto: − '+R$(t.desc):''}${t.km?'\nDeslocamento: '+R$(t.km):''}\n*Total: ${R$(t.total)}*${o.cond?'\n\nPagamento: '+o.cond:''}${c.pix?'\nChave Pix: '+c.pix:''}${o.obs?'\n\nObs.: '+o.obs:''}`;
+}
+function verOrc(o){
+  const st=orcStatus(o),t=orcTotais(o);
+  $('card').innerHTML=`<div class="bar"><h2>${esc(o.numero)}</h2><span class="pill" style="--c:var(--s-${ORC_COR[st]})">${st}</span></div>
+  <p class="meta" style="margin:-6px 0 12px">${br(o.data)} · válido até ${br(orcValidade(o))}${o.aprovadoEm?' · aprovado em '+br(o.aprovadoEm):''}</p>
+  <div class="box"><b>${esc(o.cliente)}</b>${o.doc?' · '+esc(o.doc):''}${o.tel?' · '+esc(o.tel):''}${o.animal?`<br><span class="meta">Animal: ${esc(o.animal)}</span>`:''}</div>
+  <div class="tw"><table><tr><th>Item</th><th class="n">Qtd.</th><th class="n">Unit.</th><th class="n">Total</th></tr>${t.its.map(i=>`<tr><td>${esc(i.desc)}</td><td class="n">${fx(num(i.qtd||1),2)}</td><td class="n">${R$(i.unit)}</td><td class="n">${R$(num(i.qtd||1)*num(i.unit))}</td></tr>`).join('')}
+  <tr><td colspan="3">Subtotal</td><td class="n">${R$(t.sub)}</td></tr>${t.desc?`<tr><td colspan="3">Desconto</td><td class="n">− ${R$(t.desc)}</td></tr>`:''}${t.km?`<tr><td colspan="3">Deslocamento (${esc(o.km)} km)</td><td class="n">${R$(t.km)}</td></tr>`:''}<tr class="totrow"><td colspan="3"><b>Total</b></td><td class="n"><b>${R$(t.total)}</b></td></tr></table></div>
+  ${o.cond?`<p><span class="lbl">Pagamento</span>${esc(o.cond)}</p>`:''}${o.obs?`<p><span class="lbl">Observações</span>${esc(o.obs)}</p>`:''}
+  <div class="acts" style="justify-content:flex-start"><button class="btn pri sm" id="v_pdf">Baixar PDF</button>${waLink(o.tel,textoOrc(o))}<button class="btn sm" id="v_copy">Copiar texto</button><button class="btn sm" id="v_edit">Editar</button><button class="btn sm" id="v_dup">Duplicar</button></div>
+  <div class="acts" style="justify-content:flex-start">${st!=='Aprovado'?'<button class="btn sm" id="v_env">Marcar como enviado</button><button class="btn sm ok" id="v_apr">Aprovar</button><button class="btn sm ghost del" id="v_rec">Recusado</button>':''}<button class="btn sm" id="cancel" style="margin-left:auto">Fechar</button></div>`;
+  $('sheet').classList.add('on');$('card').scrollTop=0;
+  $('cancel').onclick=fechar;
+  $('v_pdf').onclick=()=>exportarPdfOrc(o);
+  $('v_copy').onclick=()=>copiar(textoOrc(o),'Texto do orçamento copiado');
+  $('v_edit').onclick=()=>editarOrc(o,false);
+  $('v_dup').onclick=()=>editarOrc({...JSON.parse(JSON.stringify(o)),id:uid(),numero:proxNumOrc(),data:hoje(),status:'Rascunho',aprovadoEm:'',lancado:'',por:meId()},true);
+  const mudar=(s2,msg)=>{const x={...o,status:s2};if(s2==='Enviado'&&!o.enviadoEm)x.enviadoEm=hoje();salvarOrc(x);fechar();toast(msg)};
+  if($('v_env'))$('v_env').onclick=()=>mudar('Enviado','Marcado como enviado');
+  if($('v_rec'))$('v_rec').onclick=()=>mudar('Recusado','Marcado como recusado');
+  if($('v_apr'))$('v_apr').onclick=()=>aprovarOrc(o);
+}
+function aprovarOrc(o){
+  const t=orcTotais(o),p=o.pacienteId&&S.pac.find(x=>x.id===o.pacienteId);
+  const fim=(q,lancar)=>{const x={...o,status:'Aprovado',aprovadoEm:hoje()};
+    if(q&&lancar){const novos=t.its.map(i=>({id:uid(),data:hoje(),tipo:'Serviço',desc:i.desc+' ('+o.numero+')',qtd:String(num(i.qtd||1)),unit:String(num(i.unit)),total:String(num(i.qtd||1)*num(i.unit)),sit:'Pendente',pago:'',orc:o.id,por:meId()}));
+      let resto=t.desc;for(const e of [...novos].sort((a,b)=>num(b.total)-num(a.total))){if(resto<=0)break;const ab=Math.min(resto,num(e.total));e.desconto=String(ab);e.total=String(num(e.total)-ab);resto-=ab}
+      const fin=[...(q.fin||[]),...novos];
+      if(t.km)fin.push({id:uid(),data:hoje(),tipo:'Deslocamento (km)',desc:'Deslocamento ('+o.km+' km) · '+o.numero,qtd:String(num(o.km)),unit:String(num(o.kmval||S.cfg.kmval)),total:String(t.km),sit:'Pendente',pago:'',orc:o.id});
+      salvar({...q,fin});x.lancado=q.id}
+    salvarOrc(x);fechar();toast(lancar&&q?'Aprovado e lançado no Financeiro de '+q.nome:'Orçamento aprovado')};
+  $('card').innerHTML=`<h2>Aprovar ${esc(o.numero)}</h2><p>Total de <b>${R$(t.total)}</b>.</p>
+  ${p?`<p>Lançar os itens como "em aberto" no Financeiro de <b>${esc(p.nome)}</b>? Eles passam a contar no Caixa e na ficha.</p>`:`<p class="meta">Este orçamento não está ligado a um animal cadastrado. Você pode escolher um agora para lançar os itens no Financeiro dele, ou só aprovar.</p>`}
+  <div class="acts">${p?'<button class="btn" id="a_so">Só aprovar</button><button class="btn pri" id="a_lan">Aprovar e lançar</button>':'<button class="btn" id="a_so">Só aprovar</button><button class="btn pri" id="a_esc">Escolher animal e lançar</button>'}<button class="btn ghost" id="cancel">Cancelar</button></div>`;
+  $('cancel').onclick=()=>verOrc(o);
+  $('a_so').onclick=()=>fim(null,false);
+  if($('a_lan'))$('a_lan').onclick=()=>fim(p,true);
+  if($('a_esc'))$('a_esc').onclick=()=>escolherPaciente('Lançar em qual animal?',q=>fim(q,true));
+}
+function csvOrc(){
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',m=v=>num(v).toFixed(2).replace('.',',');
+  const rows=[['Número','Data','Validade','Situação','Cliente','CPF/CNPJ','Telefone','Animal','Itens','Subtotal','Desconto','Deslocamento','Total']];
+  for(const o of [...S.orc].sort((a,b)=>String(a.numero).localeCompare(String(b.numero)))){const t=orcTotais(o);rows.push([o.numero,br(o.data),br(orcValidade(o)),orcStatus(o),o.cliente,o.doc,o.tel,o.animal,t.its.map(i=>`${i.desc} (${fx(num(i.qtd||1),2)} x ${m(i.unit)})`).join(' | '),m(t.sub),m(t.desc),m(t.km),m(t.total)])}
+  return '﻿'+rows.map(r=>r.map(q).join(';')).join('\r\n');
+}
+/* PDF */
+const PDF_LIBS=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
+const carregarScript=src=>new Promise((ok,erro)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>erro(new Error('falha ao carregar '+src));document.head.appendChild(s)});
+async function pdfLib(){if(!(window.jspdf&&window.jspdf.jsPDF))await carregarScript(PDF_LIBS[0]);if(!window.jspdf.jsPDF.API.autoTable)await carregarScript(PDF_LIBS[1]);return window.jspdf.jsPDF}
+function logoTingido(cor){try{const el=document.querySelector('.top .logo'),m=(getComputedStyle(el).webkitMaskImage||getComputedStyle(el).maskImage||'').match(/url\("?(data:image\/png;base64,[^")]+)"?\)/);if(!m)return Promise.resolve(null);
+  return new Promise(ok=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const cx=cv.getContext('2d');cx.drawImage(im,0,0);cx.globalCompositeOperation='source-in';cx.fillStyle=cor;cx.fillRect(0,0,cv.width,cv.height);ok(cv.toDataURL('image/png'))};im.onerror=()=>ok(null);im.src=m[1]})}catch(e){return Promise.resolve(null)}}
+async function pdfOrc(o){
+  const jsPDF=await pdfLib(),d=new jsPDF({unit:'mm',format:'a4'}),c=S.cfg,t=orcTotais(o),W=210,M=14;
+  const lat=x=>String(x??'').replace(/[\u2012-\u2015\u2212]/g,'-').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/\u2026/g,'...').replace(/[^\x00-\xFF]/g,'');
+  const t0=d.text.bind(d),s0=d.splitTextToSize.bind(d);d.text=(x,...a)=>t0(Array.isArray(x)?x.map(lat):lat(x),...a);d.splitTextToSize=(x,...a)=>s0(lat(x),...a);
+  const MARROM=[91,56,27],CREME=[246,232,212],TAN=[243,230,211],TINTA=[51,33,15],CINZA=[118,88,61];
+  const brl=v=>'R$ '+num(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  // cabeçalho
+  d.setFillColor(...MARROM);d.rect(0,0,W,38,'F');
+  const lg=await logoTingido('#f6e8d4');let x0=M;if(lg){d.addImage(lg,'PNG',M,7,24,24);x0=M+29}
+  d.setTextColor(...CREME);d.setFont('helvetica','bold');d.setFontSize(17);d.text(c.clinica||'SAMVET',x0,15);
+  d.setFont('helvetica','normal');d.setFontSize(8.5);
+  const lin=[[c.vet,c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),[c.endc,c.cidade].filter(Boolean).join(' · '),[c.telc,c.emailc,c.cpfvet?'CPF/CNPJ '+c.cpfvet:''].filter(Boolean).join(' · ')].filter(Boolean);
+  lin.forEach((l,i)=>d.text(d.splitTextToSize(l,105)[0],x0,21+i*4.4));
+  d.setFont('helvetica','bold');d.setFontSize(19);d.text('ORÇAMENTO',W-M,16,{align:'right'});
+  d.setFont('helvetica','normal');d.setFontSize(9.5);d.text(o.numero,W-M,22.5,{align:'right'});d.text('Emitido em '+br(o.data),W-M,27.5,{align:'right'});d.text('Válido até '+br(orcValidade(o)),W-M,32.5,{align:'right'});
+  // blocos cliente / animal
+  let y=46;const bw=(W-2*M-6)/2;
+  const bloco=(x,tit,linhas)=>{d.setFillColor(...TAN);d.roundedRect(x,y,bw,24,2,2,'F');d.setTextColor(...CINZA);d.setFont('helvetica','bold');d.setFontSize(7.5);d.text(tit.toUpperCase(),x+4,y+5.5);d.setTextColor(...TINTA);d.setFontSize(10.5);d.text(d.splitTextToSize(linhas[0]||'-',bw-8)[0],x+4,y+11.5);d.setFont('helvetica','normal');d.setFontSize(8.5);linhas.slice(1).filter(Boolean).slice(0,2).forEach((l,i)=>d.text(d.splitTextToSize(l,bw-8)[0],x+4,y+16.5+i*4.2))};
+  bloco(M,'Cliente',[o.cliente,[o.doc?'CPF/CNPJ '+o.doc:'',o.tel].filter(Boolean).join(' · '),(S.cli.find(z=>z.id===o.clienteId)||{}).cidade||'']);
+  bloco(M+bw+6,'Animal',o.animal?[o.animal.split(' (')[0],o.animal.includes('(')?o.animal.slice(o.animal.indexOf('(')+1).replace(/\)$/,''):'']:['Não informado']);
+  y+=31;
+  // itens
+  d.autoTable({startY:y,margin:{left:M,right:M},head:[['Descrição','Qtd.','Valor unitário','Total']],
+    body:t.its.map(i=>[lat(i.desc),fx(num(i.qtd||1),2),brl(i.unit),brl(num(i.qtd||1)*num(i.unit))]),
+    theme:'plain',styles:{font:'helvetica',fontSize:9.5,textColor:TINTA,cellPadding:{top:2.6,bottom:2.6,left:3,right:3},lineColor:[216,193,162],lineWidth:{bottom:.2}},
+    headStyles:{fillColor:MARROM,textColor:CREME,fontStyle:'bold',fontSize:9},alternateRowStyles:{fillColor:[251,246,239]},
+    columnStyles:{0:{cellWidth:'auto'},1:{halign:'right',cellWidth:18},2:{halign:'right',cellWidth:34},3:{halign:'right',cellWidth:34,fontStyle:'bold'}},
+    didParseCell:h=>{if(h.section==='head'&&h.column.index>0)h.cell.styles.halign='right'}});
+  y=d.lastAutoTable.finalY+6;
+  // totais
+  const tl=[['Subtotal',brl(t.sub)]];if(t.desc)tl.push(['Desconto'+(o.descTipo==='%'?' ('+o.descValor+'%)':''),'- '+brl(t.desc)]);if(t.km)tl.push([`Deslocamento (${o.km} km × ${brl(o.kmval||c.kmval)})`,brl(t.km)]);
+  const tx=W-M-82;if(y+tl.length*6+16>270){d.addPage();y=20}
+  d.setFontSize(9.5);tl.forEach(([a,b],i)=>{d.setTextColor(...CINZA);d.setFont('helvetica','normal');d.text(a,tx,y+i*6);d.setTextColor(...TINTA);d.text(b,W-M,y+i*6,{align:'right'})});
+  y+=tl.length*6;d.setFillColor(...MARROM);d.roundedRect(tx-4,y-3,86,11,2,2,'F');d.setTextColor(...CREME);d.setFont('helvetica','bold');d.setFontSize(12);d.text('TOTAL',tx,y+4.4);d.text(brl(t.total),W-M-4,y+4.4,{align:'right'});
+  y+=18;
+  // condições e observações
+  const sec=(tit,txt)=>{if(!txt)return;const ls=d.splitTextToSize(txt,W-2*M);if(y+8+ls.length*4.4>262){d.addPage();y=20}d.setTextColor(...CINZA);d.setFont('helvetica','bold');d.setFontSize(8);d.text(tit.toUpperCase(),M,y);d.setTextColor(...TINTA);d.setFont('helvetica','normal');d.setFontSize(9.5);d.text(ls,M,y+5);y+=8+ls.length*4.4};
+  sec('Condições de pagamento',[o.cond,c.pix?'Chave Pix: '+c.pix:''].filter(Boolean).join('\n'));
+  sec('Validade',`Este orçamento é válido por ${o.validade||15} dias, até ${br(orcValidade(o))}. Valores sujeitos a alteração após esse prazo.`);
+  sec('Observações',o.obs);
+  // assinaturas
+  if(y>232){d.addPage();y=30}const ya=Math.max(y+18,246);
+  const av=c.assinVet?await dataUrlDe(srcAssin(c.assinVet)):'';if(av){try{d.addImage(av,'PNG',M+8,ya-17,54,16)}catch(e){}}
+  d.setDrawColor(...CINZA);d.setLineWidth(.3);d.line(M,ya,M+78,ya);d.line(W-M-78,ya,W-M,ya);
+  d.setTextColor(...TINTA);d.setFontSize(8.5);d.setFont('helvetica','normal');
+  d.text(d.splitTextToSize([c.vet||'Médico(a)-veterinário(a)',c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),78)[0],M,ya+4.5);
+  d.text('De acordo: '+d.splitTextToSize(o.cliente,60)[0],W-M-78,ya+4.5);d.setTextColor(...CINZA);d.text('Data: ____/____/______',W-M-78,ya+9.5);
+  // rodapé
+  const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setDrawColor(216,193,162);d.line(M,284,W-M,284);d.setFontSize(7.5);d.setTextColor(...CINZA);d.text(`${c.clinica||'SAMVET'} · Orçamento ${o.numero}`,M,288.5);d.text(`Página ${i} de ${n}`,W-M,288.5,{align:'right'})}
+  return d;
+}
+async function exportarPdfOrc(o){
+  if(!dl){toast('Para baixar o PDF, abra o SAMVET pelo link do Claude com sua conta.');return}
+  toast('Gerando PDF…');
+  try{const d=await pdfOrc(o);const nome=`Orçamento ${o.numero} - ${o.cliente}.pdf`.replace(/[\/\\:*?"<>|]/g,'-');
+    const r=await dl.save({filename:nome,data:d.output('blob')});if(r&&r.status==='saved')toast('PDF salvo: '+nome);
+    if(o.status==='Rascunho'){const x={...o,status:'Enviado',enviadoEm:hoje()};salvarOrc(x)}}
+  catch(e){toast(e&&/carregar/.test(e.message||'')?'Sem internet para gerar o PDF agora. Tente de novo com conexão.':(e&&e.code&&e.code!=='cancelled'&&e.code!=='declined'?'Não foi possível baixar o PDF.':'Download cancelado.'))}
+}
+
 /* ---------- ficha ---------- */
 function renderFicha(p){
   const tabs=[['resumo','Resumo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']];
@@ -958,7 +1168,7 @@ function resumo(p){
   ${g?`<div class="info"><b>Prenhe</b> · parto previsto ${br(g.parto)} (${quando(g.parto)})</div>`:''}
   ${deb?`<div class="info">Saldo em aberto: <b>${R$(deb)}</b> <button class="btn sm" data-tab="fin">Ver financeiro</button></div>`:''}
   ${spOk('gr',p)&&Object.keys(ofi).length?`<div class="chips">${Object.values(ofi).map(x=>{const v=x.resultado==='Negativo'&&x.data&&+x.val?addD(x.data,+x.val):null;const c=x.resultado==='Positivo'?'internado':!v?'obito':dias(v)<0?'internado':dias(v)<=10?'tratamento':'alta';return`<span class="pill" style="--c:var(--s-${c})">${esc(x.tipo.split(' (')[0])}: ${esc(x.resultado)}${v?' · até '+br(v):''}</span>`}).join('')}</div>`:''}
-  <div class="bar"><h3>Último exame${u.data?' · '+br(u.data):''}</h3><div class="btns"><button class="btn sm" data-protapl>Aplicar protocolo</button><button class="btn sm" data-add="agend">Agendar</button><button class="btn pri sm" data-add="consultas">+ Nova consulta</button></div></div>
+  <div class="bar"><h3>Último exame${u.data?' · '+br(u.data):''}</h3><div class="btns"><button class="btn sm" data-orcpac>Orçamento</button><button class="btn sm" data-protapl>Aplicar protocolo</button><button class="btn sm" data-add="agend">Agendar</button><button class="btn pri sm" data-add="consultas">+ Nova consulta</button></div></div>
   ${u.data?`<div class="grid">${vit.map(([l,v,un,k])=>`<div class="vit${out(k,v)?' out':''}"><span>${l}</span><b>${v?esc(v)+(un?' '+un:''):'—'}</b>${k&&R[k]?`<small>ref. ${R[k][0]}–${R[k][1]}</small>`:''}</div>`).join('')}</div>`:'<div class="empty"><p>Nenhuma consulta registrada.</p></div>'}
   ${u.diag?`<div class="box"><span class="lbl">Diagnóstico atual</span><p>${esc(u.diag)}</p>${u.trat?`<span class="lbl">Tratamento</span><p>${esc(u.trat)}</p>`:''}</div>`:''}
   ${meds.length?`<div class="box"><h3>Medicação em curso</h3>${meds.map(m=>{const n=proxMed(m);return`<p>${esc(m.med)} ${esc(m.dose||'')} ${esc(m.via||'')} a cada ${esc(m.freq||'?')} h · <span class="${n&&n<new Date()?'late':''}">${n?'próxima '+hora(n.toISOString()):'sem aplicação registrada'}</span></p>`}).join('')}</div>`:''}
@@ -1162,6 +1372,7 @@ $('fileimp').onchange=e=>{
   const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const ps=Array.isArray(d)?d:d.pacientes||[];let n=0;
     for(const p of ps){if(!p||!p.nome)continue;const o={...p,id:p.id||uid()};S.pac=S.pac.filter(x=>x.id!==o.id);salvar(o);n++}
     for(const c of (d.clientes||[])){if(c&&c.nome)salvarCli({...c,id:c.id||uid()})}
+    for(const o of (d.orcamentos||[])){if(o&&o.numero)salvarOrc({...o,id:o.id||uid()})}
     for(const it of (d.estoque||[])){if(it&&it.nome)salvarEst({...it,id:it.id||uid()})}
     if(d.config&&typeof d.config==='object')salvarCfg({...S.cfg,...d.config});
     toast(n+' paciente(s) importado(s)')}catch(err){toast('Arquivo inválido. Use um backup .json do SAMVET.')}};r.readAsText(f);
@@ -1188,6 +1399,11 @@ document.addEventListener('click',e=>{
     abrirForm(`Receber ${R$(tot)} · ${c.nome}`,[{k:'forma',l:'Forma de pagamento',t:'select',o:FORMAS.filter(Boolean),h:1},{k:'dataPag',l:'Data do pagamento',t:'date',h:1}],{forma:'Pix',dataPag:hoje()},{},o=>{const ids=new Set(its.map(x=>x.f.id));for(const pid of new Set(its.map(x=>x.p.id))){const q=S.pac.find(x=>x.id===pid);if(q)salvar({...q,fin:q.fin.map(f=>ids.has(f.id)?{...f,pago:String(num(f.total)),sit:'Pago',forma:o.forma,dataPag:o.dataPag}:f)})}toast('Fatura recebida: '+R$(tot))})}
   else if('fotoperfil' in d)escolherFoto({t:'perfil'});
   else if('fotoperfilrm' in d){const c={...S.cfg};delete c.foto;salvarCfg(c,'Foto removida')}
+  else if('orcnovo' in d)novoOrc();
+  else if(d.orc){const o=S.orc.find(x=>x.id===d.orc);if(o)verOrc(o)}
+  else if(d.orcf){S.orcF=d.orcf;render()}
+  else if('orccsv' in d)baixar(`samvet-orcamentos-${hoje()}.csv`,csvOrc(),'text/csv');
+  else if(d.orccli){const c=S.cli.find(x=>x.id===d.orccli);if(c)novoOrc({clienteId:c.id,cliente:c.nome,tel:c.tel||'',doc:c.doc||'',km:c.km?String(num(c.km)*2):''})}
   else if('csv' in d)baixar(`samvet-lancamentos-${hoje()}.csv`,csvLanc(),'text/csv');
   else if('reenviar' in d)reenviar();
   else if('protnovo' in d)editarProtocolo(null);
@@ -1211,7 +1427,7 @@ document.addEventListener('click',e=>{
   else if(d.rmexame){const pr={...(S.cfg.precos||{})};delete pr[precoK('exames',d.rmexame)];salvarCfg({...S.cfg,precos:pr,examesExtra:(S.cfg.examesExtra||[]).filter(x=>x!==d.rmexame)},'Exame removido')}
   else if(d.quick&&p){const x=(S.cfg.servicos||[]).find(y=>y.id===d.quick);if(x){salvar({...p,fin:[...(p.fin||[]),{id:uid(),data:hoje(),tipo:x.tipo||'Serviço',desc:x.nome,qtd:'1',unit:String(num(x.valor)),total:String(num(x.valor)),sit:'Pendente',pago:''}]});toast(x.nome+' · '+R$(x.valor)+' lançado')}}
   else if('copylink' in d)copiar(LINK,'Link copiado');
-  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,config:S.cfg},null,1),'application/json')}
+  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,orcamentos:S.orc,config:S.cfg},null,1),'application/json')}
   else if('importar' in d)$('fileimp').click();
   else if('back' in d){S.sel=null;render()}
   else if(d.tab&&p){S.tab=d.tab;render()}
@@ -1220,6 +1436,7 @@ document.addEventListener('click',e=>{
   else if(d.edit)editarItem(p,d.edit,d.iid);
   else if(d.aplic)aplicar(p,d.aplic);
   else if('protapl' in d)escolherProtocolo(p);
+  else if('orcpac' in d)novoOrc(orcDePaciente(p));
   else if('fotopac' in d)escolherFoto({t:'pac',id:p.id});
   else if('fotopacrm' in d){const q={...p};delete q.foto;salvar(q);toast('Foto removida')}
   else if(d.anexoedit){const a=(p.anexos||[]).find(x=>x.id===d.anexoedit);if(a)abrirForm('Legenda do anexo',[{k:'desc',l:'Descrição'},{k:'regiao',l:'Região do corpo',h:1,list:[...REG_CORPO,...MEMB.flatMap(mb=>REG_MEMBRO.map(r=>mb+' · '+r))]},{k:'data',l:'Data',t:'date',h:1}],a,p,o=>salvar({...p,anexos:p.anexos.map(x=>x.id===a.id?o:x)}))}
@@ -1256,9 +1473,9 @@ render();
     dict.onFinal(({text})=>{if(micTa&&text)micTa.value=(micTa.value?micTa.value.replace(/\s*$/,' '):'')+text});
   }
   if(!db){
-    S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.cfg=LS.get('samvet-config',{});
+    S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.orc=LS.get('samvet-orcamentos',[]);S.cfg=LS.get('samvet-config',{});
     note(window.__semId?'Não foi possível identificar sua conta neste link, então os dados ficam só neste aparelho. Peça a quem compartilhou para te convidar com acesso de edição.':'Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
-  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.cfg=LS.get(PFX+'cache-config',{});render();
+  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=LS.get(PFX+'cache-orcamentos',[]);S.cfg=LS.get(PFX+'cache-config',{});render();
   note(S.pac.length?'Mostrando os dados salvos neste aparelho enquanto conecta…':'Carregando pacientes…');
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
@@ -1268,6 +1485,7 @@ render();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))render();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
+  colRef('orcamentos').onSnapshot(snap=>{S.orc=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))render()},()=>{});
   colRef('clientes').onSnapshot(snap=>{S.cli=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))render()},()=>{});
   colRef('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
   cfgRef().onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))render()},()=>{});
