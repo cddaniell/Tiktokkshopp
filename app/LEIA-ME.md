@@ -79,3 +79,27 @@ Com um `firebase-config.js` cujo `projectId` comece com `demo-`, o site usa os s
 ## Situação
 - Projeto Firebase: `vetcamp-1704e`
 - Segredos do GitHub (`FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`) cadastrados em 25/11/2026.
+
+## Segurança e proteção contra sobrecarga
+Já ativo no site (gratuito):
+- **Hospedagem do Firebase atrás da rede do Google**, que absorve picos de acesso e ataques de negação de serviço (DDoS) na entrada.
+- **Cabeçalhos de segurança** (`firebase.json`): política de conteúdo (CSP) que bloqueia scripts de sites estranhos, proteção contra o site ser embutido em páginas falsas, HTTPS obrigatório (HSTS), `nosniff`, `Referrer-Policy` e `Permissions-Policy`.
+- **Banco (`firestore.rules`)**: cada conta só acessa os próprios dados, só nas coleções que o app usa, com limite de campos por registro; o resto fica fechado.
+- **Arquivos (`storage.rules`)**: só imagem ou PDF, até 20 MB, só na pasta da própria conta.
+- **No app**: gravações seguidas do mesmo registro viram uma só, proteção contra clique duplo, tela redesenhada em lote, lista de pacientes em páginas de 80, pausa progressiva após 5 senhas erradas, limites de tamanho em anexos e backups.
+
+## O que depende de você (gratuito, só configurar)
+1. **Alerta de orçamento no Google Cloud** (recomendado): https://console.cloud.google.com/billing → Orçamentos e alertas → crie um orçamento de, por exemplo, R$ 20 com alerta por e-mail. Se algo estranho gerar uso, você fica sabendo na hora.
+2. **Proteção contra enumeração de e-mail**: Firebase › Authentication › Configurações › marque *Proteção contra enumeração de e-mails*.
+3. **App Check (reCAPTCHA v3)**: confere que quem acessa o banco é o VetCamp de verdade e não um robô.
+   - Crie a chave em https://www.google.com/recaptcha/admin (tipo reCAPTCHA v3, domínio `vetcamp.web.app`).
+   - Firebase › App Check › registre o app da Web com essa chave.
+   - Mande a **chave do site** (a pública) para o Claude colocar em `appCheckKey`. Depois de 1 a 2 dias sem erros, ligue a **aplicação obrigatória** para Firestore e Storage no App Check.
+4. **Monitor de disponibilidade** (avisa se o site cair): UptimeRobot (https://uptimerobot.com) ou Better Stack têm plano gratuito. Cadastre `https://vetcamp.web.app`. Confira nos termos se o plano gratuito permite uso comercial.
+
+## O que é pago (para você decidir)
+- **Plano Blaze do Firebase** (paga só o que passar do gratuito; pede cartão): necessário para anexos de PDF e raio-X no Storage.
+- **Domínio próprio** (ex.: `vetcamp.com.br`, cerca de R$ 40/ano no registro.br).
+- **WhatsApp automático** (lembretes enviados sozinhos): exige a API oficial do WhatsApp Business, cobrada por conversa.
+- **Monitor de erros** como o Sentry: tem plano gratuito limitado; os pagos começam por volta de US$ 26/mês.
+- **Lojas**: Google Play (taxa única de US$ 25) e App Store (US$ 99/ano).
