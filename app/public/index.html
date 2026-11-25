@@ -242,6 +242,17 @@ body.semrede .wrap{padding-bottom:200px}
 .passos li::before{content:counter(p);grid-row:span 2;width:32px;height:32px;border-radius:50%;background:var(--act);color:var(--actink);display:grid;place-items:center;font:800 15px var(--display)}
 .passos .pt{font-weight:400}.passos .pt b{font-weight:700}
 .ico{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 5px;font-size:13px;line-height:1.4}
+.alertas{display:flex;gap:6px;flex-wrap:wrap;margin:-6px 0 12px}.item .alertas{margin:0 0 8px}
+.lbtns{display:inline-flex;gap:6px}
+.modpop{border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 6px 20px var(--shadow);margin:0 0 6px;max-height:260px;overflow:auto}
+.modpop button{display:grid;gap:2px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 12px}.modpop button:hover{background:var(--panel)}.modpop p{margin:0;padding:8px 12px}
+.pixbox{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start}
+.pixqr{width:220px;height:220px;max-width:100%;background:#fff;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line)}.pixqr img{width:100%;height:100%;border-radius:12px}
+.pixcod{width:100%;min-height:96px;font:12px/1.4 ui-monospace,monospace;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel);word-break:break-all}
+@media(max-width:600px){.pixbox{grid-template-columns:1fr;justify-items:center}}
+.sline{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) 70px auto 32px;gap:6px;align-items:center;margin-bottom:6px}
+.sline input{min-height:40px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);width:100%}
+@media(max-width:600px){.sline{grid-template-columns:1fr 70px auto 32px}.sline [data-f=nome]{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}.pulso{animation:none}}
 </style>
 
@@ -479,6 +490,7 @@ const telWa=t=>{let d=String(t||'').replace(/\D/g,'');if(!d)return'';if(d.length
 const waLink=(t,msg)=>{const n=telWa(t);return n?`<a class="btn sm wa" href="https://wa.me/${n}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a>`:''};
 
 const EXAMES_BASE=['Hemograma','Bioquímico','Fibrinogênio','Lactato','Gasometria','Radiografia','Ultrassonografia','Endoscopia','Coproparasitológico','Cultura e antibiograma','Citologia','Histopatológico'];
+const ALERTAS=['Agressivo / escoiceia','Difícil de conter','Reação a sedação','Não aplicar IM no pescoço','Risco de cólica','Em carência de medicamento','Doador de sangue','Gestante'];
 const STATUS=[['tratamento','Em tratamento'],['internado','Internado'],['acompanhamento','Acompanhamento'],['alta','Alta'],['obito','Óbito']];
 const stLabel=k=>(STATUS.find(s=>s[0]===k)||STATUS[0])[1];
 const EQ=['Equino','Muar','Asinino'],RUM=['Bovino','Bubalino','Ovino','Caprino'],GR=[...EQ,...RUM,'Suíno'];
@@ -496,7 +508,7 @@ const VAC_EQ=['Influenza equina','Encefalomielite (leste/oeste)','Tétano','Raiv
 const VAC_BOV=['Brucelose (B19 / RB51)','Raiva','Clostridioses','Leptospirose','IBR / BVD','Botulismo'];
 const FORMAS=['','Pix','Dinheiro','Cartão de débito','Cartão de crédito','Boleto','Transferência'];
 
-const S={pac:[],est:[],cli:[],orc:[],cliSel:null,cfg:{},sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac',finF:'pend'};
+const S={pac:[],est:[],cli:[],orc:[],desp:[],cliSel:null,cfg:{},sel:null,tab:'resumo',filtro:'todos',q:'',vis:'pac',finF:'pend'};
 let BASE='',PFX='samvet-',isDono=false,db=null,dict=null,user=null,assets=null,dl=null,me=null,micBtn=null,micTa=null,timer=null;
 const queue={};
 
@@ -522,6 +534,7 @@ const F_PAC=[
  {k:'end',l:'Município / endereço'},{k:'km',l:'Distância da base (km)',t:'number',h:1},
  {sec:'Saúde'},
  {k:'alergias',l:'Alergias e reações a medicamentos',t:'ta'},
+ {k:'alertas',l:'Alertas fixos (aparecem no topo da ficha)',t:'checks',o:ALERTAS},{k:'alertaObs',l:'Outro alerta (texto curto)'},
  {k:'cronicas',l:'Doenças crônicas e observações gerais',t:'ta'},
  {k:'dieta',l:'Alimentação / manejo',t:'ta'},
  {k:'status',l:'Status',t:'select',o:STATUS}];
@@ -670,7 +683,7 @@ function rodapeFin(p){
   ${ks.length?`<div class="tw"><table><tr><th>Seção</th><th class="n">Itens</th><th class="n">Valor</th><th class="n">Em aberto</th></tr>${ks.map(k=>`<tr><td>${esc(k)}</td><td class="n">${r.g[k].n}</td><td class="n">${R$(r.g[k].t)}</td><td class="n ${r.g[k].a?'late':''}">${R$(r.g[k].a)}</td></tr>`).join('')}
   <tr class="totrow"><td><b>Total</b></td><td></td><td class="n"><b>${R$(r.tot)}</b></td><td class="n ${r.ab?'late':'ok'}"><b>${R$(r.ab)}</b></td></tr></table></div>
   <div class="counts" style="margin:12px 0 0"><div class="count"><b>${R$(r.tot)}</b><span>Total do animal</span></div><div class="count" style="color:var(--okc)"><b>${R$(r.rec)}</b><span>Recebido</span></div><div class="count" style="color:var(--warn)"><b>${R$(r.ab)}</b><span>Em aberto</span></div>${r.orc?`<div class="count"><b>${R$(r.orc)}</b><span>Em orçamento</span></div>`:''}</div>
-  ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button></div>`:''}`
+  ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm pri" data-pixpac>Cobrar com Pix</button><button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button><button class="btn sm" data-socios>${p.socios&&p.socios.length>1?'Editar divisão':'Dividir entre responsáveis'}</button></div>${rateioHtml(p,r.ab)}`:''}`
   :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a aba Preços para o valor entrar sozinho.</p>'}</section>`;
 }
 const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
@@ -751,7 +764,7 @@ function alertas(p){
 /* ---------- gravação ---------- */
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const errMsg=e=>e&&['invalid_argument','permission-denied','invalid-argument'].includes(e.code)?'Seu acesso não permite salvar. Peça ao dono do VetCamp para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
-const COLS={pacientes:'pac',estoque:'est',clientes:'cli',orcamentos:'orc'};
+const COLS={pacientes:'pac',estoque:'est',clientes:'cli',orcamentos:'orc',despesas:'desp'};
 const colRef=c=>db.collection(BASE+'/'+c);
 const cfgRef=()=>db.doc(BASE+'/config/clinica');
 const lsKey=col=>col==='pacientes'?'prontuario-vet':'samvet-'+col;
@@ -826,7 +839,7 @@ function renderLista(){
   let rows;
   if(!S.pac.length)rows=`<div class="empty"><h2>Nenhum paciente ainda</h2><p>Cadastre o primeiro animal para abrir a ficha clínica.</p><button class="btn pri" data-novo>+ Novo paciente</button></div>`;
   else if(!list.length)rows=`<div class="empty"><p>Nenhum paciente neste filtro.</p></div>`;
-  else rows=list.map(({p,a})=>{const u=ult(p)[0];const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}${deb?` · <span class="late">deve ${R$(deb)}</span>`:''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
+  else rows=list.map(({p,a})=>{const u=ult(p)[0];const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${alertasDe(p).slice(0,1).map(x=>`<span class="flag">⚠ ${esc(x)}</span>`).join('')}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}${deb?` · <span class="late">deve ${R$(deb)}</span>`:''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
   const hj=new Date(),hr=hj.getHours(),nm=(S.cfg.apelido||me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
   const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
@@ -844,7 +857,7 @@ function renderAgenda(){
     if(g!==last){html+=`<h3 class="dayh">${g}</h3>`;last=g}
     html+=`<div class="ag${dias(x.d)<0?' late':''}"><button data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${x.h?esc(x.h)+' · ':''}${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>${waLink(x.p.tel,x.tab==='fin'?`Olá, ${x.p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. ${x.txt.replace('Cobrança: ','Consta em aberto: ')}, referente a ${x.p.nome}. Chave Pix: ${S.cfg.pix||'—'}.`:msgLembrete(x))}</div>`;
   }
-  $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>');
+  $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><div class="btns">${(()=>{const e=rotaHoje();return e.length?`<a class="btn sm" href="${esc(rotaUrl(e))}" target="_blank" rel="noopener">Rota de hoje no mapa (${e.length})</a>`:''})()}<button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>');
 }
 function renderIntern(){
   const ps=S.pac.filter(p=>p.status==='internado');
@@ -853,7 +866,7 @@ function renderIntern(){
     const ev=ord(p.evolucao)[0],u=ult(p)[0]||{},v=ev||u,R=REF[p.especie]||{};
     const out=(k)=>R[k]&&v[k]&&(+v[k]<R[k][0]||+v[k]>R[k][1]);
     const meds=(p.meds||[]).filter(medAtiva).map(m=>({m,n:proxMed(m)})).sort((a,b)=>(a.n||0)-(b.n||0));
-    return `<article class="item"><header><h3>${esc(p.nome)}</h3><span class="meta">${esc(p.lote||'')}</span></header>
+    return `<article class="item"><header><h3>${esc(p.nome)}</h3><span class="meta">${esc(p.lote||'')}</span></header>${chipsAlerta(p)}
     <div class="vl">${esc([p.especie,p.raca,p.tutor].filter(Boolean).join(' · '))}</div>
     ${u.diag?`<p><b>Dx:</b> ${esc(u.diag)}</p>`:''}
     <div class="vl">${v.data?'Último registro '+br(v.data)+(v.hora?' '+esc(v.hora):'')+': ':''}${['temp','fc','fr'].map(k=>v[k]?`<span class="${out(k)?'late':''}">${k==='temp'?'T '+esc(v[k])+'°C':k.toUpperCase()+' '+esc(v[k])}</span>`:'').filter(Boolean).join(' · ')||'sem parâmetros'}</div>
@@ -875,17 +888,19 @@ function renderCaixa(){
   $('view').innerHTML=`<div class="bar"><h2>Caixa</h2><span class="meta">${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</span></div>
   <div class="counts"><div class="count"><b>${R$(aRec)}</b><span>A receber</span></div><div class="count" style="color:var(--warn)"><b>${R$(venc)}</b><span>Vencido</span></div><div class="count"><b>${R$(fat)}</b><span>Faturado no mês</span></div><div class="count" style="color:var(--okc)"><b>${R$(rec)}</b><span>Recebido no mês</span></div></div>
   ${tut.length?`<div class="box"><h3>Em aberto por tutor</h3><div class="tw"><table><tr><th>Tutor</th><th>Animais</th><th class="n">Saldo</th><th></th></tr>${tut.map(t=>`<tr><td><b>${esc(t.tutor)}</b></td><td>${esc([...new Set(t.itens.map(x=>x.p.nome))].join(', '))}</td><td class="n late">${R$(t.total)}</td><td>${waLink(t.tel,`Olá, ${t.tutor}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Segue o resumo em aberto:\n${t.itens.map(x=>`• ${x.p.nome}: ${x.f.desc} (${br(x.f.data)}) ${R$(saldo(x.f))}`).join('\n')}\nTotal: ${R$(t.total)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}</td></tr>`).join('')}</table></div></div>`:''}
+  ${despesasHtml(mes)}
+  <div class="box"><h3>Resultado do mês</h3><p style="margin:0">Recebido ${R$(rec)} − despesas pagas ${R$(despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0))} = <b class="${rec-despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0)>=0?'ok':'late'}">${R$(rec-despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0))}</b></p></div>
   <div class="bar"><h3>Lançamentos</h3><div class="chips" style="margin:0">${[['pend','Em aberto'],['mes','Este mês'],['todos','Todos']].map(([k,l])=>`<button class="btn sm${S.finF===k?' pri':''}" data-finf="${k}">${l}</button>`).join('')}</div></div>
   ${ordL.length?`<div class="tw"><table><tr><th>Data</th><th>Paciente</th><th>Descrição</th><th class="n">Total</th><th class="n">Saldo</th><th></th></tr>${ordL.map(({f,p})=>`<tr><td>${br(f.data)}</td><td>${esc(p.nome)}<br><span class="meta">${esc(p.tutor||'')}</span></td><td>${esc(f.desc)}<br><span class="meta">${esc(f.sit)}${f.forma?' · '+esc(f.forma):''}</span></td><td class="n">${R$(f.total)}</td><td class="n ${saldo(f)?'late':'ok'}">${R$(saldo(f))}</td><td>${saldo(f)?`<button class="btn sm" data-quitar="${esc(f.id)}" data-pid="${esc(p.id)}">Receber</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="empty"><p>Nenhum lançamento aqui. Lance pela aba Financeiro da ficha do paciente ou informe o valor ao salvar uma consulta.</p></div>'}`;
 }
 const estAlerta=it=>(it.min!==undefined&&it.min!==''&&num(it.qtd)<=num(it.min))||(it.val&&dias(it.val)<=60);
-const F_EST=[{k:'nome',l:'Produto',req:1},{k:'cat',l:'Categoria',t:'select',o:['Medicamento','Vacina','Vermífugo','Material','Ferradura / casco','Outro'],h:1},{k:'un',l:'Unidade',h:1,list:['frasco','ampola','mL','comprimido','dose','caixa','unidade','kg','bisnaga']},
+const F_EST=[{k:'nome',l:'Produto',req:1},{k:'controlado',l:'Controlado (MAPA)',t:'select',o:['Não','Sim'],h:1,hint2:'entra no livro de controlados'},{k:'cat',l:'Categoria',t:'select',o:['Medicamento','Vacina','Vermífugo','Material','Ferradura / casco','Outro'],h:1},{k:'un',l:'Unidade',h:1,list:['frasco','ampola','mL','comprimido','dose','caixa','unidade','kg','bisnaga']},
  {k:'qtd',l:'Quantidade em estoque',t:'number',h:1},{k:'min',l:'Estoque mínimo',t:'number',h:1},{k:'lote',l:'Lote',h:1},{k:'val',l:'Validade',t:'date',h:1},
  {k:'conc',l:'Concentração (mg/mL)',t:'number',h:1},{k:'custo',l:'Custo unitário (R$)',t:'number',h:1},{k:'preco',l:'Preço de venda (R$)',t:'number',h:1},{k:'forn',l:'Fornecedor',h:1},{k:'obs',l:'Observações',t:'ta'}];
 function renderEstoque(){
   const l=[...S.est].sort((a,b)=>(estAlerta(b)-estAlerta(a))||String(a.nome).localeCompare(String(b.nome)));
   const val=S.est.reduce((s,x)=>s+num(x.qtd)*num(x.custo),0);
-  $('view').innerHTML=`<div class="bar"><h2>Estoque e farmácia</h2><button class="btn pri sm" data-estnovo>+ Produto</button></div>
+  $('view').innerHTML=`<div class="bar"><h2>Estoque e farmácia</h2><div class="btns"><button class="btn sm" data-livroctr>Livro de controlados</button><button class="btn pri sm" data-estnovo>+ Produto</button></div></div>
   <p class="hint">Alerta quando a quantidade chega ao mínimo ou a validade vence em até 60 dias. Valor em estoque (custo): ${R$(val)}.</p>
   ${l.length?`<div class="tw"><table><tr><th>Produto</th><th class="n">Qtd.</th><th>Validade</th><th class="n">Preço</th><th></th></tr>${l.map(it=>`<tr><td><b>${esc(it.nome)}</b><br><span class="meta">${esc([it.cat,it.conc?it.conc+' mg/mL':'',it.lote?'lote '+it.lote:''].filter(Boolean).join(' · '))}</span></td><td class="n ${num(it.qtd)<=num(it.min)&&it.min!==''&&it.min!==undefined?'late':''}">${fx(num(it.qtd),2)} ${esc(it.un||'')}<br><span class="meta">mín. ${esc(it.min||'—')}</span></td><td class="${it.val&&dias(it.val)<=60?'late':''}">${br(it.val)}</td><td class="n">${it.preco?R$(it.preco):'—'}</td><td><div class="btns"><button class="btn sm" data-estmv="-1" data-eid="${esc(it.id)}" aria-label="Baixar 1">−1</button><button class="btn sm" data-estmv="1" data-eid="${esc(it.id)}" aria-label="Adicionar 1">+1</button><button class="btn sm" data-estedit="${esc(it.id)}">Editar</button></div></td></tr>`).join('')}</table></div>`:'<div class="empty"><h2>Estoque vazio</h2><p>Cadastre medicamentos, vacinas e materiais para controlar quantidade, validade e preço.</p></div>'}`;
 }
@@ -916,6 +931,7 @@ function renderFerr(){
     <div class="fld h"><label for="gs_esp">Espécie</label><select id="gs_esp">${Object.keys(GEST).map(k=>`<option>${k}</option>`).join('')}</select></div>
    </div><div class="res" id="r_gs"></div></div>
   </div>
+  <div class="box"><div class="bar"><h3>Modelos de texto</h3><button class="btn pri sm" data-modnovo>+ Modelo</button></div><p class="hint" style="margin:0 0 10px">Frases prontas para consultas, orientações e laudos. Nos campos de texto, toque em <b>Modelos</b> para inserir.</p>${modelos().map(m=>`<div class="prow2"><span><b>${esc(m.nome)}</b><br><span class="meta">${esc(m.texto.slice(0,90))}${m.texto.length>90?'…':''}</span></span><button class="btn sm" data-modedit="${esc(m.id)}">Editar</button></div>`).join('')}</div>
   <div class="box"><div class="bar"><h3>Protocolos</h3><button class="btn pri sm" data-protnovo>+ Protocolo</button></div><p class="hint" style="margin:0 0 10px">Pacotes prontos de medicação, vacinas, exames e serviços, com valores. Aplique pelo botão "Aplicar protocolo" no Resumo do animal.</p>${protocolos().map(x=>`<div class="prow2"><span><b>${esc(x.nome)}</b><br><span class="meta">${esc(x.itens.map(i=>i.nome).join(' · '))}</span></span><button class="btn sm" data-protedit="${esc(x.id)}">Editar</button></div>`).join('')}</div>
   <div class="box"><h3>Tabela de doses · equinos adultos</h3><p class="hint" style="margin:0 0 10px">Referências usuais de literatura. Confira sempre a bula, a concentração do frasco e o estado do paciente. "Usar" leva a dose para a calculadora.</p><div class="tw"><table><tr><th>Fármaco</th><th>Dose</th><th>Via</th><th>Intervalo</th><th></th></tr>${DOSES_BASE.map((d,i)=>`<tr><td><b>${esc(d[0])}</b>${d[5]?`<br><span class="meta">frasco comum ${d[5]} mg/mL</span>`:''}</td><td>${esc(d[1])}</td><td>${esc(d[2])}</td><td>${esc(d[3])}</td><td><button class="btn sm" data-dose="${i}">Usar</button></td></tr>`).join('')}</table></div></div>
   <div class="box"><h3>Atendimento em lote</h3><p class="hint" style="margin:0 0 10px">Vacina, vermífugo ou OPG para vários animais de uma propriedade numa visita só. Cada animal recebe o registro na aba Sanidade.</p>
@@ -1017,7 +1033,8 @@ function renderConta(){
   </div>
   <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.</p>
    <form id="cfgf"><div class="f">
-   ${[['clinica','Nome da clínica / serviço'],['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ'],['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
+   ${[['clinica','Nome da clínica / serviço'],['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ'],['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['pixNome','Nome do recebedor do Pix (como no banco)'],['pixCidade','Cidade do recebedor do Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
+   <div class="fld h"><label for="cf_pixTipo">Tipo da chave Pix</label><select id="cf_pixTipo">${['','CPF / CNPJ','Celular','E-mail','Aleatória'].map(x=>`<option${(c.pixTipo||'')===x?' selected':''}>${x}</option>`).join('')}</select></div>
    </div><div class="acts"><button class="btn pri">Salvar dados da clínica</button></div></form></div>
   <div class="box"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
   <div class="box"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
@@ -1026,7 +1043,7 @@ function renderConta(){
   $('perff').onsubmit=e=>{e.preventDefault();salvarCfg({...S.cfg,apelido:$('pf_apelido').value.trim()},'Nome salvo')};
   if($('padV'))window._padV=padAssin($('padV'));
   if($('meName'))$('meName').textContent=S.cfg.apelido||nome||(STANDALONE?'Sua conta':'Conta Claude');
-  $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
+  $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input,select'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
 }
 
 /* ---------- clientes ---------- */
@@ -1059,7 +1076,7 @@ function renderCliente(c){
   ${(()=>{const os=S.orc.filter(o=>o.clienteId===c.id).sort((a,b)=>String(b.numero).localeCompare(String(a.numero)));return os.length?`<div class="box"><h3>Orçamentos (${os.length})</h3>${os.map(o=>`<button class="row" data-orc="${esc(o.id)}"><span class="av">Or</span><span><h3>${esc(o.numero)}</h3><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''}</span></span><span class="end"><b class="tnum">${R$(orcTotais(o).total)}</b><br><span class="pill" style="--c:var(--s-${ORC_COR[orcStatus(o)]})">${orcStatus(o)}</span></span></button>`).join('')}</div>`:''})()}
   <div class="box"><div class="bar"><h3>Fatura</h3><div class="btns"><label class="meta" for="fat_mes">Mês</label><input id="fat_mes" type="month" value="${esc(mes)}" class="minp"><label class="ck"><label><input type="checkbox" id="fat_ant"${ant?' checked':''}>Incluir em aberto de meses anteriores</label></label></div></div>
   ${its.length?`<div class="tw"><table><tr><th>Animal</th><th>Data</th><th>Descrição</th><th class="n">Valor</th><th class="n">Em aberto</th></tr>${its.map(({f,p})=>`<tr><td>${esc(p.nome)}</td><td>${br(f.data)}</td><td>${esc(f.desc)}</td><td class="n">${R$(f.total)}</td><td class="n ${saldo(f)?'late':'ok'}">${R$(saldo(f))}</td></tr>`).join('')}<tr class="totrow"><td colspan="3"><b>Total</b></td><td class="n"><b>${R$(tot)}</b></td><td class="n ${ab?'late':'ok'}"><b>${R$(ab)}</b></td></tr></table></div>
-  <div class="btns" style="margin-top:10px"><button class="btn pri sm" data-fatura="${esc(c.id)}">Gerar fatura</button>${ab?`<button class="btn sm" data-fatreceber="${esc(c.id)}">Receber tudo</button>`:''}</div>`:'<p class="meta">Nada lançado neste período.</p>'}</div>`;
+  <div class="btns" style="margin-top:10px"><button class="btn pri sm" data-fatura="${esc(c.id)}">Gerar fatura</button>${ab?`<button class="btn sm pri" data-pixcli="${esc(c.id)}">Cobrar com Pix</button><button class="btn sm" data-fatreceber="${esc(c.id)}">Receber tudo</button>`:''}</div>`:'<p class="meta">Nada lançado neste período.</p>'}</div>`;
   $('fat_mes').onchange=e=>{S.fatMes=e.target.value||hoje().slice(0,7);render()};
   $('fat_ant').onchange=e=>{S.fatAnt=e.target.checked;render()};
 }
@@ -1079,6 +1096,7 @@ const mesesAte=(m,n)=>{const out=[];let [y,mo]=m.split('-').map(Number);for(let 
 const nomeMesC=m=>new Date(m+'-15T12:00:00').toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
 function renderRelat(){
   const mes=S.relMes||hoje().slice(0,7),L=lancamentos().filter(x=>x.f.sit!=='Orçamento');
+  const despP=despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0);
   const doMes=L.filter(x=>(x.f.data||'').startsWith(mes));
   const fat=doMes.reduce((s,x)=>s+num(x.f.total),0),rec=doMes.reduce((s,x)=>s+num(x.f.pago),0);
   const custo=S.est.reduce((s,it)=>s+(it.mov||[]).filter(m=>m.q<0&&String(m.d).slice(0,7)===mes).reduce((t,m)=>t-m.q*num(it.custo),0),0);
@@ -1093,7 +1111,7 @@ function renderRelat(){
   const esp={};for(const p of S.pac.filter(ativo))esp[p.especie||'Outro']=(esp[p.especie||'Outro']||0)+1;
   const tbl=(h,rows)=>`<div class="tw"><table><tr>${h.map((x,i)=>`<th${i?' class="n"':''}>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((x,i)=>`<td${i?' class="n"':''}>${x}</td>`).join('')}</tr>`).join('')}</table></div>`;
   $('view').innerHTML=`<div class="bar"><h2>Relatórios</h2><div class="btns"><label class="meta" for="rel_mes">Mês</label><input id="rel_mes" type="month" value="${esc(mes)}" class="minp">${dl?'<button class="btn sm" data-csv>Baixar lançamentos (.csv)</button>':''}</div></div>
-  <div class="counts"><div class="count"><b>${R$(fat)}</b><span>Faturado</span></div><div class="count" style="color:var(--okc)"><b>${R$(rec)}</b><span>Recebido</span></div><div class="count"><b>${R$(custo)}</b><span>Custo de estoque usado</span></div><div class="count"><b>${R$(fat-custo)}</b><span>Resultado estimado</span></div><div class="count"><b>${atend.length}</b><span>Atendimentos</span></div><div class="count"><b>${pacM.size}</b><span>Animais atendidos</span></div><div class="count"><b>${novos}</b><span>Novos cadastros</span></div></div>
+  <div class="counts"><div class="count"><b>${R$(fat)}</b><span>Faturado</span></div><div class="count" style="color:var(--okc)"><b>${R$(rec)}</b><span>Recebido</span></div><div class="count"><b>${R$(custo)}</b><span>Custo de estoque usado</span></div><div class="count"><b>${R$(rec-despP)}</b><span>Resultado (recebido − despesas)</span></div><div class="count"><b>${R$(despP)}</b><span>Despesas pagas</span></div><div class="count"><b>${atend.length}</b><span>Atendimentos</span></div><div class="count"><b>${pacM.size}</b><span>Animais atendidos</span></div><div class="count"><b>${novos}</b><span>Novos cadastros</span></div></div>
   <div class="box"><h3>Faturamento nos últimos 12 meses</h3><div class="fig fig2"><svg id="relsvg" role="img" aria-label="Faturamento mensal dos últimos 12 meses"></svg></div></div>
   <div class="cols">
    <div class="box"><h3>Por seção</h3>${porSec.length?tbl(['Seção','Itens','Valor'],porSec.map(([k,v])=>[esc(k),v.n,R$(v.v)])):'<p class="meta">Sem lançamentos no mês.</p>'}</div>
@@ -1294,11 +1312,12 @@ function verOrc(o){
   <div class="tw"><table><tr><th>Item</th><th class="n">Qtd.</th><th class="n">Unit.</th><th class="n">Total</th></tr>${t.its.map(i=>`<tr><td>${esc(i.desc)}</td><td class="n">${fx(num(i.qtd||1),2)}</td><td class="n">${R$(i.unit)}</td><td class="n">${R$(num(i.qtd||1)*num(i.unit))}</td></tr>`).join('')}
   <tr><td colspan="3">Subtotal</td><td class="n">${R$(t.sub)}</td></tr>${t.desc?`<tr><td colspan="3">Desconto</td><td class="n">− ${R$(t.desc)}</td></tr>`:''}${t.km?`<tr><td colspan="3">Deslocamento (${esc(o.km)} km)</td><td class="n">${R$(t.km)}</td></tr>`:''}<tr class="totrow"><td colspan="3"><b>Total</b></td><td class="n"><b>${R$(t.total)}</b></td></tr></table></div>
   ${o.cond?`<p><span class="lbl">Pagamento</span>${esc(o.cond)}</p>`:''}${o.obs?`<p><span class="lbl">Observações</span>${esc(o.obs)}</p>`:''}
-  <div class="acts" style="justify-content:flex-start"><button class="btn pri sm" id="v_pdf">Baixar PDF</button>${waLink(o.tel,textoOrc(o))}<button class="btn sm" id="v_copy">Copiar texto</button><button class="btn sm" id="v_edit">Editar</button><button class="btn sm" id="v_dup">Duplicar</button></div>
+  <div class="acts" style="justify-content:flex-start"><button class="btn pri sm" id="v_pdf">Baixar PDF</button><button class="btn sm" id="v_pix">Pix</button>${waLink(o.tel,textoOrc(o))}<button class="btn sm" id="v_copy">Copiar texto</button><button class="btn sm" id="v_edit">Editar</button><button class="btn sm" id="v_dup">Duplicar</button></div>
   <div class="acts" style="justify-content:flex-start">${st!=='Aprovado'?'<button class="btn sm pri" id="v_apr">Aprovado</button><button class="btn sm del" id="v_rec">Recusado</button><button class="btn sm" id="v_env">Marcar como enviado</button>':''}<button class="btn sm" id="cancel" style="margin-left:auto">Fechar</button></div>`;
   $('sheet').classList.add('on');$('card').scrollTop=0;
   $('cancel').onclick=fechar;
   $('v_pdf').onclick=()=>exportarPdfOrc(o);
+  $('v_pix').onclick=()=>cobrarPix(orcTotais(o).total,{desc:'orçamento '+o.numero,tel:o.tel,nome:o.cliente,txid:o.numero});
   $('v_copy').onclick=()=>copiar(textoOrc(o),'Texto do orçamento copiado');
   $('v_edit').onclick=()=>editarOrc(o,false);
   $('v_dup').onclick=()=>editarOrc({...JSON.parse(JSON.stringify(o)),id:uid(),numero:proxNumOrc(),data:hoje(),status:'Rascunho',aprovadoEm:'',lancado:'',por:meId()},true);
@@ -1398,9 +1417,10 @@ async function pdfOrc(o){
   // totais
   const tl=[['Subtotal',brl(t.sub)]];if(t.desc)tl.push(['Desconto'+(o.descTipo==='%'?' ('+o.descValor+'%)':''),'- '+brl(t.desc)]);if(t.km)tl.push([`Deslocamento (${o.km} km × ${brl(o.kmval||c.kmval)})`,brl(t.km)]);
   const tx=W-M-82;if(y+tl.length*6+16>270){d.addPage();y=20}
+  const yQ=y;if(c.pix&&t.total>0){try{const qr=await qrPng(pixPayload(t.total,o.numero),6);d.addImage(qr,'PNG',M,y-4,36,36);d.setTextColor(...CINZA);d.setFont('helvetica','bold');d.setFontSize(8);d.text('PAGUE COM PIX',M+39,y+1);d.setFont('helvetica','normal');d.text(d.splitTextToSize('Aponte a câmera do app do banco para o código. O valor já vem preenchido.',52),M+39,y+5.5)}catch(e){}}
   d.setFontSize(9.5);tl.forEach(([a,b],i)=>{d.setTextColor(...CINZA);d.setFont('helvetica','normal');d.text(a,tx,y+i*6);d.setTextColor(...TINTA);d.text(b,W-M,y+i*6,{align:'right'})});
   y+=tl.length*6;d.setFillColor(...MARROM);d.roundedRect(tx-4,y-3,86,11,2,2,'F');d.setTextColor(...CREME);d.setFont('helvetica','bold');d.setFontSize(12);d.text('TOTAL',tx,y+4.4);d.text(brl(t.total),W-M-4,y+4.4,{align:'right'});
-  y+=18;
+  y=Math.max(y+18,c.pix?yQ+38:0);
   // condições e observações
   const sec=(tit,txt)=>{if(!txt)return;const ls=d.splitTextToSize(txt,W-2*M);if(y+8+ls.length*4.4>262){d.addPage();y=20}d.setTextColor(...CINZA);d.setFont('helvetica','bold');d.setFontSize(8);d.text(tit.toUpperCase(),M,y);d.setTextColor(...TINTA);d.setFont('helvetica','normal');d.setFontSize(9.5);d.text(ls,M,y+5);y+=8+ls.length*4.4};
   sec('Condições de pagamento',[o.cond,c.pix?'Chave Pix: '+c.pix:''].filter(Boolean).join('\n'));
@@ -1426,6 +1446,175 @@ async function exportarPdfOrc(o){
   catch(e){toast(e&&/carregar/.test(e.message||'')?'Sem internet para gerar o PDF agora. Tente de novo com conexão.':(e&&e.code&&e.code!=='cancelled'&&e.code!=='declined'?'Não foi possível baixar o PDF.':'Download cancelado.'))}
 }
 
+/* ---------- melhorias: PDF de documentos, Pix, carteira, rateio, alertas, modelos, despesas, rota, controlados ---------- */
+const alertasDe=p=>[...(Array.isArray(p.alertas)?p.alertas:[]),...(p.alertaObs?[p.alertaObs]:[])];
+const chipsAlerta=p=>{const a=alertasDe(p);return a.length?`<div class="alertas">${a.map(x=>`<span class="pill" style="--c:var(--warn)">⚠ ${esc(x)}</span>`).join('')}</div>`:''};
+
+/* PDF base com o cabeçalho do VetCamp */
+async function novoPdf(titulo,linhasDir=[]){
+  const jsPDF=await pdfLib(),d=new jsPDF({unit:'mm',format:'a4'}),c=S.cfg,W=210,M=14;
+  const lat=x=>String(x??'').replace(/[‒-―−]/g,'-').replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/…/g,'...').replace(/[─-╿]/g,'-').replace(/[^\x00-\xFF]/g,'');
+  const t0=d.text.bind(d),s0=d.splitTextToSize.bind(d);d.text=(x,...a)=>t0(Array.isArray(x)?x.map(lat):lat(x),...a);d.splitTextToSize=(x,...a)=>s0(lat(x),...a);
+  const COR={MARROM:[91,56,27],CREME:[246,232,212],TAN:[243,230,211],TINTA:[51,33,15],CINZA:[118,88,61]};
+  d.setFillColor(...COR.MARROM);d.rect(0,0,W,38,'F');
+  const lg=await logoTingido('#f6e8d4');let x0=M;if(lg){d.addImage(lg,'PNG',M,7,24,24);x0=M+29}
+  d.setTextColor(...COR.CREME);d.setFont('helvetica','bold');d.setFontSize(16);d.text(d.splitTextToSize(c.clinica||'VetCamp',95)[0],x0,15);
+  d.setFont('helvetica','normal');d.setFontSize(8.5);
+  [[c.vet,c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),[c.endc,c.cidade].filter(Boolean).join(' · '),[c.telc,c.emailc].filter(Boolean).join(' · ')].filter(Boolean).forEach((l,i)=>d.text(d.splitTextToSize(l,95)[0],x0,21+i*4.4));
+  d.setFont('helvetica','bold');d.setFontSize(titulo.length>22?12:15);d.splitTextToSize(titulo.toUpperCase(),72).slice(0,2).forEach((l,i)=>d.text(l,W-M,15+i*5.5,{align:'right'}));
+  d.setFont('helvetica','normal');d.setFontSize(9);linhasDir.slice(0,3).forEach((l,i)=>d.text(l,W-M,26+i*4.6,{align:'right'}));
+  return{d,W,M,COR,c,lat,y:48};
+}
+function rodapePdf(P,txt){const{d,W,M,COR}=P,n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setDrawColor(216,193,162);d.setLineWidth(.2);d.line(M,284,W-M,284);d.setFontSize(7.5);d.setTextColor(...COR.CINZA);d.setFont('helvetica','normal');d.text(txt,M,288.5);d.text(`Página ${i} de ${n}`,W-M,288.5,{align:'right'})}}
+async function assinaturasPdf(P,y,assT,nomeT){
+  const{d,W,M,COR,c}=P;const v=c.assinVet?await dataUrlDe(srcAssin(c.assinVet)):'',t=assT?await dataUrlDe(srcAssin(assT)):'';
+  if(!v&&!t)return y;if(y>246){d.addPage();y=30}const ya=Math.max(y+22,y+22);
+  const col=(x,img,nome)=>{if(img){try{d.addImage(img,'PNG',x+8,ya-18,54,16)}catch(e){}}d.setDrawColor(...COR.CINZA);d.setLineWidth(.3);d.line(x,ya,x+78,ya);d.setTextColor(...COR.TINTA);d.setFontSize(8.5);d.text(d.splitTextToSize(nome,78)[0],x,ya+4.5)};
+  if(t)col(M,t,nomeT||'Tutor / responsável');if(v)col(W-M-78,v,[c.vet||'Médico(a)-veterinário(a)',c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '));
+  return ya+10;
+}
+async function pdfTexto(titulo,texto,{assT=null,nomeT='',dir=[]}={}){
+  const P=await novoPdf(titulo,dir.length?dir:['Emitido em '+br(hoje())]),{d,W,M,COR}=P;let y=P.y;
+  let corpo=String(texto).replace(/^[\s\S]*?\n[─-]{8,}\n+/,'');
+  {const pl=corpo.split('\n');if(pl[0]&&pl[0].trim().toUpperCase()===titulo.toUpperCase())corpo=pl.slice(1).join('\n').replace(/^\n+/,'')}
+  const temImg=!!(S.cfg.assinVet||assT);
+  for(const bruta of corpo.split('\n')){
+    if(temImg&&/^_{8,}$/.test(bruta.trim()))continue;
+    const titulo2=/^[A-ZÀ-Ý0-9 ()./·-]{4,}$/.test(bruta.trim())&&/[A-ZÀ-Ý]{3}/.test(bruta)&&!/^(CRMV|CPF|CNPJ)\b/.test(bruta.trim());
+    d.setFont('helvetica',titulo2?'bold':'normal');d.setFontSize(titulo2?11.5:10.3);d.setTextColor(...(titulo2?COR.MARROM:COR.TINTA));
+    const ls=bruta.trim()?d.splitTextToSize(bruta,W-2*M):[''];
+    for(const l of ls){if(y>276){d.addPage();y=20}d.text(l,M,y);y+=titulo2?6:4.9}
+    if(titulo2)y+=1;
+  }
+  y=await assinaturasPdf(P,y+4,assT,nomeT);
+  rodapePdf(P,`${S.cfg.clinica||'VetCamp'} · ${titulo}`);return d;
+}
+async function baixarPdf(nome,gerar){
+  if(!dl){toast('Download indisponível aqui.');return false}
+  toast('Gerando PDF…');
+  try{const d=await gerar();const r=await dl.save({filename:nome.replace(/[\/\\:*?"<>|]/g,'-'),data:d.output('blob')});if(r&&r.status==='saved')toast('PDF salvo');return true}
+  catch(e){if(e&&['cancelled','declined'].includes(e.code)){toast('Download cancelado.');return 'cancelado'}toast(e&&/carregar/.test(e.message||'')?'Sem internet para gerar o PDF agora. Tente de novo com conexão.':'Não foi possível gerar o PDF.');return false}
+}
+async function pdfCarteira(p){
+  const P=await novoPdf('Carteira de sanidade',[p.nome,'Emitida em '+br(hoje())]),{d,W,M,COR}=P;let y=P.y;
+  d.setFillColor(...COR.TAN);d.roundedRect(M,y,W-2*M,22,2,2,'F');d.setTextColor(...COR.CINZA);d.setFont('helvetica','bold');d.setFontSize(7.5);d.text('ANIMAL',M+4,y+5.5);
+  d.setTextColor(...COR.TINTA);d.setFontSize(11);d.text(p.nome,M+4,y+11.5);d.setFont('helvetica','normal');d.setFontSize(8.5);
+  d.text(d.splitTextToSize([p.especie,p.raca,p.sexo,p.pelagem,p.nasc?'nasc. '+br(p.nasc):'',p.chip?'chip/marca '+p.chip:'',p.registro?'registro '+p.registro:''].filter(Boolean).join(' · '),W-2*M-8)[0],M+4,y+16.5);
+  d.text(d.splitTextToSize('Proprietário: '+[nomeCli(p),p.cpf,p.prop].filter(Boolean).join(' · '),W-2*M-8)[0],M+4,y+20.5);y+=28;
+  const tab=(tit,head,body)=>{d.setTextColor(...COR.MARROM);d.setFont('helvetica','bold');d.setFontSize(11);if(y>262){d.addPage();y=20}d.text(tit,M,y);
+    d.autoTable({startY:y+2,margin:{left:M,right:M},head:[head],body:body.length?body:[[{content:'Nenhum registro.',colSpan:head.length}]],theme:'plain',
+      styles:{font:'helvetica',fontSize:9,textColor:COR.TINTA,cellPadding:2.2,lineColor:[216,193,162],lineWidth:{bottom:.2}},headStyles:{fillColor:COR.MARROM,textColor:COR.CREME,fontStyle:'bold'},alternateRowStyles:{fillColor:[251,246,239]}});
+    y=d.lastAutoTable.finalY+9};
+  const vac=ord(p.vacinas).filter(v=>v.tipo==='Vacina'),verm=ord(p.vacinas).filter(v=>v.tipo!=='Vacina');
+  tab('Vacinas',['Data','Vacina','Lote / fabricante','Próxima dose'],vac.map(v=>[br(v.data),v.nome,v.lote||'-',v.prox?br(v.prox):'-']));
+  tab('Vermifugação e exames de fezes',['Data','Tipo','Produto','OPG','Próxima'],verm.map(v=>[br(v.data),v.tipo==='Vermífugo'?'Vermífugo':'OPG',v.nome,v.opg||'-',v.prox?br(v.prox):'-']));
+  if(spOk('gr',p))tab('Exames oficiais',['Exame','Coleta','Resultado','Laboratório / laudo','Válido até'],ord(p.oficiais).map(x=>[x.tipo.split(' (')[0],br(x.data),x.resultado||'-',[x.lab,x.laudo].filter(Boolean).join(' · ')||'-',x.resultado==='Negativo'&&x.data&&+x.val?br(addD(x.data,+x.val)):'-']));
+  await assinaturasPdf(P,y,null,'');rodapePdf(P,`${S.cfg.clinica||'VetCamp'} · Carteira de sanidade · ${p.nome}`);return d;
+}
+
+/* Pix (BR Code) */
+function crc16(s){let c=0xFFFF;for(const ch of new TextEncoder().encode(s)){c^=ch<<8;for(let i=0;i<8;i++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
+function chavePix(){const c=S.cfg,k=String(c.pix||'').trim(),tipo=c.pixTipo||'';if(!k)return'';
+  if(tipo==='E-mail'||k.includes('@'))return k.toLowerCase();
+  if(tipo==='Aleatória'||/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(k))return k.toLowerCase();
+  const dg=k.replace(/\D/g,'');
+  if(tipo==='Celular'||k.startsWith('+'))return '+'+(dg.length>=12&&dg.startsWith('55')?dg:'55'+dg);
+  return dg||k;}
+function pixPayload(valor,txid){
+  const f=(id,v)=>id+String(v.length).padStart(2,'0')+v;
+  const limpa=(s,n)=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 ]/g,'').toUpperCase().replace(/\s+/g,' ').trim().slice(0,n)||'VETCAMP';
+  const c=S.cfg,cidade=String(c.pixCidade||c.cidade||'').split('/')[0];
+  let p=f('00','01')+f('26',f('00','br.gov.bcb.pix')+f('01',chavePix()))+f('52','0000')+f('53','986')+(valor>0?f('54',(+valor).toFixed(2)):'')+f('58','BR')+f('59',limpa(c.pixNome||c.vet||c.clinica,25))+f('60',limpa(cidade,15))+f('62',f('05',String(txid||'***').replace(/[^A-Za-z0-9]/g,'').slice(0,25)||'***'));
+  p+='6304';return p+crc16(p);
+}
+const QR_LIB='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+async function qrPng(texto,px=8){if(!window.qrcode)await carregarScript(QR_LIB);const q=qrcode(0,'M');q.addData(texto);q.make();const n=q.getModuleCount(),m=4,cv=document.createElement('canvas');cv.width=cv.height=(n+2*m)*px;const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.fillStyle='#000';for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))cx.fillRect((k+m)*px,(r+m)*px,px,px);return cv.toDataURL('image/png')}
+async function cobrarPix(valor,{desc='',tel='',nome='',txid=''}={}){
+  if(!S.cfg.pix){$('card').innerHTML=`<h2>Cobrar com Pix</h2><p>Para gerar o QR Code, cadastre sua <b>chave Pix</b> em Conta › Dados da clínica.</p><div class="acts"><button class="btn" id="cancel">Fechar</button><button class="btn pri" data-vis="conta" id="irconta">Ir para Conta</button></div>`;$('sheet').classList.add('on');$('cancel').onclick=fechar;$('irconta').onclick=()=>{fechar();S.vis='conta';S.sel=null;render()};return}
+  const cod=pixPayload(valor,txid);
+  $('card').innerHTML=`<h2>Cobrar ${R$(valor)} com Pix</h2>${desc?`<p class="meta" style="margin:-6px 0 10px">${esc(desc)}</p>`:''}
+   <div class="pixbox"><div class="pixqr" id="pixqr" aria-label="QR Code Pix"><span class="meta">Gerando QR Code…</span></div>
+   <div><span class="lbl">Recebedor</span><p style="margin:0 0 8px">${esc(S.cfg.pixNome||S.cfg.vet||S.cfg.clinica||'')} · chave ${esc(S.cfg.pix)}</p>
+   <span class="lbl">Pix copia e cola</span><textarea class="pixcod" id="pixcod" readonly aria-label="Código Pix copia e cola">${esc(cod)}</textarea>
+   <p class="hint" style="margin:6px 0 0">O cliente aponta a câmera do app do banco para o QR Code ou cola o código. Confira o valor e o nome do recebedor no app antes de mandar.</p></div></div>
+   <div class="acts"><button class="btn" id="cancel">Fechar</button><button class="btn" id="pixcopy">Copiar código</button>${waLink(tel,`Olá${nome?', '+nome:''}! Segue o Pix de ${R$(valor)}${desc?' referente a '+desc:''}.\n\nPix copia e cola:\n${cod}`)}</div>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;$('pixcopy').onclick=()=>copiar(cod,'Código Pix copiado');
+  try{const u=await qrPng(cod);if($('pixqr'))$('pixqr').innerHTML=`<img src="${u}" alt="QR Code Pix de ${R$(valor)}">`}catch(e){if($('pixqr'))$('pixqr').innerHTML='<span class="meta">Sem internet para desenhar o QR Code. Use o código copia e cola.</span>'}
+}
+
+/* rateio entre coproprietários */
+function editarSocios(p){
+  const l=(p.socios&&p.socios.length?p.socios:[{nome:nomeCli(p),tel:p.tel||'',pct:'100'}]).map(x=>({...x}));
+  const linha=(x,i)=>`<div class="sline"><input data-f="nome" placeholder="Nome" aria-label="Nome" value="${esc(x.nome||'')}"><input data-f="tel" type="tel" placeholder="Telefone" aria-label="Telefone" value="${esc(x.tel||'')}"><input data-f="pct" type="number" step="any" min="0" max="100" inputmode="decimal" aria-label="Porcentagem" value="${esc(x.pct||'')}"><span class="meta">%</span><button type="button" class="x" data-rmsoc="${i}" aria-label="Remover">×</button></div>`;
+  const ler=()=>[...$('card').querySelectorAll('.sline')].map(r=>{const o={};r.querySelectorAll('[data-f]').forEach(e=>o[e.dataset.f]=e.value.trim());return o}).filter(o=>o.nome);
+  const draw=ls=>{$('card').innerHTML=`<h2>Dividir entre responsáveis · ${esc(p.nome)}</h2><p class="hint">Para animais com mais de um dono. Cada um recebe a cobrança da sua parte. A soma precisa dar 100%.</p><div id="socs">${ls.map(linha).join('')}</div><button type="button" class="btn sm" id="addsoc">+ Responsável</button><p class="meta" id="somasoc"></p>
+    <div class="acts">${p.socios&&p.socios.length?'<button type="button" class="btn ghost del" id="del">Não dividir</button>':''}<button type="button" class="btn" id="cancel">Cancelar</button><button type="button" class="btn pri" id="socok">Salvar divisão</button></div>`;
+    const soma=()=>{const s=ler().reduce((a,x)=>a+num(x.pct),0);$('somasoc').textContent='Soma: '+fx(s,2)+'%';$('somasoc').className=Math.abs(s-100)<.01?'ok':'late';return s};
+    $('card').oninput=()=>{if($('somasoc'))soma()};soma();
+    $('addsoc').onclick=()=>draw([...ler(),{nome:'',tel:'',pct:''}]);
+    $('card').querySelectorAll('[data-rmsoc]').forEach(b=>b.onclick=()=>{const x=ler();x.splice(+b.dataset.rmsoc,1);draw(x.length?x:[{nome:'',pct:'100'}])});
+    $('cancel').onclick=fechar;
+    if($('del'))$('del').onclick=()=>{const q={...p};delete q.socios;salvar(q);fechar();toast('Divisão removida')};
+    $('socok').onclick=()=>{const x=ler();if(x.length<2){toast('Coloque pelo menos dois responsáveis');return}if(Math.abs(soma()-100)>=.01){toast('A soma das porcentagens precisa dar 100%');return}salvar({...p,socios:x});fechar();toast('Divisão salva')};
+  };
+  $('sheet').classList.add('on');draw(l);
+}
+function rateioHtml(p,ab){
+  if(!(p.socios&&p.socios.length>1))return '';
+  return `<div class="tw" style="margin-top:10px"><table><tr><th>Responsável</th><th class="n">Parte</th><th class="n">Em aberto</th><th></th></tr>${p.socios.map((s,i)=>{const v=ab*num(s.pct)/100;return`<tr><td>${esc(s.nome)}</td><td class="n">${fx(num(s.pct),2)}%</td><td class="n late">${R$(v)}</td><td><div class="btns">${v>0?`<button class="btn sm" data-pixsoc="${i}">Pix</button>`:''}${v>0?waLink(s.tel,`Olá, ${s.nome}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Sua parte (${fx(num(s.pct),2)}%) das despesas de ${p.nome} em aberto: ${R$(v)}.${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`):''}</div></td></tr>`}).join('')}</table></div>`;
+}
+
+/* modelos de texto */
+const MODELOS_BASE=[
+ {id:'m_ef',nome:'Exame físico normal',texto:'Animal alerta, em bom estado corporal. Mucosas normocoradas, TPC menor que 2 s, hidratação normal. Ausculta cardíaca e pulmonar sem alterações. Motilidade intestinal presente nos quatro quadrantes. Linfonodos sem alterações. Sem dor à palpação.'},
+ {id:'m_col',nome:'Orientações: observação de cólica',texto:'Manter sem alimento até nova avaliação, com água à vontade. Observar a cada 30 minutos: comportamento (deitar, rolar, cavar, olhar para o flanco), presença de fezes e apetite. Se a dor voltar ou piorar, ou se não houver fezes, ligar imediatamente.'},
+ {id:'m_pos',nome:'Orientações: pós-operatório',texto:'Manter em baia limpa e seca. Trocar o curativo conforme orientado. Observar apetite, fezes, febre e secreção na ferida; em qualquer alteração, ligar imediatamente. Seguir a medicação prescrita até o fim. Retorno para avaliação em __ dias.'},
+ {id:'m_rep',nome:'Repouso em baia',texto:'Repouso em baia por __ dias, sem trabalho montado. Caminhada ao passo, puxado, __ minutos __ vezes ao dia. Reavaliação ao fim do período.'},
+ {id:'m_vac',nome:'Vacinação realizada',texto:'Vacinação realizada sem reações imediatas. Pode haver dor ou inchaço no local e leve apatia por até 48 horas. Próxima dose conforme a carteira de sanidade.'}];
+const modelos=()=>S.cfg.modelos||MODELOS_BASE;
+function abrirModelos(alvo,btn){
+  const old=document.querySelector('.modpop');if(old){const mesmo=old.dataset.alvo===alvo;old.remove();if(mesmo)return}
+  const pop=document.createElement('div');pop.className='modpop';pop.dataset.alvo=alvo;
+  pop.innerHTML=modelos().length?modelos().map((m,i)=>`<button type="button" data-usemod="${i}" data-alvo="${esc(alvo)}"><b>${esc(m.nome)}</b><span class="meta">${esc(m.texto.slice(0,70))}${m.texto.length>70?'…':''}</span></button>`).join('')+'<p class="meta">Crie e edite seus modelos em Ferramentas › Modelos de texto.</p>':'<p class="meta">Nenhum modelo. Crie em Ferramentas › Modelos de texto.</p>';
+  const ta=$(alvo);ta.parentNode.insertBefore(pop,ta);
+}
+function usarModelo(i,alvo){const m=modelos()[+i],ta=$(alvo);if(!m||!ta)return;const s=ta.selectionStart??ta.value.length,e=ta.selectionEnd??s,antes=ta.value.slice(0,s);const pre=antes&&!/\s$/.test(antes)?' ':'';ta.setRangeText(pre+m.texto,s,e,'end');ta.dispatchEvent(new Event('input',{bubbles:true}));const p=document.querySelector('.modpop');if(p)p.remove();ta.focus()}
+const F_MOD=[{k:'nome',l:'Nome do modelo',req:1},{k:'texto',l:'Texto',t:'ta',req:1}];
+
+/* despesas */
+const CAT_DESP=['Combustível / deslocamento','Medicamentos e insumos','Equipamentos','Manutenção do veículo','Aluguel / estrutura','Funcionários / ajudantes','Impostos e taxas','Cursos e congressos','Marketing','Outros'];
+const F_DESP=[{k:'data',l:'Data',t:'date',h:1},{k:'cat',l:'Categoria',t:'select',o:CAT_DESP,h:1},{k:'desc',l:'Descrição',req:1},{k:'valor',l:'Valor (R$)',t:'number',req:1,h:1},{k:'sit',l:'Situação',t:'select',o:['Paga','A pagar'],h:1},{k:'venc',l:'Vencimento',t:'date',h:1},{k:'forma',l:'Forma de pagamento',t:'select',o:FORMAS,h:1},{k:'obs',l:'Observações',t:'ta'}];
+const salvarDesp=o=>gravar('despesas',o,S.desp);
+const despMes=mes=>S.desp.filter(x=>String(x.data||'').startsWith(mes));
+function despesasHtml(mes){
+  const l=[...despMes(mes)].sort((a,b)=>String(b.data).localeCompare(String(a.data))),pagas=l.filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0),apagar=S.desp.filter(x=>x.sit==='A pagar').reduce((s,x)=>s+num(x.valor),0);
+  const porCat={};for(const x of l)porCat[x.cat||'Outros']=(porCat[x.cat||'Outros']||0)+num(x.valor);
+  return `<div class="box"><div class="bar"><h3>Despesas do mês</h3><button class="btn pri sm" data-despnova>+ Despesa</button></div>
+   <p class="meta" style="margin:0 0 8px">Pagas no mês: <b>${R$(pagas)}</b>${apagar?` · a pagar (todas): <b class="late">${R$(apagar)}</b>`:''}${Object.keys(porCat).length?' · '+Object.entries(porCat).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>esc(k)+' '+R$(v)).join(' · '):''}</p>
+   ${l.length?`<div class="tw"><table><tr><th>Data</th><th>Descrição</th><th class="n">Valor</th><th></th></tr>${l.map(x=>`<tr><td>${br(x.data)}</td><td>${esc(x.desc)}<br><span class="meta">${esc(x.cat||'')}${x.sit==='A pagar'?` · <span class="late">a pagar${x.venc?' até '+br(x.venc):''}</span>`:''}</span></td><td class="n">${R$(x.valor)}</td><td><button class="btn sm" data-despedit="${esc(x.id)}">Editar</button></td></tr>`).join('')}</table></div>`:'<p class="meta">Nenhuma despesa lançada neste mês. Lance combustível, medicamentos, equipamentos e outros gastos para ver o resultado real.</p>'}</div>`;
+}
+
+/* rota do dia */
+function rotaHoje(){
+  const its=S.pac.flatMap(p=>(p.agend||[]).filter(a=>a.data===hoje()&&['Agendado','Confirmado'].includes(a.situacao)).map(a=>({a,p}))).sort((x,y)=>String(x.a.hora||'').localeCompare(String(y.a.hora||'')));
+  const ends=[];for(const {a,p} of its){const c=cliDe(p);const e=a.local||[p.end,p.prop].filter(Boolean).join(', ')||(c?[c.end,c.cidade].filter(Boolean).join(', '):'');if(e&&!ends.includes(e))ends.push(e)}
+  return ends;
+}
+function rotaUrl(ends){if(!ends.length)return '';const dest=ends[ends.length-1],way=ends.slice(0,-1).slice(0,9);return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dest)+(way.length?'&waypoints='+encodeURIComponent(way.join('|')):'')}
+
+/* controlados */
+const ehControlado=it=>it&&it.controlado==='Sim';
+function livroControlados(){
+  const its=S.est.filter(ehControlado);
+  const movs=its.flatMap(it=>(it.mov||[]).map(m=>({it,m}))).sort((a,b)=>String(b.m.d).localeCompare(String(a.m.d)));
+  $('card').innerHTML=`<h2>Livro de controlados</h2><p class="hint">Entradas e saídas dos produtos marcados como controlados no Estoque. A prescrição de controlados de uso veterinário é feita pela Notificação de Receita Veterinária no SIPEAGRO (MAPA). Confira sempre as regras atuais do MAPA.</p>
+   ${its.length?`<div class="tw"><table><tr><th>Produto</th><th class="n">Saldo</th></tr>${its.map(it=>`<tr><td>${esc(it.nome)}${it.lote?' · lote '+esc(it.lote):''}</td><td class="n">${fx(num(it.qtd),2)} ${esc(it.un||'')}</td></tr>`).join('')}</table></div>
+   <h3 style="font-size:16px;margin:14px 0 6px">Movimentações</h3>${movs.length?`<div class="tw"><table><tr><th>Data</th><th>Produto</th><th class="n">Qtd.</th><th>Motivo</th></tr>${movs.map(({it,m})=>`<tr><td>${hora(m.d)}</td><td>${esc(it.nome)}</td><td class="n ${m.q>0?'ok':'late'}">${m.q>0?'+':'−'}${fx(Math.abs(m.q),2)}</td><td>${esc(m.motivo||'')}</td></tr>`).join('')}</table></div>`:'<p class="meta">Nenhuma movimentação ainda.</p>'}`:'<p class="meta">Nenhum produto marcado como controlado. Em Estoque, edite o produto e marque "Controlado (MAPA)".</p>'}
+   <div class="acts"><button class="btn" id="cancel">Fechar</button>${movs.length&&dl?'<button class="btn" id="ctrcsv">Baixar planilha (.csv)</button>':''}</div>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;
+  if($('ctrcsv'))$('ctrcsv').onclick=()=>{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';baixar(`vetcamp-controlados-${hoje()}.csv`,'﻿'+[['Data','Produto','Lote','Entrada','Saída','Motivo'],...movs.map(({it,m})=>[hora(m.d),it.nome,it.lote||'',m.q>0?fx(m.q,2):'',m.q<0?fx(-m.q,2):'',m.motivo||''])].map(r=>r.map(q).join(';')).join('\r\n'),'text/csv')};
+}
+
 /* ---------- ficha ---------- */
 function renderFicha(p){
   const tabs=[['resumo','Resumo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']];
@@ -1433,6 +1622,7 @@ function renderFicha(p){
   $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Voltar</button>
   <div class="head"><button class="fotobtn" data-fotopac aria-label="${p.foto?'Trocar':'Adicionar'} foto de ${esc(p.nome)}">${avatar(p)}<span class="cam">${p.foto?'Trocar':'+ Foto'}</span></button><div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
+  ${chipsAlerta(p)}
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
   <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${rodapeFin(p)}`;
   const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
@@ -1470,6 +1660,7 @@ function modulo(m,p){
   const l=ord(p[m.key],dk);
   let topo='';
   if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const ids=new Set(l.map(x=>x.id)),fl=(p.fin||[]).filter(f=>f.ref&&(ids.has(f.ref)||ids.has(String(f.ref).replace(/-km$/,''))));if(fl.length)topo=`<p class="info">Subtotal de ${esc(m.tab)}: <b>${R$(fl.reduce((s,f)=>s+num(f.total),0))}</b>${fl.some(f=>saldo(f))?` · em aberto <b class="late">${R$(fl.reduce((s,f)=>s+saldo(f),0))}</b>`:''}</p>`}
+  if(m.key==='vacinas'&&l.length)topo+=`<div class="btns" style="margin-bottom:10px"><button class="btn sm pri" data-carteira>Baixar carteira de sanidade (PDF)</button></div>`;
   if(m.key==='fin'){const t=l.reduce((s,x)=>s+(x.sit==='Orçamento'?0:num(x.total)),0),sd=l.reduce((s,x)=>s+saldo(x),0);topo=`${(S.cfg.servicos||[]).length?`<div class="chips"><span class="meta" style="align-self:center">Lançar rápido:</span>${S.cfg.servicos.map(x=>`<button class="btn sm" data-quick="${esc(x.id)}">${esc(x.nome)} · ${R$(x.valor)}</button>`).join('')}</div>`:`<p class="hint">Cadastre seus serviços em Preços para lançar com um toque.</p>`}<div class="counts"><div class="count"><b>${R$(t)}</b><span>Total lançado</span></div><div class="count" style="color:var(--warn)"><b>${R$(sd)}</b><span>Em aberto</span></div></div>`}
   return `<div class="bar"><h3>${m.titulo}</h3><button class="btn pri sm" data-add="${m.key}">+ ${m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}${topo}`+
   (l.length?l.map(it=>{
@@ -1499,7 +1690,7 @@ const assTutor=p=>`\n\n_______________________________\n${p.tutor||'Tutor / resp
 function gerarDoc(t,p){
   const u=ult(p)[0]||{},pe=pesoAtual(p),H=cabec()+'\n'+'─'.repeat(24)+'\n\n';
   switch(t){
-  case 'receita':{const ms=(p.meds||[]).filter(medAtiva);return H+'RECEITUÁRIO\n\n'+identA(p)+(pe?`\nPeso: ${pe} kg`:'')+'\n\n'+(ms.length?ms.map((m,i)=>`${i+1}) ${m.med}${m.dose?' — '+m.dose:''}\n   Via ${m.via||''}, a cada ${m.freq||'?'} horas${m.fim?', até '+br(m.fim):''}.${m.obs?'\n   '+m.obs:''}${+m.carencia?'\n   Carência: '+m.carencia+' dias.':''}`).join('\n\n'):(u.trat||'1) \n   Via , a cada  horas, por  dias.'))+(u.orient?'\n\nOrientações: '+u.orient:'')+assin()}
+  case 'receita':{const ms=(p.meds||[]).filter(medAtiva);return H+'RECEITUÁRIO\n\n'+identA(p)+(pe?`\nPeso: ${pe} kg`:'')+'\n\n'+(ms.length?ms.map((m,i)=>`${i+1}) ${m.med}${m.dose?' — '+m.dose:''}\n   Via ${m.via||''}, a cada ${m.freq||'?'} horas${m.fim?', até '+br(m.fim):''}.${m.obs?'\n   '+m.obs:''}${+m.carencia?'\n   Carência: '+m.carencia+' dias.':''}${ehControlado(S.est.find(x=>x.id===m.estId))?'\n   Medicamento controlado: emitir a Notificação de Receita Veterinária no SIPEAGRO.':''}`).join('\n\n'):(u.trat||'1) \n   Via , a cada  horas, por  dias.'))+(u.orient?'\n\nOrientações: '+u.orient:'')+assin()}
   case 'atestado':return H+'ATESTADO DE SAÚDE\n\n'+`Atesto, para os devidos fins, que examinei nesta data o animal abaixo identificado, que se encontra clinicamente sadio, sem sinais de doença infectocontagiosa ou parasitária${u.temp?` (T ${u.temp} °C, FC ${u.fc||'—'} bpm, FR ${u.fr||'—'} mpm)`:''}, apto para ${p.finalidade==='Esporte'?'participar de provas e eventos':'trânsito / a finalidade a que se destina'}.\n\n`+identA(p)+(()=>{const ofi={};for(const x of ord(p.oficiais))if(!ofi[x.tipo])ofi[x.tipo]=x;const l=Object.values(ofi).filter(x=>x.resultado==='Negativo');return l.length?'\n\nExames oficiais: '+l.map(x=>`${x.tipo.split(' (')[0]} negativo em ${br(x.data)}${x.laudo?' (laudo '+x.laudo+')':''}`).join('; ')+'.':''})()+(()=>{const v=ord(p.vacinas).filter(x=>x.tipo==='Vacina').slice(0,6);return v.length?'\nVacinas: '+v.map(x=>`${x.nome} (${br(x.data)})`).join('; ')+'.':''})()+assin();
   case 'termo_cir':return H+'TERMO DE CONSENTIMENTO PARA CIRURGIA E ANESTESIA\n\n'+identA(p)+`\n\nProcedimento: ${u.diag?'tratamento de '+u.diag:'________________________________'}\n\nEu, ${p.tutor||'________________'}, responsável pelo animal acima, autorizo a realização do procedimento cirúrgico e da anestesia/sedação necessárias. Declaro que fui informado(a) sobre o diagnóstico, as alternativas de tratamento, os riscos anestésicos e cirúrgicos (incluindo complicações e óbito), os cuidados pós-operatórios e a estimativa de custos, e que tive oportunidade de esclarecer minhas dúvidas.\n\nAutorizo também procedimentos adicionais que se façam necessários durante a cirurgia, em benefício do animal.\n\nValor estimado: R$ ____________`+assTutor(p)+assin();
   case 'termo_int':return H+'TERMO DE INTERNAÇÃO\n\n'+identA(p)+`\n\nMotivo da internação: ${u.diag||u.queixa||'________________'}\n\nAutorizo a internação do animal acima e os exames, medicações e procedimentos necessários ao tratamento, ciente de que serão cobrados diárias, materiais e medicamentos utilizados. Fui informado(a) do estado clínico e do prognóstico, e de que receberei atualizações pelo telefone ${p.tel||'________'}.\n\nPertences deixados com o animal: ________________________________`+assTutor(p)+assin();
@@ -1515,6 +1706,7 @@ function docsTab(p){
   const l=ord(p.docs);
   return `<div class="bar"><h3>Documentos</h3></div><p class="hint">O texto já vem preenchido com os dados do paciente e da clínica (configure em Conta). Revise, edite e copie, baixe ou envie.</p>
   <div class="chips">${DOCS.map(([k,l])=>`<button class="btn sm" data-gerdoc="${k}">${l}</button>`).join('')}</div>
+  <div class="chips"><span class="meta" style="align-self:center">PDF pronto:</span><button class="btn sm pri" data-carteira>Carteira de sanidade</button><button class="btn sm pri" data-baixarficha>Ficha clínica completa</button></div>
   ${l.length?`<h3 style="font-size:16px;margin:12px 0 8px">Emitidos</h3>${l.map(d=>`<article class="item"><header><h3>${br(d.data)} · ${esc(d.titulo)}</h3><button class="btn sm" data-verdoc="${esc(d.id)}">Abrir</button></header></article>`).join('')}`:''}`;
 }
 function abrirDoc(p,titulo,texto,docId,opt={}){
@@ -1522,12 +1714,14 @@ function abrirDoc(p,titulo,texto,docId,opt={}){
   $('card').innerHTML=`<h2>${esc(titulo)}</h2><textarea class="doc" id="doctxt" aria-label="Texto do documento">${esc(texto)}</textarea>
   <div class="assin"><div><span class="lbl">Assinatura de ${esc(opt.nomeT||p.tutor||'tutor / responsável')}</span>${assT?`<div class="assinimg"><img src="${esc(srcAssin(assT))}" alt="Assinatura do tutor"></div><p class="meta">Assinado em ${old.assinEm?hora(old.assinEm):br(old.data)}</p>`:'<div id="padT"></div>'}</div>
   <div><span class="lbl">Assinatura do(a) veterinário(a)</span>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div>`:'<p class="meta">Cadastre sua assinatura em Conta para ela sair nos documentos.</p>'}</div></div>
-  <div class="acts">${docId?'<button type="button" class="btn ghost del" id="docdel">Excluir</button>':''}<button class="btn" id="cancel">Fechar</button><button class="btn" id="doccopy">Copiar</button>${dl?'<button class="btn" id="docdl">Baixar</button>':''}${waLink(p.tel,'').replace(/href="[^"]*"/,'id="docwa" href="#"')}${opt.semFicha?'':'<button class="btn pri" id="docsave">Salvar na ficha</button>'}</div>`;
+  <div class="acts">${docId?'<button type="button" class="btn ghost del" id="docdel">Excluir</button>':''}<button class="btn" id="cancel">Fechar</button><button class="btn" id="doccopy">Copiar</button>${dl?'<button class="btn" id="docdl">Baixar PDF</button>':''}${waLink(p.tel,'').replace(/href="[^"]*"/,'id="docwa" href="#"')}${opt.semFicha?'':'<button class="btn pri" id="docsave">Salvar na ficha</button>'}</div>`;
   $('sheet').classList.add('on');
   const pad=$('padT')?padAssin($('padT')):null;
   $('cancel').onclick=fechar;
   $('doccopy').onclick=()=>copiar($('doctxt').value,'Documento copiado');
-  if($('docdl'))$('docdl').onclick=async()=>{const a=pad&&!pad.vazio()?{url:pad.url()}:assT;baixar(`${titulo} - ${p.nome}.html`.replace(/[\/\\:*?"<>|]/g,'-'),await htmlDoc(titulo,$('doctxt').value,a,opt.nomeT||p.tutor),'text/html')};
+  if($('docdl'))$('docdl').onclick=async()=>{const a=pad&&!pad.vazio()?{url:pad.url()}:assT,tx=$('doctxt').value,nt=opt.nomeT||p.tutor;
+    const ok=await baixarPdf(`${titulo} - ${p.nome}.pdf`,()=>pdfTexto(titulo,tx,{assT:a,nomeT:nt,dir:[p.nome||'','Emitido em '+br(hoje())]}));
+    if(ok===false){toast('PDF indisponível agora: baixando como página.');baixar(`${titulo} - ${p.nome}.html`.replace(/[\/\\:*?"<>|]/g,'-'),await htmlDoc(titulo,tx,a,nt),'text/html')}};
   if($('docwa'))$('docwa').onclick=e=>{e.currentTarget.href=`https://wa.me/${telWa(p.tel)}?text=${encodeURIComponent($('doctxt').value)}`};
   if($('docsave'))$('docsave').onclick=async()=>{
     $('docsave').disabled=true;const a=pad?await guardarAssin(pad):null;
@@ -1573,7 +1767,7 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
     else{const lst=f.listEst?S.est.map(x=>x.nome):typeof f.list==='function'?f.list(p):f.list;
       inp=`<input id="${id}" type="${f.t||'text'}" ${f.t==='number'?'step="any" inputmode="decimal"':''} value="${esc(v)}"${lst&&lst.length?` list="dl_${f.k}"`:''}>${lst&&lst.length?`<datalist id="dl_${f.k}">${lst.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:''}`}
     const hint=f.hint2||(f.hint?(f.hint.eq&&spOk('eq',p)?f.hint.eq:f.hint.rum&&spOk('rum',p)?f.hint.rum:''):'');
-    return `<div class="fld${f.h?' h':''}"><label for="${id}">${f.l}${f.req?' *':''}${hint?` <span class="meta">${hint}</span>`:''}${f.t==='ta'&&dict?`<button type="button" class="mic" data-mic="${id}">Ditar</button>`:''}</label>${inp}</div>`};
+    return `<div class="fld${f.h?' h':''}"><label for="${id}">${f.l}${f.req?' *':''}${hint?` <span class="meta">${hint}</span>`:''}${f.t==='ta'?`<span class="lbtns"><button type="button" class="mic" data-modelos="${id}">Modelos</button>${dict?`<button type="button" class="mic" data-mic="${id}">Ditar</button>`:''}</span>`:''}</label>${inp}</div>`};
   $('card').innerHTML=`<h2>${esc(titulo)}</h2><form id="frm" novalidate><div class="f">${fs.map(fld).join('')}</div><div class="acts">${onDel?'<button type="button" class="btn ghost del" id="del">Excluir</button>':''}<button type="button" class="btn" id="cancel">Cancelar</button><button class="btn pri">Salvar</button></div></form>`;
   $('sheet').classList.add('on');$('card').scrollTop=0;
   const ler=()=>{const o={...val};for(const f of fs){if(!f.k)continue;const el=$('f_'+f.k);o[f.k]=f.t==='checks'||f.t==='regioes'?[...el.querySelectorAll('input:checked')].map(c=>c.value):f.t==='triadan'?[...el.querySelectorAll('[aria-pressed=true]')].map(b=>b.dataset.dente):el.value.trim()}return o};
@@ -1607,7 +1801,7 @@ function editarItem(p,key,id){
   const nf=key==='meds'?'f_med':key==='vacinas'?'f_nome':null;
   if(nf&&$(nf)&&$('f_estId')){
     $(nf).addEventListener('change',()=>{const it=estPorNome($(nf).value);if(it&&!$('f_estId').value){$('f_estId').value=it.id;if(!$('f_consumo').value)$('f_consumo').value='1';toast('Produto do estoque selecionado: '+it.nome)}});
-    $('f_estId').addEventListener('change',()=>{const it=S.est.find(x=>x.id===$('f_estId').value);if(!it)return;if(!$(nf).value.trim())$(nf).value=it.nome;if(!$('f_consumo').value)$('f_consumo').value='1'});
+    $('f_estId').addEventListener('change',()=>{const it=S.est.find(x=>x.id===$('f_estId').value);if(!it)return;if(ehControlado(it))toast('Produto controlado: a receita é a Notificação de Receita Veterinária no SIPEAGRO (MAPA).');if(!$(nf).value.trim())$(nf).value=it.nome;if(!$('f_consumo').value)$('f_consumo').value='1'});
   }
   const sel=m.priceK&&$('f_'+m.priceK),fv=$('f_valor');
   if(sel&&fv){let last=fv.value;sel.addEventListener('change',()=>{const np=preco(key,sel.value);if(np&&(!fv.value||fv.value===last)){fv.value=String(np);last=fv.value}
@@ -1658,6 +1852,7 @@ $('fileimp').onchange=e=>{
   const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const ps=Array.isArray(d)?d:d.pacientes||[];let n=0;
     for(const p of ps){if(!p||!p.nome)continue;const o={...p,id:p.id||uid()};S.pac=S.pac.filter(x=>x.id!==o.id);salvar(o);n++}
     for(const c of (d.clientes||[])){if(c&&c.nome)salvarCli({...c,id:c.id||uid()})}
+    for(const x of (d.despesas||[])){if(x&&x.desc)salvarDesp({...x,id:x.id||uid()})}
     for(const o of (d.orcamentos||[])){if(o&&o.numero)salvarOrc({...o,id:o.id||uid()})}
     for(const it of (d.estoque||[])){if(it&&it.nome)salvarEst({...it,id:it.id||uid()})}
     if(d.config&&typeof d.config==='object')salvarCfg({...S.cfg,...d.config});
@@ -1665,6 +1860,8 @@ $('fileimp').onchange=e=>{
 };
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t||t.closest('#card')&&t.dataset.pick)return;const d=t.dataset;let p=cur();
+  if(d.modelos){abrirModelos(d.modelos,t);return}
+  if('usemod' in d&&d.alvo){usarModelo(d.usemod,d.alvo);return}
   if(d.dente){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
   if(d.mic){if(micBtn===t){pararMic();return}pararMic();micBtn=t;micTa=$(d.mic);
     dict.start().catch(err=>{toast(err&&err.code==='not_granted'?'Microfone não autorizado.':'Ditado indisponível.');micBtn=null});return}
@@ -1686,6 +1883,12 @@ document.addEventListener('click',e=>{
   else if('fotoperfil' in d)escolherFoto({t:'perfil'});
   else if('fotoperfilrm' in d){const c={...S.cfg};delete c.foto;salvarCfg(c,'Foto removida')}
   else if('orcnovo' in d)novoOrc();
+  else if('despnova' in d)abrirForm('Nova despesa',F_DESP,{id:uid(),data:hoje(),sit:'Paga',cat:CAT_DESP[0],forma:'Pix'},{},o=>salvarDesp(o));
+  else if(d.despedit){const x=S.desp.find(y=>y.id===d.despedit);if(x)abrirForm('Editar despesa',F_DESP,x,{},o=>salvarDesp(o),()=>apagar('despesas',x.id))}
+  else if('livroctr' in d)livroControlados();
+  else if('modnovo' in d)abrirForm('Novo modelo de texto',F_MOD,{id:uid()},{},o=>salvarCfg({...S.cfg,modelos:[...modelos(),o]},'Modelo salvo'));
+  else if(d.modedit){const m=modelos().find(x=>x.id===d.modedit);if(m)abrirForm('Editar modelo',F_MOD,m,{},o=>salvarCfg({...S.cfg,modelos:modelos().map(x=>x.id===o.id?o:x)},'Modelo salvo'),()=>salvarCfg({...S.cfg,modelos:modelos().filter(x=>x.id!==m.id)},'Modelo excluído'))}
+  else if(d.pixcli){const c=S.cli.find(x=>x.id===d.pixcli);if(c){const ab=itensFatura(c,S.fatMes||hoje().slice(0,7),S.fatAnt!==false).reduce((s,x)=>s+saldo(x.f),0);cobrarPix(ab,{desc:'fatura de '+c.nome,tel:c.tel,nome:c.contato||c.nome,txid:'FAT'+String(S.fatMes||hoje().slice(0,7)).replace('-','')})}}
   else if(d.orcapr){const o=S.orc.find(x=>x.id===d.orcapr);if(o)aprovarOrc(o)}
   else if(d.orcrec)recusarOrc(t,d.orcrec);
   else if(d.orcpdf){const o=S.orc.find(x=>x.id===d.orcpdf);if(o)exportarPdfOrc(o)}
@@ -1704,9 +1907,9 @@ document.addEventListener('click',e=>{
   else if('novo' in d)novoPaciente();
   else if(d.dose){const x=DOSES_BASE[+d.dose];$('c_dose').value=x[4];$('c_conc').value=x[5];$('c_dose').dispatchEvent(new Event('input',{bubbles:true}));$('c_dose').closest('.box').scrollIntoView({behavior:'smooth',block:'center'});toast(x[0]+': confira a concentração do seu frasco')}
   else if('agendar' in d)escolherPaciente('Agendar para qual paciente?',q=>editarItem(q,'agend',null));
-  else if('estnovo' in d)abrirForm('Novo produto',F_EST,{id:uid(),un:'frasco',cat:'Medicamento'},{},o=>salvarEst(o));
-  else if(d.estedit){const it=S.est.find(x=>x.id===d.estedit);if(it)abrirForm('Editar produto',F_EST,it,{},o=>salvarEst(o),()=>apagar('estoque',it.id))}
-  else if(d.estmv){const it=S.est.find(x=>x.id===d.eid);if(it){salvarEst({...it,qtd:String(Math.max(0,num(it.qtd)+(+d.estmv)))})}}
+  else if('estnovo' in d)abrirForm('Novo produto',F_EST,{id:uid(),un:'frasco',cat:'Medicamento',controlado:'Não'},{},o=>{if(num(o.qtd))o.mov=[{d:new Date().toISOString(),q:num(o.qtd),motivo:'Cadastro (saldo inicial)',por:meId()}];salvarEst(o)});
+  else if(d.estedit){const it=S.est.find(x=>x.id===d.estedit);if(it)abrirForm('Editar produto',F_EST,it,{},o=>{if(num(o.qtd)!==num(it.qtd))o.mov=[...(it.mov||[]),{d:new Date().toISOString(),q:num(o.qtd)-num(it.qtd),motivo:'Ajuste no cadastro',por:meId()}].slice(-300);salvarEst(o)},()=>apagar('estoque',it.id))}
+  else if(d.estmv){const it=S.est.find(x=>x.id===d.eid);if(it)moverEstoque(it.id,-(+d.estmv),+d.estmv>0?'Entrada manual':'Saída manual')}
   else if('lote' in d){const ids=[...document.querySelectorAll('#lt_anim input:checked')].map(i=>i.value),nome=$('lt_nome').value.trim();
     if(!nome){toast('Preencha o produto');$('lt_nome').focus();return}if(!ids.length){toast('Marque ao menos um animal');return}
     const val=num($('lt_valor').value),reg={tipo:$('lt_tipo').value,nome,lote:$('lt_lote').value.trim(),data:$('lt_data').value||hoje(),prox:$('lt_prox').value,obs:'Atendimento em lote',valor:val?String(val):''};
@@ -1723,7 +1926,7 @@ document.addEventListener('click',e=>{
   else if(d.instos){S.instOS=d.instos;render()}
   else if('copysite' in d)copiar(SITE_OFICIAL,'Link do VetCamp copiado');
   else if('instalar' in d&&window.__instalarApp){const ev=window.__instalarApp;window.__instalarApp=null;ev.prompt();ev.userChoice.then(r=>{toast(r&&r.outcome==='accepted'?'VetCamp instalado':'Instalação cancelada');render()}).catch(()=>render())}
-  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`vetcamp-backup-${hoje()}.json`,JSON.stringify({app:'VetCamp',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,orcamentos:S.orc,config:S.cfg},null,1),'application/json')}
+  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`vetcamp-backup-${hoje()}.json`,JSON.stringify({app:'VetCamp',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,orcamentos:S.orc,despesas:S.desp,config:S.cfg},null,1),'application/json')}
   else if('importar' in d)$('fileimp').click();
   else if('back' in d){S.sel=null;render()}
   else if(d.tab&&p){S.tab=d.tab;render()}
@@ -1732,6 +1935,9 @@ document.addEventListener('click',e=>{
   else if(d.edit)editarItem(p,d.edit,d.iid);
   else if(d.aplic)aplicar(p,d.aplic);
   else if('protapl' in d)escolherProtocolo(p);
+  else if('pixpac' in d){const ab=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);cobrarPix(ab,{desc:'despesas de '+p.nome,tel:p.tel,nome:p.tutor,txid:'VC'+p.id.slice(-8)})}
+  else if(d.pixsoc!==undefined&&p.socios){const sc=p.socios[+d.pixsoc],ab=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);if(sc)cobrarPix(ab*num(sc.pct)/100,{desc:`${fx(num(sc.pct),2)}% das despesas de ${p.nome}`,tel:sc.tel,nome:sc.nome,txid:'VC'+p.id.slice(-6)+d.pixsoc})}
+  else if('socios' in d)editarSocios(p);
   else if('orcpac' in d)novoOrc(orcDePaciente(p));
   else if('fotopac' in d)escolherFoto({t:'pac',id:p.id});
   else if('fotopacrm' in d){const q={...p};delete q.foto;salvar(q);toast('Foto removida')}
@@ -1739,7 +1945,8 @@ document.addEventListener('click',e=>{
   else if(d.desfaz){const m=p.meds.find(x=>x.id===d.desfaz);salvar({...p,meds:p.meds.map(x=>x.id===d.desfaz?{...x,aplic:(x.aplic||[]).slice(0,-1)}:x)});if(m&&num(m.consumo)&&moverEstoque(m.estId||m.med,-num(m.consumo),'Estorno · '+p.nome))toast('Aplicação desfeita · estoque devolvido')}
   else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>apagar('pacientes',p.id));
   else if('copy' in d)copiar(textoFicha(p),'Ficha copiada');
-  else if('baixarficha' in d)baixar(`Ficha ${p.nome}.txt`.replace(/[\/\\:*?"<>|]/g,'-'),textoFicha(p),'text/plain');
+  else if('baixarficha' in d)baixarPdf(`Ficha clinica - ${p.nome}.pdf`,()=>pdfTexto('Ficha clínica',textoFicha(p),{dir:[p.nome,'Emitida em '+br(hoje())]}));
+  else if('carteira' in d)baixarPdf(`Carteira de sanidade - ${p.nome}.pdf`,()=>pdfCarteira(p));
   else if('upload' in d)$('fileup').click();
   else if(d.rmanexo){salvar({...p,anexos:(p.anexos||[]).filter(a=>a.id!==d.rmanexo)});toast('Anexo removido da ficha')}
   else if(d.gerdoc){const l=DOCS.find(x=>x[0]===d.gerdoc);abrirDoc(p,l[1],gerarDoc(d.gerdoc,p))}
@@ -1769,9 +1976,9 @@ render();
     dict.onFinal(({text})=>{if(micTa&&text)micTa.value=(micTa.value?micTa.value.replace(/\s*$/,' '):'')+text});
   }
   if(!db){
-    S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.orc=LS.get('samvet-orcamentos',[]);S.cfg=LS.get('samvet-config',{});
+    S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.orc=LS.get('samvet-orcamentos',[]);S.desp=LS.get('samvet-despesas',[]);S.cfg=LS.get('samvet-config',{});
     note(window.__semId?'Não foi possível identificar sua conta neste link, então os dados ficam só neste aparelho. Peça a quem compartilhou para te convidar com acesso de edição.':'Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
-  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=LS.get(PFX+'cache-orcamentos',[]);S.cfg=LS.get(PFX+'cache-config',{});render();
+  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=LS.get(PFX+'cache-orcamentos',[]);S.desp=LS.get(PFX+'cache-despesas',[]);S.cfg=LS.get(PFX+'cache-config',{});render();
   note(S.pac.length?'Mostrando os dados salvos neste aparelho enquanto conecta…':'Carregando pacientes…');
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
@@ -1781,6 +1988,7 @@ render();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))render();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
+  colRef('despesas').onSnapshot(snap=>{S.desp=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-despesas',S.desp);if(idle()&&['caixa','relat'].includes(S.vis)&&!S.sel)render()},()=>{});
   colRef('orcamentos').onSnapshot(snap=>{S.orc=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))render()},()=>{});
   colRef('clientes').onSnapshot(snap=>{S.cli=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))render()},()=>{});
   colRef('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
