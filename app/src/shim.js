@@ -175,6 +175,10 @@
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{setModo('entrar');iniciar()});else{setModo('entrar');iniciar()}
 
+  /* Android: guarda o convite de instalação para o botão "Instalar agora" da aba Conta */
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__instalarApp=e});
+  addEventListener('appinstalled',()=>{window.__instalarApp=null});
+
   /* aplicativo instalável (funciona aberto mesmo com sinal fraco) */
   if('serviceWorker' in navigator&&location.protocol==='https:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 })();
