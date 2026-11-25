@@ -16,12 +16,23 @@ self.addEventListener('fetch', e => {
   if (r.method !== 'GET') return;
   const u = new URL(r.url);
   const proprio = u.origin === location.origin;
+  if (proprio && u.pathname.startsWith('/__/')) return; // páginas de login do Firebase: sempre direto
   const sdk = u.hostname === 'www.gstatic.com' && u.pathname.startsWith('/firebasejs/');
   const libs = u.hostname === 'cdn.jsdelivr.net' || u.hostname === 'fonts.googleapis.com' || u.hostname === 'fonts.gstatic.com';
   if (!proprio && !sdk && !libs) return;
-  // primeiro a rede (para pegar atualizações); sem rede, a cópia guardada
-  e.respondWith(fetch(r).then(resp => {
-    if (resp && (resp.ok || resp.type === 'opaque')) { const copia = resp.clone(); caches.open(CACHE).then(c => c.put(r, copia)); }
-    return resp;
-  }).catch(() => caches.match(r).then(m => m || (r.mode === 'navigate' ? caches.match('index.html') : undefined))));
+  const guardar = resp => { if (resp && (resp.ok || resp.type === 'opaque')) { const copia = resp.clone(); caches.open(CACHE).then(c => c.put(r, copia)); } return resp; };
+  // bibliotecas com versão no endereço nunca mudam: abre direto da cópia guardada (mais rápido)
+  if (sdk || (libs && u.hostname === 'cdn.jsdelivr.net')) {
+    e.respondWith(caches.match(r).then(m => m || fetch(r).then(guardar)));
+    return;
+  }
+  // página do app: primeiro a rede (para pegar atualizações), mas sem esperar mais de 2 s com sinal fraco
+  const rede = fetch(r).then(guardar);
+  const copia = () => caches.match(r).then(m => m || (r.mode === 'navigate' ? caches.match('index.html') : undefined));
+  e.respondWith(new Promise(ok => {
+    let feito = false;
+    const t = setTimeout(() => copia().then(m => { if (m && !feito) { feito = true; ok(m); } }), 2000);
+    rede.then(resp => { if (!feito) { feito = true; clearTimeout(t); ok(resp); } })
+      .catch(() => copia().then(m => { if (!feito) { feito = true; clearTimeout(t); ok(m || Response.error()); } }));
+  }));
 });

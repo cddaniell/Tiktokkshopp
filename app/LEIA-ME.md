@@ -101,6 +101,7 @@ Sem esses segredos, a publicação do site continua normal e só o e-mail fica d
 ## Como as contas são protegidas
 - Cada pessoa só lê e grava os próprios dados; na clínica, só os membros acessam, conforme o papel (`firestore.rules` e `storage.rules`).
 - Senhas ficam com o serviço de login do Google, nunca no banco.
+- **Sessão:** quem entrou fica conectado e o app abre direto, sem passar pela tela de login. Depois de **4 dias sem abrir o VetCamp**, pede o login de novo, mas com o e-mail e o nome já preenchidos ("Olá de novo… Continuar"). Os dados guardados no aparelho continuam lá. Quem toca em **Sair** também precisa entrar de novo.
 - A página `privacidade.html` é um modelo de política de privacidade (LGPD): preencha os campos entre colchetes.
 
 ## Testar no computador (para desenvolvedores)

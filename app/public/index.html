@@ -337,13 +337,20 @@ html.letra-maior body{zoom:1.12}
   #auth .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;border:1px solid var(--line,#d8c1a2);border-radius:10px;background:#fff;color:#1f1f1f;font-weight:700;font-size:16px}
   #auth .gbtn[disabled]{opacity:.6}
   #auth .ou{display:flex;align-items:center;gap:10px;color:var(--mute,#76583d);font-size:13px}#auth .ou::before,#auth .ou::after{content:"";flex:1;height:1px;background:var(--line,#d8c1a2)}
+  #auth .volta{display:grid;gap:10px;background:var(--card,#fbf6ef);border:1px solid var(--line,#d8c1a2);border-radius:16px;padding:16px;text-align:center}
+  #auth .volta img{width:56px;height:56px;border-radius:50%;object-fit:cover;margin:0 auto}
+  #auth .volta b{font-size:18px}#auth .volta span{color:var(--mute,#76583d);font-size:14px;word-break:break-all}
+  #auth.entrando .ab>*:not(.alogo):not(h1):not(#a_carr){display:none!important}
+  #auth #a_carr{display:none;text-align:center;color:var(--mute,#76583d);font-weight:700}#auth.entrando #a_carr{display:block}
+  #auth #a_carr i{display:block;width:34px;height:34px;margin:0 auto 10px;border:4px solid var(--line,#d8c1a2);border-top-color:var(--act,#965a27);border-radius:50%;animation:agira .8s linear infinite}
+  @keyframes agira{to{transform:rotate(360deg)}}
   #auth .rod{font-size:12px;color:var(--mute,#76583d);text-align:center}#auth .rod a{color:inherit}
   #verifbar{position:sticky;top:0;z-index:6;background:var(--note,#f3e1bf);color:var(--ink,#33210f);font-size:14px;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
   #verifbar button{border:1px solid var(--line,#d8c1a2);background:var(--card,#fbf6ef);border-radius:8px;min-height:34px;padding:0 10px;font-weight:700;color:inherit}`;
   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
   const tela=document.createElement('div');tela.id='auth';tela.setAttribute('role','dialog');tela.setAttribute('aria-label','Entrar no VetCamp');
-  tela.innerHTML=`<div class="ab"><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p>
+  tela.innerHTML=`<div class="ab"><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p><div id="a_carr" role="status"><i aria-hidden="true"></i>Entrando na sua conta…</div><div class="volta" id="a_volta" hidden><img id="a_vfoto" alt=""><b id="a_vnome"></b><span id="a_vmail"></span><button type="button" class="ok2" id="a_vbtn">Continuar</button><button type="button" class="lnk" id="a_outra">Usar outra conta</button></div>
    <div class="tabs2" role="group" aria-label="Entrar ou criar conta"><button type="button" data-m="entrar" aria-pressed="true">Entrar</button><button type="button" data-m="criar" aria-pressed="false">Criar conta</button></div>
    <div class="msg" id="a_msg" role="status"></div>
    <button type="button" class="gbtn" id="a_google"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span id="a_gtxt">Entrar com Google</span></button>
@@ -375,10 +382,33 @@ html.letra-maior body{zoom:1.12}
     $('a_senha').autocomplete=m==='criar'?'new-password':'current-password';$('a_ok').textContent=m==='criar'?'Criar conta':'Entrar';$('a_gtxt').textContent=m==='criar'?'Criar conta com Google':'Entrar com Google';msg('')}
   tela.addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(b)setModo(b.dataset.m)});
 
+  /* ---------- lembrar a conta neste aparelho ---------- */
+  // Fica conectado; só pede login de novo depois de 4 dias sem abrir o VetCamp (e-mail e nome continuam salvos).
+  const INATIVO=4*24*3600*1000,LK='vetcamp-lembrar';
+  const lerL=()=>{try{return JSON.parse(localStorage.getItem(LK)||'null')}catch(e){return null}};
+  const gravarL=o=>{try{if(o)localStorage.setItem(LK,JSON.stringify(o));else localStorage.removeItem(LK)}catch(e){}};
+  const provDe=u=>(u.providerData||[]).some(p=>p&&p.providerId==='google.com')?'google':'senha';
+  function lembrar(u){gravarL({uid:u.uid,email:u.email||'',nome:u.displayName||'',foto:u.photoURL||'',prov:provDe(u),verif:!!u.emailVerified,ultimo:Date.now()})}
+  const tocarUso=()=>{const l=lerL();if(l&&usuario&&l.uid===usuario.uid&&l.ultimo){l.ultimo=Date.now();gravarL(l)}};
+  function mostrarVolta(){
+    const l=lerL(),v=$('a_volta');if(!v)return;
+    if(!l||!l.email){v.hidden=true;return}
+    v.hidden=false;$('a_vnome').textContent='Olá de novo'+(l.nome?', '+l.nome.split(' ')[0]:'')+'!';$('a_vmail').textContent=l.email;
+    const f=$('a_vfoto');if(l.foto&&/^https:/.test(l.foto)){f.src=l.foto;f.hidden=false}else f.hidden=true;
+    $('a_vbtn').textContent=l.prov==='google'?'Continuar com Google':'Continuar';
+    if(l.prov!=='google'){$('a_email').value=l.email}
+  }
+  const entrando=on=>tela.classList.toggle('entrando',!!on);
+  // sessão rápida: quem entrou nos últimos 4 dias abre direto, sem ver a tela de login
+  const L0=lerL(),rapida=!!(L0&&L0.uid&&L0.ultimo&&Date.now()-L0.ultimo<INATIVO&&configurado);
+  let redir=false;try{redir=sessionStorage.getItem('vetcamp-redir')==='1';sessionStorage.removeItem('vetcamp-redir')}catch(e){}
+  if(rapida)tela.hidden=true;else if(redir)entrando(true);
+
   /* ---------- Firebase ---------- */
   let auth=null,fs=null,storage=null;
   let resolverPronto;const pronto=new Promise(r=>resolverPronto=r);
-  let usuario=null;
+  let usuario=null,appIniciado=false;
+  if(rapida){usuario={uid:L0.uid,email:L0.email,displayName:L0.nome,photoURL:L0.foto||null,emailVerified:!!L0.verif,providerData:[{providerId:L0.prov==='google'?'google.com':'password'}],provisorio:true};appIniciado=true}
 
   function iniciar(){
     if(!configurado){msg('Configuração do Firebase pendente. Preencha o arquivo firebase-config.js.','inf');$('a_ok').disabled=true;return}
@@ -391,31 +421,52 @@ html.letra-maior body{zoom:1.12}
     if(!DEMO)fs.enablePersistence({synchronizeTabs:true}).catch(()=>{});
     if(CFG.storageBucket&&CFG.storage!==false&&firebase.storage){storage=firebase.storage();if(DEMO)storage.useEmulator(location.hostname,9199)}
     auth.languageCode='pt';
-    auth.getRedirectResult().catch(err=>{if(err&&err.code)msg(traduz(err))});
-    auth.onAuthStateChanged(u=>{
-      if(u){usuario=u;tela.hidden=true;barraVerificacao();resolverPronto(true)}
-      else{usuario=null;tela.hidden=false;setTimeout(()=>{try{$('a_email').focus()}catch(e){}},50)}
+    if(rapida)resolverPronto(true); // abre já com a conta guardada; o Firebase confirma a sessão em seguida
+    auth.getRedirectResult().catch(err=>{entrando(false);if(err&&err.code)msg(traduz(err))});
+    auth.onAuthStateChanged(async u=>{
+      const l=lerL();
+      if(u&&l&&l.uid===u.uid&&l.ultimo&&Date.now()-l.ultimo>INATIVO){
+        // mais de 4 dias sem usar: pede o login de novo, mas mantém e-mail e nome salvos
+        l.ultimo=0;gravarL(l);await auth.signOut();return}
+      if(u){
+        const trocou=appIniciado&&usuario&&usuario.uid!==u.uid;
+        usuario=u;lembrar(u);entrando(false);
+        if(trocou||(appIniciado&&!tela.hidden&&tela.dataset.reabrir==='1')){location.reload();return}
+        tela.hidden=true;barraVerificacao();appIniciado=true;resolverPronto(true)}
+      else{
+        usuario=null;entrando(false);
+        if(appIniciado){tela.dataset.reabrir='1';const lv=lerL();if(lv){lv.ultimo=0;gravarL(lv)}}
+        mostrarVolta();tela.hidden=false;setTimeout(()=>{try{($('a_email').value?$('a_senha'):$('a_email')).focus()}catch(e){}},50)}
     });
+    addEventListener('visibilitychange',()=>{if(!document.hidden)tocarUso()});setInterval(tocarUso,600000);
   }
   const instalado=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-  document.addEventListener('click',async e=>{
-    if(!e.target.closest||!e.target.closest('#a_google')||!auth)return;
-    const b=$('a_google');b.disabled=true;msg('');
-    const prov=new firebase.auth.GoogleAuthProvider();prov.setCustomParameters({prompt:'select_account'});
+  const iosApp=()=>navigator.standalone===true||(instalado()&&/iPhone|iPad|iPod/.test(navigator.userAgent));
+  async function entrarGoogle(dica){
+    if(!auth)return;const b=$('a_google');b.disabled=true;msg('');
+    const prov=new firebase.auth.GoogleAuthProvider();prov.setCustomParameters(dica?{login_hint:dica}:{prompt:'select_account'});
+    const redirecionar=async()=>{try{sessionStorage.setItem('vetcamp-redir','1')}catch(e){}entrando(true);await auth.signInWithRedirect(prov)};
     try{
-      if(instalado())await auth.signInWithRedirect(prov);
-      else await auth.signInWithPopup(prov);
+      if(iosApp())await redirecionar();
+      else{await auth.signInWithPopup(prov);entrando(true)}
     }catch(err){
-      if(err&&['auth/popup-blocked','auth/operation-not-supported-in-environment','auth/cancelled-popup-request'].includes(err.code)){try{await auth.signInWithRedirect(prov);return}catch(e2){err=e2}}
+      if(err&&['auth/popup-blocked','auth/operation-not-supported-in-environment','auth/cancelled-popup-request'].includes(err.code)){try{await redirecionar();return}catch(e2){err=e2}}
+      entrando(false);
       if(!err||!['auth/popup-closed-by-user','auth/cancelled-popup-request','auth/user-cancelled'].includes(err.code))msg(traduz(err));
     }finally{b.disabled=false}
+  }
+  document.addEventListener('click',e=>{
+    if(!e.target.closest)return;
+    if(e.target.closest('#a_google'))entrarGoogle();
+    else if(e.target.closest('#a_vbtn')){const l=lerL();if(l&&l.prov==='google')entrarGoogle(l.email);else{$('a_email').value=(l&&l.email)||'';$('a_senha').focus()}}
+    else if(e.target.closest('#a_outra')){gravarL(null);$('a_volta').hidden=true;$('a_email').value='';$('a_senha').value='';$('a_email').focus()}
   });
   let falhas=0,bloqueioAte=0;
   document.addEventListener('submit',async e=>{
     if(e.target.id!=='a_form')return;e.preventDefault();if(!auth)return;
     const email=$('a_email').value.trim(),senha=$('a_senha').value;
     const espera=Math.ceil((bloqueioAte-Date.now())/1000);if(espera>0){msg('Muitas tentativas. Aguarde '+espera+' s e tente de novo.');return}
-    $('a_ok').disabled=true;msg('');
+    $('a_ok').disabled=true;msg('');const txtOk=$('a_ok').textContent;if(!recuperar)$('a_ok').textContent=modo==='criar'?'Criando conta…':'Entrando…';
     try{
       if(recuperar){await auth.sendPasswordResetEmail(email);msg('Enviamos um link para '+email+' criar uma nova senha. Confira também a caixa de spam.','inf');recuperar=false;$('l_senha').hidden=false;$('a_ok').textContent='Entrar'}
       else if(modo==='criar'){
@@ -424,10 +475,12 @@ html.letra-maior body{zoom:1.12}
         if(senha!==$('a_senha2').value){msg('As senhas não são iguais.');return}
         const r=await auth.createUserWithEmailAndPassword(email,senha);
         await r.user.updateProfile({displayName:nome});
+        lembrar(r.user);
         try{await r.user.sendEmailVerification()}catch(_){}
       }else await auth.signInWithEmailAndPassword(email,senha);
+      if(!recuperar)entrando(true);
     }catch(err){msg(traduz(err));if(err&&/credential|password|user-not-found/.test(err.code||'')){falhas++;if(falhas>=5){bloqueioAte=Date.now()+30000*Math.min(4,falhas-4);msg('Muitas tentativas erradas. Aguarde '+Math.round((bloqueioAte-Date.now())/1000)+' s. Se esqueceu a senha, use "Esqueci minha senha".')}}}
-    finally{$('a_ok').disabled=false}
+    finally{$('a_ok').disabled=false;if($('a_ok').textContent.endsWith('…'))$('a_ok').textContent=txtOk}
   });
   document.addEventListener('click',e=>{if(e.target&&e.target.id==='a_esq'){recuperar=true;$('l_senha').hidden=true;$('a_ok').textContent='Enviar link para nova senha';msg('Digite seu e-mail e toque no botão. Você vai receber um link para criar uma nova senha.','inf')}});
 
@@ -477,6 +530,7 @@ html.letra-maior body{zoom:1.12}
       try{await Promise.race([fs.waitForPendingWrites(),new Promise(r=>setTimeout(r,4000))])}catch(e){}
       const pfx='samvet-'+usuario.uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-';
       try{Object.keys(localStorage).filter(k=>k.startsWith(pfx)).forEach(k=>localStorage.removeItem(k))}catch(e){}
+      const lv=lerL();if(lv){lv.ultimo=0;gravarL(lv)}
       await auth.signOut();try{await fs.terminate();await fs.clearPersistence()}catch(e){}location.reload()},
     async trocarSenha(){try{await auth.sendPasswordResetEmail(usuario.email);return 'Enviamos um link para '+usuario.email+' criar uma nova senha.'}catch(e){return traduz(e)}},
     async reenviar(){try{await usuario.sendEmailVerification();return 'Link de confirmação reenviado para '+usuario.email+'.'}catch(e){return traduz(e)}}};
@@ -921,7 +975,9 @@ function trocarEspaco(e){LS.set(espKey(),e||null);location.reload()}
 async function entrarEspaco(uid){
   const e=LS.get('vetcamp-espaco-'+uid,null);if(!e||!e.cid)return;
   let m=null;
-  try{const s=await db.doc(`clinicas/${e.cid}/membros/${uid}`).get();
+  // entra na hora com o papel guardado neste aparelho; a lista de membros ao vivo confere logo em seguida
+  if(e.eu&&e.eu.papel)m={...e.eu,uid};
+  else try{const s=await db.doc(`clinicas/${e.cid}/membros/${uid}`).get();
     if(!s.exists){LS.set('vetcamp-espaco-'+uid,null);db.doc(`usuarios/${uid}/clinicas/${e.cid}`).delete().catch(()=>{});setTimeout(()=>toast('Você não faz mais parte da clínica '+(e.nome||'')+'. Voltou ao seu espaço pessoal.'),900);return}
     m={...s.data(),uid}}
   catch(err){if(err&&PERM.includes(err.code)){LS.set('vetcamp-espaco-'+uid,null);return}if(!e.eu)return;m=e.eu}

@@ -705,7 +705,9 @@ function trocarEspaco(e){LS.set(espKey(),e||null);location.reload()}
 async function entrarEspaco(uid){
   const e=LS.get('vetcamp-espaco-'+uid,null);if(!e||!e.cid)return;
   let m=null;
-  try{const s=await db.doc(`clinicas/${e.cid}/membros/${uid}`).get();
+  // entra na hora com o papel guardado neste aparelho; a lista de membros ao vivo confere logo em seguida
+  if(e.eu&&e.eu.papel)m={...e.eu,uid};
+  else try{const s=await db.doc(`clinicas/${e.cid}/membros/${uid}`).get();
     if(!s.exists){LS.set('vetcamp-espaco-'+uid,null);db.doc(`usuarios/${uid}/clinicas/${e.cid}`).delete().catch(()=>{});setTimeout(()=>toast('Você não faz mais parte da clínica '+(e.nome||'')+'. Voltou ao seu espaço pessoal.'),900);return}
     m={...s.data(),uid}}
   catch(err){if(err&&PERM.includes(err.code)){LS.set('vetcamp-espaco-'+uid,null);return}if(!e.eu)return;m=e.eu}
