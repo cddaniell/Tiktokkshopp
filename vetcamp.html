@@ -233,6 +233,13 @@ body.semrede .wrap{padding-bottom:200px}
 .sline{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) 70px auto 32px;gap:6px;align-items:center;margin-bottom:6px}
 .sline input{min-height:40px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);width:100%}
 @media(max-width:600px){.sline{grid-template-columns:1fr 70px auto 32px}.sline [data-f=nome]{grid-column:1/-1}}
+.bbtn{border:0;background:transparent;color:var(--barink);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none}.bbtn:hover{background:color-mix(in srgb,var(--barink) 15%,transparent)}
+.desfazer{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:31;background:var(--ink);color:var(--bg);border-radius:12px;padding:8px 8px 8px 16px;display:flex;gap:12px;align-items:center;box-shadow:0 6px 20px var(--shadow);max-width:calc(100% - 24px)}
+.desfazer .btn{background:var(--bg);color:var(--ink);border-color:transparent}
+.tlw{display:grid;gap:2px}
+.tl{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;text-align:left;border:0;border-left:3px solid var(--line);background:none;padding:8px 10px;margin-left:6px}.tl:hover{background:var(--panel);border-left-color:var(--act)}
+.tld{font:800 14px var(--display);color:var(--brand);font-variant-numeric:tabular-nums}
+html.letra-maior body{zoom:1.12}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}.pulso{animation:none}}
 </style>
 
@@ -240,6 +247,7 @@ body.semrede .wrap{padding-bottom:200px}
   <div class="toprow">
     <div class="brandrow"><span class="logo" role="img" aria-label="Logo VetCamp"></span><h1>VetCamp<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
     <button class="who" id="who" data-vis="conta"><span class="dot"></span>Entrar</button>
+    <button class="bbtn" id="busca" aria-label="Buscar em tudo" title="Buscar (/)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     <button class="btn pri sm" id="novo" aria-label="Novo paciente">+ <span class="nl">Paciente</span></button>
   </div>
   <nav class="nav" id="nav" aria-label="Seções"></nav>
@@ -654,7 +662,7 @@ function renderAgenda(){
     if(g!==last){html+=`<h3 class="dayh">${g}</h3>`;last=g}
     html+=`<div class="ag${dias(x.d)<0?' late':''}"><button data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${x.h?esc(x.h)+' · ':''}${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>${waLink(x.p.tel,x.tab==='fin'?`Olá, ${x.p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. ${x.txt.replace('Cobrança: ','Consta em aberto: ')}, referente a ${x.p.nome}. Chave Pix: ${S.cfg.pix||'—'}.`:msgLembrete(x))}</div>`;
   }
-  $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><div class="btns">${(()=>{const e=rotaHoje();return e.length?`<a class="btn sm" href="${esc(rotaUrl(e))}" target="_blank" rel="noopener">Rota de hoje no mapa (${e.length})</a>`:''})()}<button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>');
+  $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><div class="btns">${(()=>{const e=rotaHoje();return e.length?`<a class="btn sm" href="${esc(rotaUrl(e))}" target="_blank" rel="noopener">Rota de hoje no mapa (${e.length})</a>`:''})()}${dl?'<button class="btn sm" data-ics>Exportar para o calendário</button>':''}<button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>');
 }
 function renderIntern(){
   const ps=S.pac.filter(p=>p.status==='internado');
@@ -685,6 +693,7 @@ function renderCaixa(){
   $('view').innerHTML=`<div class="bar"><h2>Caixa</h2><span class="meta">${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</span></div>
   <div class="counts"><div class="count"><b>${R$(aRec)}</b><span>A receber</span></div><div class="count" style="color:var(--warn)"><b>${R$(venc)}</b><span>Vencido</span></div><div class="count"><b>${R$(fat)}</b><span>Faturado no mês</span></div><div class="count" style="color:var(--okc)"><b>${R$(rec)}</b><span>Recebido no mês</span></div></div>
   ${tut.length?`<div class="box"><h3>Em aberto por tutor</h3><div class="tw"><table><tr><th>Tutor</th><th>Animais</th><th class="n">Saldo</th><th></th></tr>${tut.map(t=>`<tr><td><b>${esc(t.tutor)}</b></td><td>${esc([...new Set(t.itens.map(x=>x.p.nome))].join(', '))}</td><td class="n late">${R$(t.total)}</td><td>${waLink(t.tel,`Olá, ${t.tutor}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Segue o resumo em aberto:\n${t.itens.map(x=>`• ${x.p.nome}: ${x.f.desc} (${br(x.f.data)}) ${R$(saldo(x.f))}`).join('\n')}\nTotal: ${R$(t.total)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}</td></tr>`).join('')}</table></div></div>`:''}
+  ${esquecidasHtml()}
   ${despesasHtml(mes)}
   <div class="box"><h3>Resultado do mês</h3><p style="margin:0">Recebido ${R$(rec)} − despesas pagas ${R$(despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0))} = <b class="${rec-despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0)>=0?'ok':'late'}">${R$(rec-despMes(mes).filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0))}</b></p></div>
   <div class="bar"><h3>Lançamentos</h3><div class="chips" style="margin:0">${[['pend','Em aberto'],['mes','Este mês'],['todos','Todos']].map(([k,l])=>`<button class="btn sm${S.finF===k?' pri':''}" data-finf="${k}">${l}</button>`).join('')}</div></div>
@@ -835,9 +844,11 @@ function renderConta(){
    </div><div class="acts"><button class="btn pri">Salvar dados da clínica</button></div></form></div>
   <div class="box"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
   <div class="box"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
+  ${aparenciaHtml()}
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, clientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}. ${(()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último backup baixado neste aparelho: '+new Date(t).toLocaleDateString('pt-BR')+'.':'Nenhum backup baixado ainda neste aparelho.'})()}</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
   $('perff').onsubmit=e=>{e.preventDefault();salvarCfg({...S.cfg,apelido:$('pf_apelido').value.trim()},'Nome salvo')};
+  if($('ap_maior'))$('ap_maior').onchange=e=>{LS.set('vetcamp-aparencia',{...LS.get('vetcamp-aparencia',{}),maior:e.target.checked});aplicarAparencia()};
   if($('padV'))window._padV=padAssin($('padV'));
   if($('meName'))$('meName').textContent=S.cfg.apelido||nome||(STANDALONE?'Sua conta':'Conta Claude');
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input,select'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
@@ -1168,7 +1179,7 @@ function lancarOrc(q,o,t){
 }
 function recusarOrc(btn,id){
   if(btn.dataset.arm!=='1'){btn.dataset.arm='1';btn.textContent='Toque de novo para apagar';setTimeout(()=>{if(btn.isConnected){btn.dataset.arm='';btn.textContent='Recusado'}},4000);return}
-  const o=S.orc.find(x=>x.id===id);apagar('orcamentos',id);if($('sheet').classList.contains('on'))fechar();toast('Orçamento '+(o?o.numero+' ':'')+'recusado e apagado');
+  const o=S.orc.find(x=>x.id===id);apagar('orcamentos',id);if(o)desfazivel('Orçamento '+o.numero+' apagado.',()=>salvarOrc(o));if($('sheet').classList.contains('on'))fechar();toast('Orçamento '+(o?o.numero+' ':'')+'recusado e apagado');
 }
 function csvOrc(){
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',m=v=>num(v).toFixed(2).replace('.',',');
@@ -1412,16 +1423,83 @@ function livroControlados(){
   if($('ctrcsv'))$('ctrcsv').onclick=()=>{const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';baixar(`vetcamp-controlados-${hoje()}.csv`,'﻿'+[['Data','Produto','Lote','Entrada','Saída','Motivo'],...movs.map(({it,m})=>[hora(m.d),it.nome,it.lote||'',m.q>0?fx(m.q,2):'',m.q<0?fx(-m.q,2):'',m.motivo||''])].map(r=>r.map(q).join(';')).join('\r\n'),'text/csv')};
 }
 
+/* ---------- praticidade: busca, linha do tempo, desfazer, calendário, aparência, cobranças esquecidas ---------- */
+/* desfazer */
+let desfazerTimer=null;
+function desfazivel(msg,restaurar){
+  let el=$('desfazer');if(!el){el=document.createElement('div');el.id='desfazer';el.className='desfazer';el.setAttribute('role','status');document.body.appendChild(el)}
+  el.innerHTML=`<span></span><button type="button" class="btn sm">Desfazer</button>`;el.querySelector('span').textContent=msg;el.hidden=false;
+  el.querySelector('button').onclick=()=>{clearTimeout(desfazerTimer);el.hidden=true;restaurar();toast('Desfeito')};
+  clearTimeout(desfazerTimer);desfazerTimer=setTimeout(()=>{el.hidden=true},7000);
+}
+/* busca em tudo */
+const semAcento=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function buscarTudo(q){
+  const t=semAcento(q).trim();if(t.length<2)return[];
+  const r=[],tem=(...v)=>semAcento(v.join(' ')).includes(t);
+  for(const p of S.pac){if(tem(p.nome,p.tutor,p.raca,p.chip,p.registro,p.prop,p.pelagem))r.push({tipo:'Animal',tit:p.nome,sub:[p.especie,p.raca,p.tutor].filter(Boolean).join(' · '),abrir:{id:p.id}});
+    for(const m of MODS)for(const it of (p[m.key]||[]))if(tem(...Object.values(it).filter(v=>typeof v==='string'&&v.length<400)))r.push({tipo:m.tab,tit:`${p.nome} · ${tituloIt(m,it)}`,sub:br(it[m.dateK||'data']),abrir:{id:p.id,tab:m.key}})}
+  for(const c of S.cli)if(tem(c.nome,c.doc,c.tel,c.cidade,c.contato))r.push({tipo:'Cliente',tit:c.nome,sub:[c.tipo,c.cidade,c.tel].filter(Boolean).join(' · '),abrir:{cli:c.id}});
+  for(const o of S.orc)if(tem(o.numero,o.cliente,o.animal))r.push({tipo:'Orçamento',tit:`${o.numero} · ${o.cliente}`,sub:br(o.data)+' · '+R$(orcTotais(o).total),abrir:{orc:o.id}});
+  for(const x of S.est)if(tem(x.nome,x.lote,x.forn))r.push({tipo:'Estoque',tit:x.nome,sub:fx(num(x.qtd),2)+' '+(x.un||''),abrir:{vis:'estoque'}});
+  return r.slice(0,60);
+}
+function abrirBusca(){
+  $('card').innerHTML=`<h2>Buscar no VetCamp</h2><input class="search" id="bq" type="search" placeholder="Animal, tutor, cliente, diagnóstico, orçamento, produto…" aria-label="Buscar em tudo" autocomplete="off"><div id="bres"><p class="meta">Digite pelo menos 2 letras. Dica: no computador, aperte <b>/</b> para abrir a busca.</p></div><div class="acts"><button class="btn" id="cancel">Fechar</button></div>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;
+  const mostrar=()=>{const l=buscarTudo($('bq').value);$('bres').innerHTML=$('bq').value.trim().length<2?'<p class="meta">Digite pelo menos 2 letras.</p>':l.length?l.map((x,i)=>`<button class="row" data-bres="${i}"><span class="av">${esc(x.tipo.slice(0,2))}</span><span><h3>${esc(x.tit)}</h3><span class="meta">${esc(x.tipo)} · ${esc(x.sub||'')}</span></span></button>`).join(''):'<p class="meta">Nada encontrado.</p>';
+    $('bres').querySelectorAll('[data-bres]').forEach(b=>b.onclick=()=>{const a=l[+b.dataset.bres].abrir;$('sheet').classList.remove('on');
+      if(a.id){S.sel=a.id;S.tab=a.tab||'resumo';render();scrollTo(0,0)}else if(a.cli){S.sel=null;S.vis='clientes';S.cliSel=a.cli;render()}else if(a.orc){S.sel=null;S.vis='orc';render();const o=S.orc.find(x=>x.id===a.orc);if(o)verOrc(o)}else if(a.vis){S.sel=null;S.vis=a.vis;render()}})};
+  $('bq').oninput=mostrar;setTimeout(()=>$('bq').focus(),30);
+}
+/* linha do tempo do animal */
+function linhaTempo(p){
+  const ev=[];
+  for(const m of MODS)if(modVis(m,p))for(const it of (p[m.key]||[])){const d=it[m.dateK||'data'];if(!d)continue;
+    const extra=m.key==='consultas'?[it.diag,it.queixa].filter(Boolean).join(' · '):m.key==='meds'?[it.dose,it.via,(it.aplic||[]).length?(it.aplic.length+' aplicação(ões)'):''].filter(Boolean).join(' · '):m.key==='fin'?R$(it.total)+(saldo(it)?' · em aberto':' · pago'):(it.obs||it.res||it.diag||it.resultado||'');
+    ev.push({d,h:it.hora||'',tipo:m.tab,tab:m.key,tit:tituloIt(m,it),extra})}
+  for(const d of (p.docs||[]))ev.push({d:d.data,h:'',tipo:'Documento',tab:'docs',tit:d.titulo,extra:d.assinT?'assinado':''});
+  for(const a of (p.anexos||[]))ev.push({d:a.data,h:'',tipo:'Anexo',tab:'anexos',tit:a.desc||a.nome,extra:a.regiao||''});
+  ev.sort((a,b)=>(b.d+b.h).localeCompare(a.d+a.h));
+  let mes='',html='';
+  for(const e of ev){const m=String(e.d).slice(0,7);if(m!==mes){mes=m;html+=`<h3 class="dayh">${new Date(m+'-15T12:00:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</h3>`}
+    html+=`<button class="tl" data-tab="${esc(e.tab)}"><span class="tld">${br(e.d).slice(0,5)}${e.h?'<br>'+esc(e.h):''}</span><span><b>${esc(e.tipo)}:</b> ${esc(e.tit)}${e.extra?`<br><span class="meta">${esc(String(e.extra).slice(0,140))}</span>`:''}</span></button>`}
+  return `<div class="bar"><h3>Linha do tempo</h3><span class="meta">${ev.length} registro(s)</span></div><p class="hint">Tudo o que aconteceu com ${esc(p.nome)}, do mais recente para o mais antigo. Toque para abrir.</p>${ev.length?`<div class="tlw">${html}</div>`:'<div class="empty"><p>Nenhum registro ainda.</p></div>'}`;
+}
+/* agenda para o calendário do celular (.ics) */
+function icsAgenda(){
+  const its=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)>=-1&&dias(x.d)<=90&&x.tab!=='fin');
+  const e=s=>String(s||'').replace(/[\\;,]/g,m=>'\\'+m).replace(/\n/g,'\\n');
+  const dt=(d,h)=>d.replace(/-/g,'')+(h?'T'+h.replace(':','')+'00':'');
+  const fim=(d,h)=>{if(h){const[hh,mm]=h.split(':').map(Number);const t=new Date(2000,0,1,hh,mm+60);return d.replace(/-/g,'')+'T'+String(t.getHours()).padStart(2,'0')+String(t.getMinutes()).padStart(2,'0')+'00'}return addD(d,1).replace(/-/g,'')};
+  const ev=its.map((x,i)=>['BEGIN:VEVENT',`UID:vetcamp-${x.p.id}-${i}-${x.d}@vetcamp.web.app`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').slice(0,15)}Z`,x.h?`DTSTART:${dt(x.d,x.h)}`:`DTSTART;VALUE=DATE:${dt(x.d)}`,x.h?`DTEND:${fim(x.d,x.h)}`:`DTEND;VALUE=DATE:${fim(x.d)}`,`SUMMARY:${e(x.p.nome+' · '+x.txt)}`,`DESCRIPTION:${e([x.p.tutor,x.p.prop,x.p.tel].filter(Boolean).join(' · '))}`,'END:VEVENT'].join('\r\n'));
+  return {n:its.length,txt:['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//VetCamp//Agenda//PT-BR','CALSCALE:GREGORIAN','X-WR-CALNAME:VetCamp',...ev,'END:VCALENDAR'].join('\r\n')};
+}
+/* aparência: tema e tamanho da letra (preferência deste aparelho) */
+function aplicarAparencia(){const a=LS.get('vetcamp-aparencia',{});const r=document.documentElement;if(a.tema==='claro'||a.tema==='escuro')r.setAttribute('data-theme',a.tema==='claro'?'light':'dark');else r.removeAttribute('data-theme');r.classList.toggle('letra-maior',!!a.maior)}
+function aparenciaHtml(){const a=LS.get('vetcamp-aparencia',{});const t=a.tema||'sistema';
+  return `<div class="box"><h3>Aparência</h3><p class="hint" style="margin:0 0 10px">Vale só para este aparelho.</p>
+   <div class="seg2" role="group" aria-label="Tema">${[['sistema','Automático'],['claro','Claro'],['escuro','Escuro']].map(([k,l])=>`<button data-tema="${k}" aria-pressed="${t===k}">${l}</button>`).join('')}</div>
+   <label class="ck" style="margin-top:10px"><label><input type="checkbox" id="ap_maior"${a.maior?' checked':''}> Letra maior</label></label></div>`}
+/* cobranças esquecidas */
+function semCobranca(dd=60){
+  const out=[];for(const p of S.pac)for(const m of MODS){if(SEMVALOR.includes(m.key)||m.key==='evolucao')continue;for(const it of (p[m.key]||[])){const d=it[m.dateK||'data'];if(!d||dias(d)<-dd||dias(d)>0)continue;if(!valorItem(m,it)&&!it.semCobranca)out.push({p,m,it,d})}}
+  return out.sort((a,b)=>b.d.localeCompare(a.d));
+}
+function esquecidasHtml(){const l=semCobranca();if(!l.length)return '';
+  return `<div class="box"><div class="bar"><h3>Atendimentos sem cobrança</h3><span class="meta">últimos 60 dias</span></div><p class="hint" style="margin:0 0 8px">Registros sem valor lançado. Confira se não ficou nada por cobrar. Se foi cortesia, marque como "sem cobrança".</p>
+   <div class="tw"><table>${l.slice(0,15).map(x=>`<tr><td>${br(x.d)}</td><td><b>${esc(x.p.nome)}</b><br><span class="meta">${esc(x.m.tab)}: ${esc(tituloIt(x.m,x.it))}</span></td><td><div class="btns"><button class="btn sm" data-id="${esc(x.p.id)}" data-gotab="${esc(x.m.key)}">Abrir</button><button class="btn sm ghost" data-cortesia="${esc(x.p.id)}|${esc(x.m.key)}|${esc(x.it.id)}">Sem cobrança</button></div></td></tr>`).join('')}</table></div>${l.length>15?`<p class="meta">E mais ${l.length-15}.</p>`:''}</div>`}
+
 /* ---------- ficha ---------- */
 function renderFicha(p){
-  const tabs=[['resumo','Resumo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']];
+  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']];
   if(!tabs.some(t=>t[0]===S.tab))S.tab='resumo';
   $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Voltar</button>
   <div class="head"><button class="fotobtn" data-fotopac aria-label="${p.foto?'Trocar':'Adicionar'} foto de ${esc(p.nome)}">${avatar(p)}<span class="cam">${p.foto?'Trocar':'+ Foto'}</span></button><div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
   ${chipsAlerta(p)}
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
-  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${rodapeFin(p)}`;
+  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${rodapeFin(p)}`;
   const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
   const at=document.querySelector('.tab[aria-selected=true]');if(at&&at.scrollIntoView)at.scrollIntoView({block:'nearest',inline:'nearest'});
   hidratarNomes();
@@ -1457,6 +1535,7 @@ function modulo(m,p){
   const l=ord(p[m.key],dk);
   let topo='';
   if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const ids=new Set(l.map(x=>x.id)),fl=(p.fin||[]).filter(f=>f.ref&&(ids.has(f.ref)||ids.has(String(f.ref).replace(/-km$/,''))));if(fl.length)topo=`<p class="info">Subtotal de ${esc(m.tab)}: <b>${R$(fl.reduce((s,f)=>s+num(f.total),0))}</b>${fl.some(f=>saldo(f))?` · em aberto <b class="late">${R$(fl.reduce((s,f)=>s+saldo(f),0))}</b>`:''}</p>`}
+  if(m.key==='consultas'&&l.length)topo+=`<div class="btns" style="margin-bottom:10px"><button class="btn sm" data-repetir>Repetir última consulta</button></div>`;
   if(m.key==='vacinas'&&l.length)topo+=`<div class="btns" style="margin-bottom:10px"><button class="btn sm pri" data-carteira>Baixar carteira de sanidade (PDF)</button></div>`;
   if(m.key==='fin'){const t=l.reduce((s,x)=>s+(x.sit==='Orçamento'?0:num(x.total)),0),sd=l.reduce((s,x)=>s+saldo(x),0);topo=`${(S.cfg.servicos||[]).length?`<div class="chips"><span class="meta" style="align-self:center">Lançar rápido:</span>${S.cfg.servicos.map(x=>`<button class="btn sm" data-quick="${esc(x.id)}">${esc(x.nome)} · ${R$(x.valor)}</button>`).join('')}</div>`:`<p class="hint">Cadastre seus serviços em Preços para lançar com um toque.</p>`}<div class="counts"><div class="count"><b>${R$(t)}</b><span>Total lançado</span></div><div class="count" style="color:var(--warn)"><b>${R$(sd)}</b><span>Em aberto</span></div></div>`}
   return `<div class="bar"><h3>${m.titulo}</h3><button class="btn pri sm" data-add="${m.key}">+ ${m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}${topo}`+
@@ -1569,19 +1648,21 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
   $('sheet').classList.add('on');$('card').scrollTop=0;
   const ler=()=>{const o={...val};for(const f of fs){if(!f.k)continue;const el=$('f_'+f.k);o[f.k]=f.t==='checks'||f.t==='regioes'?[...el.querySelectorAll('input:checked')].map(c=>c.value):f.t==='triadan'?[...el.querySelectorAll('[aria-pressed=true]')].map(b=>b.dataset.dente):el.value.trim()}return o};
   for(const f of fs.filter(f=>f.re))$('f_'+f.k).onchange=()=>{const o=ler();abrirForm(titulo,todos,o,{...p,...o},onSave,onDel)};
-  $('cancel').onclick=fechar;
+  formSujo=false;$('frm').addEventListener('input',()=>{formSujo=true});$('frm').addEventListener('change',()=>{formSujo=true});
+  {let armC=0;$('cancel').onclick=()=>{if(formSujo&&!armC){armC=1;$('cancel').textContent='Descartar alterações?';return}fechar()}}
   if(onDel){let arm=0;$('del').onclick=()=>{if(!arm){arm=1;$('del').textContent='Toque de novo para excluir';return}onDel();fechar()}}
   let salvando=false;
   $('frm').onsubmit=e=>{e.preventDefault();if(salvando)return;const o=ler();
     const falta=fs.find(f=>f.req&&!o[f.k]);if(falta){toast('Preencha: '+falta.l);$('f_'+falta.k).focus();return}
     salvando=true;const t0=Date.now();onSave(o);fechar();if(lastToast<t0)toast('Salvo')};
 }
-function fechar(){pararMic();$('sheet').classList.remove('on');render()}
+let formSujo=false;
+function fechar(){formSujo=false;pararMic();$('sheet').classList.remove('on');render()}
 function pararMic(){if(dict&&micBtn)dict.stop().catch(()=>{})}
 
-function editarItem(p,key,id){
+function editarItem(p,key,id,base){
   const m=MODS.find(x=>x.key===key),lista=p[key]||[],dk=m.dateK||'data';
-  const item=id?lista.find(x=>x.id===id):{id:uid(),[dk]:hoje(),...(m.def?m.def(p):{})};if(!item)return;
+  const item=id?lista.find(x=>x.id===id):{...(m.def?m.def(p):{}),...(base?Object.fromEntries(Object.entries(base).filter(([k])=>!['id','por','editPor','aplic','aplicPor','retorno','semCobranca'].includes(k))):{}),id:uid(),[dk]:hoje()};if(!item)return;
   if(!id&&key==='consultas'){const u=ult(p)[0];if(u&&u.retorno&&u.retorno<=hoje())item.tipo='Retorno'}
   if(!id&&!SEMVALOR.includes(key)){
     const jaDiaria=key==='evolucao'&&(p.evolucao||[]).some(x=>x.data===item.data&&num(x.valor));
@@ -1594,7 +1675,7 @@ function editarItem(p,key,id){
     if(!id&&key==='vacinas'&&num(o.consumo)&&moverEstoque(o.estId||o.nome,num(o.consumo),'Sanidade · '+p.nome))setTimeout(()=>toast('Salvo · baixa no estoque: '+((S.est.find(x=>x.id===o.estId)||{}).nome||o.nome)),50);
     if(m.save)m.save(o,p);
     salvar({...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]});if(valorItem(m,o)>0&&!id)toast('Salvo · '+R$(valorItem(m,o))+' lançado no Financeiro')},
-    id?()=>salvar({...p,[key]:lista.filter(x=>x.id!==id)}):null);
+    id?()=>{const velho=lista.find(x=>x.id===id);salvar({...p,[key]:lista.filter(x=>x.id!==id)});desfazivel('Registro excluído.',()=>{const q=S.pac.find(x=>x.id===p.id)||p;salvar({...q,[key]:[...(q[key]||[]),velho]})})}:null);
   if(key==='fin'&&$('f_desc'))$('f_desc').addEventListener('change',()=>{const x=(S.cfg.servicos||[]).find(y=>y.nome===$('f_desc').value.trim());if(x){if(x.valor)$('f_unit').value=x.valor;if(x.tipo&&$('f_tipo'))$('f_tipo').value=x.tipo}});
   const nf=key==='meds'?'f_med':key==='vacinas'?'f_nome':null;
   if(nf&&$(nf)&&$('f_estId')){
@@ -1627,8 +1708,11 @@ function escolherPaciente(titulo,cb){
 
 /* ---------- eventos ---------- */
 $('novo').onclick=()=>novoPaciente();
-$('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))fechar()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('sheet').classList.contains('on'))fechar()});
+$('busca').onclick=()=>abrirBusca();
+$('sheet').addEventListener('click',e=>{if(e.target===$('sheet')){if(formSujo){toast('Há alterações não salvas: toque em Salvar ou em Cancelar.');return}fechar()}});
+document.addEventListener('keydown',e=>{const digitando=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'');
+  if(e.key==='Escape'&&$('sheet').classList.contains('on')){if(formSujo){toast('Há alterações não salvas: toque em Salvar ou em Cancelar.');return}fechar()}
+  else if(e.key==='/'&&!digitando&&!$('sheet').classList.contains('on')&&!e.ctrlKey&&!e.metaKey){e.preventDefault();abrirBusca()}});
 document.addEventListener('change',e=>{if(e.target.id==='cmpA'||e.target.id==='cmpB'){S[e.target.id]=e.target.value;render();return}
   if(e.target.id==='st'){const p=cur();if(p){salvar({...p,status:e.target.value});toast('Status atualizado')}}});
 $('fileup').onchange=async e=>{
@@ -1684,8 +1768,11 @@ document.addEventListener('click',e=>{
   else if('fotoperfil' in d)escolherFoto({t:'perfil'});
   else if('fotoperfilrm' in d){const c={...S.cfg};delete c.foto;salvarCfg(c,'Foto removida')}
   else if('orcnovo' in d)novoOrc();
+  else if(d.tema){LS.set('vetcamp-aparencia',{...LS.get('vetcamp-aparencia',{}),tema:d.tema});aplicarAparencia();render()}
+  else if('ics' in d){const c=icsAgenda();if(!c.n){toast('Nada na agenda dos próximos 90 dias.');return}baixar(`vetcamp-agenda-${hoje()}.ics`,c.txt,'text/calendar');toast(c.n+' compromisso(s) exportado(s). Abra o arquivo para adicionar ao calendário.')}
+  else if(d.cortesia){const[pid,key,iid]=d.cortesia.split('|');const q=S.pac.find(x=>x.id===pid);if(q){salvar({...q,[key]:(q[key]||[]).map(x=>x.id===iid?{...x,semCobranca:true}:x)});toast('Marcado como sem cobrança')}}
   else if('despnova' in d)abrirForm('Nova despesa',F_DESP,{id:uid(),data:hoje(),sit:'Paga',cat:CAT_DESP[0],forma:'Pix'},{},o=>salvarDesp(o));
-  else if(d.despedit){const x=S.desp.find(y=>y.id===d.despedit);if(x)abrirForm('Editar despesa',F_DESP,x,{},o=>salvarDesp(o),()=>apagar('despesas',x.id))}
+  else if(d.despedit){const x=S.desp.find(y=>y.id===d.despedit);if(x)abrirForm('Editar despesa',F_DESP,x,{},o=>salvarDesp(o),()=>{apagar('despesas',x.id);desfazivel('Despesa excluída.',()=>salvarDesp(x))})}
   else if('livroctr' in d)livroControlados();
   else if('modnovo' in d)abrirForm('Novo modelo de texto',F_MOD,{id:uid()},{},o=>salvarCfg({...S.cfg,modelos:[...modelos(),o]},'Modelo salvo'));
   else if(d.modedit){const m=modelos().find(x=>x.id===d.modedit);if(m)abrirForm('Editar modelo',F_MOD,m,{},o=>salvarCfg({...S.cfg,modelos:modelos().map(x=>x.id===o.id?o:x)},'Modelo salvo'),()=>salvarCfg({...S.cfg,modelos:modelos().filter(x=>x.id!==m.id)},'Modelo excluído'))}
@@ -1736,6 +1823,7 @@ document.addEventListener('click',e=>{
   else if(d.edit)editarItem(p,d.edit,d.iid);
   else if(d.aplic)aplicar(p,d.aplic);
   else if('protapl' in d)escolherProtocolo(p);
+  else if('repetir' in d){const u=ult(p)[0];if(u)editarItem(p,'consultas',null,u)}
   else if('pixpac' in d){const ab=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);cobrarPix(ab,{desc:'despesas de '+p.nome,tel:p.tel,nome:p.tutor,txid:'VC'+p.id.slice(-8)})}
   else if(d.pixsoc!==undefined&&p.socios){const sc=p.socios[+d.pixsoc],ab=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);if(sc)cobrarPix(ab*num(sc.pct)/100,{desc:`${fx(num(sc.pct),2)}% das despesas de ${p.nome}`,tel:sc.tel,nome:sc.nome,txid:'VC'+p.id.slice(-6)+d.pixsoc})}
   else if('socios' in d)editarSocios(p);
@@ -1744,7 +1832,7 @@ document.addEventListener('click',e=>{
   else if('fotopacrm' in d){const q={...p};delete q.foto;salvar(q);toast('Foto removida')}
   else if(d.anexoedit){const a=(p.anexos||[]).find(x=>x.id===d.anexoedit);if(a)abrirForm('Legenda do anexo',[{k:'desc',l:'Descrição'},{k:'regiao',l:'Região do corpo',h:1,list:[...REG_CORPO,...MEMB.flatMap(mb=>REG_MEMBRO.map(r=>mb+' · '+r))]},{k:'data',l:'Data',t:'date',h:1}],a,p,o=>salvar({...p,anexos:p.anexos.map(x=>x.id===a.id?o:x)}))}
   else if(d.desfaz){const m=p.meds.find(x=>x.id===d.desfaz);salvar({...p,meds:p.meds.map(x=>x.id===d.desfaz?{...x,aplic:(x.aplic||[]).slice(0,-1)}:x)});if(m&&num(m.consumo)&&moverEstoque(m.estId||m.med,-num(m.consumo),'Estorno · '+p.nome))toast('Aplicação desfeita · estoque devolvido')}
-  else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>apagar('pacientes',p.id));
+  else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>{const velho=JSON.parse(JSON.stringify(p));apagar('pacientes',p.id);desfazivel(velho.nome+' excluído.',()=>salvar(velho))});
   else if('copy' in d)copiar(textoFicha(p),'Ficha copiada');
   else if('baixarficha' in d)baixarPdf(`Ficha clinica - ${p.nome}.pdf`,()=>pdfTexto('Ficha clínica',textoFicha(p),{dir:[p.nome,'Emitida em '+br(hoje())]}));
   else if('carteira' in d)baixarPdf(`Carteira de sanidade - ${p.nome}.pdf`,()=>pdfCarteira(p));
@@ -1762,6 +1850,7 @@ function renderWho(){
   else w.innerHTML='<span class="dot"></span>Entrar';
 }
 
+aplicarAparencia();
 render();
 (async()=>{
   const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
