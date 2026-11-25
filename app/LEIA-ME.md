@@ -21,6 +21,11 @@ Toda mudança feita no VetCamp vale para os dois.
 2. Aba **Método de login** → **E-mail/senha** → **Ativar** → **Salvar**.
 3. (Opcional) Aba **Modelos** → mude o idioma dos e-mails para **Português (Brasil)**.
 
+### 2b. (Opcional) Login com Google
+1. **Authentication › Método de login › Adicionar novo provedor › Google**.
+2. Ligue **Ativar**, escolha o **e-mail de suporte** (o seu) e **Salvar**.
+Na tela inicial do VetCamp aparece o botão **Entrar com Google**.
+
 ### 3. Criar o banco de dados
 1. **Criação › Firestore Database › Criar banco de dados**.
 2. Local: **southamerica-east1 (São Paulo)**. Modo: **produção**.

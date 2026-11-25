@@ -287,6 +287,9 @@ body.semrede .wrap{padding-bottom:200px}
   #auth .lnk{border:0;background:none;color:var(--act,#965a27);font-weight:700;text-decoration:underline;padding:4px;justify-self:center}
   #auth .msg{font-size:14px;border-radius:10px;padding:10px 12px;display:none}
   #auth .msg.on{display:block}#auth .msg.err{background:color-mix(in srgb,var(--warn,#b3242c) 12%,transparent);color:var(--warn,#b3242c)}#auth .msg.inf{background:var(--note,#f3e1bf)}
+  #auth .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;border:1px solid var(--line,#d8c1a2);border-radius:10px;background:#fff;color:#1f1f1f;font-weight:700;font-size:16px}
+  #auth .gbtn[disabled]{opacity:.6}
+  #auth .ou{display:flex;align-items:center;gap:10px;color:var(--mute,#76583d);font-size:13px}#auth .ou::before,#auth .ou::after{content:"";flex:1;height:1px;background:var(--line,#d8c1a2)}
   #auth .rod{font-size:12px;color:var(--mute,#76583d);text-align:center}#auth .rod a{color:inherit}
   #verifbar{position:sticky;top:0;z-index:6;background:var(--note,#f3e1bf);color:var(--ink,#33210f);font-size:14px;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
   #verifbar button{border:1px solid var(--line,#d8c1a2);background:var(--card,#fbf6ef);border-radius:8px;min-height:34px;padding:0 10px;font-weight:700;color:inherit}`;
@@ -296,6 +299,8 @@ body.semrede .wrap{padding-bottom:200px}
   tela.innerHTML=`<div class="ab"><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p>
    <div class="tabs2" role="group" aria-label="Entrar ou criar conta"><button type="button" data-m="entrar" aria-pressed="true">Entrar</button><button type="button" data-m="criar" aria-pressed="false">Criar conta</button></div>
    <div class="msg" id="a_msg" role="status"></div>
+   <button type="button" class="gbtn" id="a_google"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span id="a_gtxt">Entrar com Google</span></button>
+   <div class="ou"><span>ou com e-mail e senha</span></div>
    <form id="a_form" novalidate>
     <label id="l_nome" hidden>Seu nome<input id="a_nome" autocomplete="name" placeholder="Como quer ser chamado(a)"></label>
     <label>E-mail<input id="a_email" type="email" autocomplete="email" inputmode="email" required></label>
@@ -313,12 +318,14 @@ body.semrede .wrap{padding-bottom:200px}
   let modo='entrar',recuperar=false;
   const msg=(t,tipo='err')=>{const m=$('a_msg');m.textContent=t||'';m.className='msg'+(t?' on '+tipo:'')};
   const ERROS={'auth/invalid-email':'E-mail inválido. Confira se digitou certo.','auth/missing-email':'Digite seu e-mail.','auth/user-not-found':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/invalid-credential':'E-mail ou senha incorretos.','auth/invalid-login-credentials':'E-mail ou senha incorretos.',
-    'auth/email-already-in-use':'Já existe uma conta com este e-mail. Toque em Entrar.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.','auth/too-many-requests':'Muitas tentativas. Espere alguns minutos e tente de novo.','auth/network-request-failed':'Sem internet. Conecte e tente de novo.','auth/missing-password':'Digite sua senha.'};
+    'auth/email-already-in-use':'Já existe uma conta com este e-mail. Toque em Entrar.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.','auth/too-many-requests':'Muitas tentativas. Espere alguns minutos e tente de novo.','auth/network-request-failed':'Sem internet. Conecte e tente de novo.','auth/missing-password':'Digite sua senha.',
+    'auth/operation-not-allowed':'O login com Google ainda não foi ligado no Firebase (Authentication › Método de login › Google).','auth/unauthorized-domain':'Este endereço não está liberado para login. Adicione-o em Authentication › Configurações › Domínios autorizados.',
+    'auth/account-exists-with-different-credential':'Já existe uma conta com este e-mail usando senha. Entre com e-mail e senha.','auth/popup-blocked':'O navegador bloqueou a janela do Google. Tente de novo.','auth/web-storage-unsupported':'Este navegador está bloqueando o login. Desative a navegação privada e tente de novo.'};
   const traduz=e=>ERROS[e&&e.code]||('Não foi possível concluir ('+((e&&e.code)||'erro')+').');
   function setModo(m){modo=m;recuperar=false;
     tela.querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
     $('l_nome').hidden=$('l_senha2').hidden=m!=='criar';$('l_senha').hidden=false;$('a_esq').hidden=m!=='entrar';
-    $('a_senha').autocomplete=m==='criar'?'new-password':'current-password';$('a_ok').textContent=m==='criar'?'Criar conta':'Entrar';msg('')}
+    $('a_senha').autocomplete=m==='criar'?'new-password':'current-password';$('a_ok').textContent=m==='criar'?'Criar conta':'Entrar';$('a_gtxt').textContent=m==='criar'?'Criar conta com Google':'Entrar com Google';msg('')}
   tela.addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(b)setModo(b.dataset.m)});
 
   /* ---------- Firebase ---------- */
@@ -328,19 +335,33 @@ body.semrede .wrap{padding-bottom:200px}
 
   function iniciar(){
     if(!configurado){msg('Configuração do Firebase pendente. Preencha o arquivo firebase-config.js.','inf');$('a_ok').disabled=true;return}
-    firebase.initializeApp(CFG);
+    const hostFirebase=/\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
+    firebase.initializeApp(hostFirebase&&!DEMO?{...CFG,authDomain:location.hostname}:CFG);
     auth=firebase.auth();fs=firebase.firestore();
     if(DEMO){auth.useEmulator('http://'+location.hostname+':9099',{disableWarnings:true});fs.useEmulator(location.hostname,8080)}
     fs.settings({ignoreUndefinedProperties:true,merge:true});
     if(!DEMO)fs.enablePersistence({synchronizeTabs:true}).catch(()=>{});
     if(CFG.storageBucket&&CFG.storage!==false&&firebase.storage){storage=firebase.storage();if(DEMO)storage.useEmulator(location.hostname,9199)}
     auth.languageCode='pt';
+    auth.getRedirectResult().catch(err=>{if(err&&err.code)msg(traduz(err))});
     auth.onAuthStateChanged(u=>{
       if(u){usuario=u;tela.hidden=true;barraVerificacao();resolverPronto(true)}
       else{usuario=null;tela.hidden=false;setTimeout(()=>{try{$('a_email').focus()}catch(e){}},50)}
     });
   }
-  $('a_form')||null;
+  const instalado=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  document.addEventListener('click',async e=>{
+    if(!e.target.closest||!e.target.closest('#a_google')||!auth)return;
+    const b=$('a_google');b.disabled=true;msg('');
+    const prov=new firebase.auth.GoogleAuthProvider();prov.setCustomParameters({prompt:'select_account'});
+    try{
+      if(instalado())await auth.signInWithRedirect(prov);
+      else await auth.signInWithPopup(prov);
+    }catch(err){
+      if(err&&['auth/popup-blocked','auth/operation-not-supported-in-environment','auth/cancelled-popup-request'].includes(err.code)){try{await auth.signInWithRedirect(prov);return}catch(e2){err=e2}}
+      if(!err||!['auth/popup-closed-by-user','auth/cancelled-popup-request','auth/user-cancelled'].includes(err.code))msg(traduz(err));
+    }finally{b.disabled=false}
+  });
   document.addEventListener('submit',async e=>{
     if(e.target.id!=='a_form')return;e.preventDefault();if(!auth)return;
     const email=$('a_email').value.trim(),senha=$('a_senha').value;
@@ -375,7 +396,7 @@ body.semrede .wrap{padding-bottom:200px}
   const avatar=n=>'data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="32" fill="#965a27"/><text x="32" y="41" font-family="Arial" font-size="26" font-weight="700" fill="#fff" text-anchor="middle">${iniciais(n)}</text></svg>`)));
   const nomeDe=u=>u.displayName||String(u.email||'').split('@')[0];
   const userNs={
-    me:async()=>({id:usuario.uid,name:nomeDe(usuario),email:usuario.email,avatarUrl:avatar(nomeDe(usuario)),color:'#965a27'}),
+    me:async()=>({id:usuario.uid,name:nomeDe(usuario),email:usuario.email,avatarUrl:usuario.photoURL||avatar(nomeDe(usuario)),color:'#965a27'}),
     id:async()=>usuario.uid,isOwner:async()=>true,canEdit:async()=>true,can:async()=>true,
     profiles:async ids=>Object.fromEntries((ids||[]).map(i=>[i,{id:i,name:i===usuario.uid?nomeDe(usuario):'',isMe:i===usuario.uid}]))};
   const nomeArquivo=n=>String(n||'arquivo').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w .()-]/g,'-').replace(/\s+/g,' ').trim()||'arquivo';
