@@ -5,7 +5,7 @@ O VetCamp roda em dois lugares, com o **mesmo código** (`vetcamp.html`):
 | Onde | Login | Endereço |
 |---|---|---|
 | Dentro do Claude (artifact) | conta Claude | https://claude.ai/artifact/D2CL9WbAYCemogA4goCkSN |
-| Site próprio | e-mail e senha do próprio VetCamp | https://vetcamp-47e18.web.app (projeto Firebase `vetcamp-47e18`) |
+| Site próprio | e-mail e senha do próprio VetCamp | https://vetcamp-1704e.web.app (projeto Firebase `vetcamp-1704e`) |
 
 O script `scripts/build_app.py` gera o site (`app/public/index.html`) a partir do `vetcamp.html`.
 Toda mudança feita no VetCamp vale para os dois.

@@ -4,12 +4,12 @@
    Estes valores não são senhas: são feitos para ficar no site. A proteção dos dados
    vem das regras de segurança (firestore.rules e storage.rules). */
 window.SAMVET_FIREBASE = {
-  apiKey: "AIzaSyBG1GBaK-nsNw9gdUNYOkx2QH35qWKsKV0",
-  authDomain: "vetcamp-47e18.firebaseapp.com",
-  projectId: "vetcamp-47e18",
-  storageBucket: "vetcamp-47e18.firebasestorage.app",
-  messagingSenderId: "92286542877",
-  appId: "1:92286542877:web:f464441e03a8e7e47252f4",
+  apiKey: "AIzaSyDDFXIyk98wt5riMolK_2yDl4UBnnV7y3k",
+  authDomain: "vetcamp-1704e.firebaseapp.com",
+  projectId: "vetcamp-1704e",
+  storageBucket: "vetcamp-1704e.firebasestorage.app",
+  messagingSenderId: "236606054255",
+  appId: "1:236606054255:web:3c636c2e721cb249eb529a",
   // Anexos (PDF, raio-X) usam o Storage, que exige o plano Blaze no Firebase.
   // Se ainda não ativou, deixe false: o resto do VetCamp funciona normalmente.
   storage: false
