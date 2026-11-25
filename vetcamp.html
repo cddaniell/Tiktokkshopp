@@ -240,6 +240,9 @@ body.semrede .wrap{padding-bottom:200px}
 .tl{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;text-align:left;border:0;border-left:3px solid var(--line);background:none;padding:8px 10px;margin-left:6px}.tl:hover{background:var(--panel);border-left-color:var(--act)}
 .tld{font:800 14px var(--display);color:var(--brand);font-variant-numeric:tabular-nums}
 html.letra-maior body{zoom:1.12}
+.hojel{display:grid;gap:4px;margin:10px 0 4px}
+.hj{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;color:var(--ink)}.hj b{font-variant-numeric:tabular-nums;color:var(--brand)}.hj:hover{background:var(--panel)}
+@media(max-width:600px){.capa .hojel{text-align:left;width:100%}}
 @media(prefers-reduced-motion:reduce){.toast{transition:none}.pulso{animation:none}}
 </style>
 
@@ -266,6 +269,7 @@ html.letra-maior body{zoom:1.12}
 
 <script>
 {
+const VERSAO='2026.11.25';
 const STANDALONE=!!window.SAMVET_STANDALONE,AUTH=window.SAMVET_AUTH||null;
 const LINK=STANDALONE?location.origin+'/':'https://claude.ai/artifact/D2CL9WbAYCemogA4goCkSN';
 const blobSrc=id=>/^https?:\/\//.test(String(id||''))?String(id):'/_blob/'+encodeURIComponent(id);
@@ -647,7 +651,7 @@ function renderLista(){
   else rows=list.map(({p,a})=>{const u=ult(p)[0];const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${alertasDe(p).slice(0,1).map(x=>`<span class="flag">⚠ ${esc(x)}</span>`).join('')}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}${deb?` · <span class="late">deve ${R$(deb)}</span>`:''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
   const hj=new Date(),hr=hj.getHours(),nm=(S.cfg.apelido||me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
-  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
+  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''} · ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${(()=>{const h=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').sort((a,b)=>String(a.h||'99').localeCompare(String(b.h||'99'))).slice(0,5);return h.length?`<div class="hojel">${h.map(x=>`<button class="hj" data-id="${esc(x.p.id)}" data-gotab="${esc(x.tab)}"><b>${esc(x.h||'—')}</b><span>${esc(x.p.nome)} · ${esc(x.txt)}</span></button>`).join('')}</div>`:''})()}<p><button class="btn pri sm" data-rapido>Atendimento rápido</button></p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
   $('view').innerHTML=capa+`<div class="counts">${[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('')}</div>
   <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro, microchip ou treinador" aria-label="Buscar paciente" value="${esc(S.q)}">
   <div id="rows">${rows}</div>`;
@@ -846,7 +850,8 @@ function renderConta(){
   <div class="box"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
   ${aparenciaHtml()}
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, clientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}. ${(()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último backup baixado neste aparelho: '+new Date(t).toLocaleDateString('pt-BR')+'.':'Nenhum backup baixado ainda neste aparelho.'})()}</p>
-   <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button></div></div>`;
+   <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button>${dl?'<button class="btn sm" data-csvpac>Lista de animais (.csv)</button>':''}</div></div>
+  <div class="box"><h3>Sobre o VetCamp</h3><p class="meta" style="margin:0 0 8px">Versão ${VERSAO}${STANDALONE?' · site próprio':' · dentro do Claude'}${navigator.onLine?'':' · sem internet agora'}</p><div class="btns"><button class="btn sm" data-atualizar>Buscar atualização</button><a class="btn sm" href="${STANDALONE?'privacidade.html':SITE_OFICIAL+'/privacidade.html'}" target="_blank" rel="noopener">Política de privacidade</a></div></div>`;
   $('perff').onsubmit=e=>{e.preventDefault();salvarCfg({...S.cfg,apelido:$('pf_apelido').value.trim()},'Nome salvo')};
   if($('ap_maior'))$('ap_maior').onchange=e=>{LS.set('vetcamp-aparencia',{...LS.get('vetcamp-aparencia',{}),maior:e.target.checked});aplicarAparencia()};
   if($('padV'))window._padV=padAssin($('padV'));
@@ -1453,6 +1458,7 @@ function abrirBusca(){
   $('bq').oninput=mostrar;setTimeout(()=>$('bq').focus(),30);
 }
 /* linha do tempo do animal */
+function resumoTutor(p,it){const c=S.cfg;return `Olá, ${p.tutor||''}! Aqui é da ${c.clinica||'VetCamp'}. Resumo do atendimento de ${p.nome} em ${br(it.data)}:${it.diag?'\n\nDiagnóstico: '+it.diag:''}${it.trat?'\n\nTratamento: '+it.trat:''}${it.orient?'\n\nOrientações: '+it.orient:''}${it.retorno?'\n\nRetorno: '+br(it.retorno):''}\n\nQualquer dúvida, é só chamar.${c.vet?'\n'+c.vet+(c.crmv?' · CRMV '+c.crmv:''):''}`}
 function linhaTempo(p){
   const ev=[];
   for(const m of MODS)if(modVis(m,p))for(const it of (p[m.key]||[])){const d=it[m.dateK||'data'];if(!d)continue;
@@ -1548,6 +1554,7 @@ function modulo(m,p){
     if(m.key==='fin')extra=`<p><b>Total ${R$(it.total)}</b> · <span class="${saldo(it)?'late':'ok'}">${saldo(it)?'em aberto '+R$(saldo(it)):it.sit==='Orçamento'?'orçamento':'pago'}</span></p>${saldo(it)?`<button class="btn sm" data-quitar="${esc(it.id)}" data-pid="${esc(p.id)}">Marcar como pago</button>`:''}`;
     if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const fl=(p.fin||[]).filter(f=>f.ref===it.id||f.ref===it.id+'-km');if(fl.length)extra+=`<p class="vl">${fl.map(f=>`${esc(f.tipo==='Deslocamento (km)'?'Deslocamento':'Valor')} <b>${R$(f.total)}</b> <span class="pill" style="--c:var(--s-${saldo(f)?'tratamento':'alta'})">${saldo(f)?'em aberto':'pago'}</span>`).join(' · ')}</p>`;else if(!num(it.valor)&&!num(it.valorAplic))extra+=`<p class="meta">Sem valor lançado.</p>`}
     if(m.key==='fin'&&it.auto)extra+=`<p class="meta">Gerado automaticamente por ${esc(secaoFin(it))}. Para mudar o valor, edite o registro de origem.</p>`;
+    if(m.key==='consultas'&&p.tel)extra+=`<div class="btns" style="margin-top:6px">${waLink(p.tel,resumoTutor(p,it)).replace('>WhatsApp<','>Enviar resumo ao tutor<')}</div>`;
     if(m.key==='agend')extra=`<div class="btns">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Confirmando ${it.tipo} de ${p.nome} em ${br(it.data)}${it.hora?' às '+it.hora:''}${it.local?' ('+it.local+')':''}. Pode confirmar?`)}</div>`;
     const tit=m.key==='agend'?`${br(it.data)} ${esc(it.hora||'')} · ${esc(it.tipo)} <span class="pill" style="--c:var(--s-${it.situacao==='Realizado'?'alta':it.situacao==='Confirmado'?'acompanhamento':['Faltou','Cancelado'].includes(it.situacao)?'obito':'tratamento'})">${esc(it.situacao||'')}</span>`:m.key==='evolucao'?`${br(it.data)} ${esc(it.hora||'')} · ${esc(it.turno||'')}`:`${br(it[dk])} · ${m.titleK==='grau'&&it.grau?'Grau ':''}${esc(String(it[m.titleK]||'').split(' – ')[0]||m.tab)}`;
     return `<article class="item"><header><h3>${tit}</h3>${it.por?`<span class="meta" data-uid="${esc(it.por)}"></span>`:''}<button class="btn sm" data-edit="${m.key}" data-iid="${esc(it.id)}">Editar</button></header>
@@ -1697,7 +1704,7 @@ function textoFicha(p){
 function copiar(t,ok){navigator.clipboard.writeText(t).then(()=>toast(ok)).catch(()=>toast('Não foi possível copiar. Selecione o texto e copie manualmente.'))}
 function baixar(nome,data,tipo){if(!dl){toast('Download indisponível aqui.');return}dl.save({filename:nome,data:new Blob([data],{type:tipo})}).then(r=>{if(r&&r.status==='saved')toast('Arquivo salvo')}).catch(e=>{if(e&&e.code!=='cancelled'&&e.code!=='declined')toast('Não foi possível baixar.')})}
 function aplicar(q,mid){const m=(q.meds||[]).find(x=>x.id===mid);if(!m)return;salvar({...q,meds:q.meds.map(x=>x.id===mid?{...x,aplic:[...(x.aplic||[]),new Date().toISOString()],aplicPor:[...(x.aplicPor||[]),meId()]}:x)});const b=num(m.consumo)&&moverEstoque(m.estId||m.med,num(m.consumo),'Aplicação · '+q.nome);toast('Aplicação registrada'+(b?' · baixa no estoque':''))}
-const novoPaciente=(pre={})=>{const b={especie:'Equino',sexo:'Macho',castrado:'Não',status:'tratamento',...pre};abrirForm('Novo paciente',F_PAC,b,b,o=>{o.id=uid();o.criado=Date.now();salvar(o);S.sel=o.id;S.tab='resumo'})};
+const novoPaciente=(pre={})=>{const b={especie:'Equino',sexo:'Macho',castrado:'Não',status:'tratamento',...pre};abrirForm('Novo paciente',F_PAC,b,b,o=>{const dup=S.pac.find(x=>semAcento(x.nome)===semAcento(o.nome)&&semAcento(x.tutor)===semAcento(o.tutor));o.id=uid();o.criado=Date.now();salvar(o);S.sel=o.id;S.tab='resumo';if(dup)setTimeout(()=>desfazivel(`Atenção: já existia ${dup.nome} de ${dup.tutor||'mesmo tutor'}. Cadastrado mesmo assim.`,()=>apagar('pacientes',o.id)),60)})};
 function escolherPaciente(titulo,cb){
   const ps=S.pac.filter(ativo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
   $('card').innerHTML=`<h2>${titulo}</h2>${ps.length?`<input class="search" id="pq" placeholder="Buscar paciente" aria-label="Buscar paciente"><div id="pl">${ps.map(p=>`<button class="row" data-pick="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}</h3><span class="meta">${esc(p.tutor||'')}${p.prop?' · '+esc(p.prop):''}</span></span></button>`).join('')}</div>`:'<div class="empty"><p>Cadastre um paciente primeiro.</p></div>'}<div class="acts"><button class="btn" id="cancel">Cancelar</button></div>`;
@@ -1713,7 +1720,8 @@ $('sheet').addEventListener('click',e=>{if(e.target===$('sheet')){if(formSujo){t
 document.addEventListener('keydown',e=>{const digitando=/^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement||{}).tagName||'');
   if(e.key==='Escape'&&$('sheet').classList.contains('on')){if(formSujo){toast('Há alterações não salvas: toque em Salvar ou em Cancelar.');return}fechar()}
   else if(e.key==='/'&&!digitando&&!$('sheet').classList.contains('on')&&!e.ctrlKey&&!e.metaKey){e.preventDefault();abrirBusca()}});
-document.addEventListener('change',e=>{if(e.target.id==='cmpA'||e.target.id==='cmpB'){S[e.target.id]=e.target.value;render();return}
+document.addEventListener('change',e=>{if(e.target&&e.target.type==='tel'&&e.target.value){const d=e.target.value.replace(/\D/g,''),f=d.length===11?`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`:d.length===10?`(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`:d.length===13&&d.startsWith('55')?`+55 (${d.slice(2,4)}) ${d.slice(4,9)}-${d.slice(9)}`:null;if(f)e.target.value=f}
+  if(e.target.id==='cmpA'||e.target.id==='cmpB'){S[e.target.id]=e.target.value;render();return}
   if(e.target.id==='st'){const p=cur();if(p){salvar({...p,status:e.target.value});toast('Status atualizado')}}});
 $('fileup').onchange=async e=>{
   const f=e.target.files[0],p=cur();e.target.value='';if(!f||!p||!assets)return;
@@ -1768,6 +1776,9 @@ document.addEventListener('click',e=>{
   else if('fotoperfil' in d)escolherFoto({t:'perfil'});
   else if('fotoperfilrm' in d){const c={...S.cfg};delete c.foto;salvarCfg(c,'Foto removida')}
   else if('orcnovo' in d)novoOrc();
+  else if('rapido' in d)escolherPaciente('Atender qual animal?',q=>{fechar();editarItem(q,'consultas',null)});
+  else if('csvpac' in d){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';baixar(`vetcamp-animais-${hoje()}.csv`,'\ufeff'+[['Nome','Espécie','Raça','Sexo','Nascimento','Pelagem','Tutor/cliente','Telefone','Propriedade','Microchip/marca','Registro','Status','Alertas'],...S.pac.map(p=>[p.nome,p.especie,p.raca,p.sexo,p.nasc?br(p.nasc):'',p.pelagem,nomeCli(p),p.tel,p.prop,p.chip,p.registro,stLabel(p.status),alertasDe(p).join(', ')])].map(r=>r.map(q).join(';')).join('\r\n'),'text/csv')}
+  else if('atualizar' in d){toast('Buscando atualização…');(async()=>{try{if('serviceWorker' in navigator){const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.update()))}if(window.caches){const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('samvet-')).map(k=>caches.delete(k)))}}catch(e){}location.reload()})()}
   else if(d.tema){LS.set('vetcamp-aparencia',{...LS.get('vetcamp-aparencia',{}),tema:d.tema});aplicarAparencia();render()}
   else if('ics' in d){const c=icsAgenda();if(!c.n){toast('Nada na agenda dos próximos 90 dias.');return}baixar(`vetcamp-agenda-${hoje()}.ics`,c.txt,'text/calendar');toast(c.n+' compromisso(s) exportado(s). Abra o arquivo para adicionar ao calendário.')}
   else if(d.cortesia){const[pid,key,iid]=d.cortesia.split('|');const q=S.pac.find(x=>x.id===pid);if(q){salvar({...q,[key]:(q[key]||[]).map(x=>x.id===iid?{...x,semCobranca:true}:x)});toast('Marcado como sem cobrança')}}
