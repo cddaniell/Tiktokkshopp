@@ -37,7 +37,10 @@ Toda mudança feita no VetCamp vale para os dois.
 2. No GitHub, abra o repositório → **Settings › Secrets and variables › Actions › New repository secret**:
    - `FIREBASE_SERVICE_ACCOUNT` → cole **todo** o conteúdo do arquivo `.json`.
    - `FIREBASE_PROJECT_ID` → o ID do projeto (aparece em Configurações do projeto, ex.: `vetcamp-1a2b3`).
-3. Pronto: a cada mudança, o GitHub publica o site sozinho (aba **Actions** mostra o andamento).
+3. Dê permissão à chave: abra https://console.cloud.google.com/iam-admin/iam?project=SEU-PROJETO,
+   edite (✏️) a conta `firebase-adminsdk-...` e adicione os papéis **Administrador do Firebase**
+   e **Usuário da conta de serviço**. Sem isso a publicação falha com "does not have permission".
+4. Pronto: a cada mudança, o GitHub publica o site sozinho (aba **Actions** mostra o andamento).
    Também dá para publicar na mão em **Actions › Publicar VetCamp › Run workflow**.
 
 ### 6. (Opcional) Anexos de arquivos
