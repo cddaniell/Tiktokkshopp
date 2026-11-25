@@ -7,7 +7,7 @@ name: Publicar VetCamp (site próprio)
 on:
   push:
     branches: [main, "claude/samvet-sonnet-file-sfo8st"]
-    paths: ["vetcamp.html", "app/**", "scripts/build_app.py", "firebase.json", "firestore.rules", "storage.rules"]
+    paths: ["vetcamp.html", "app/**", ".github/workflows/deploy-vetcamp.yml", "scripts/build_app.py", "firebase.json", "firestore.rules", "storage.rules"]
   workflow_dispatch:
 
 concurrency:
