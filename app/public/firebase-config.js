@@ -12,5 +12,8 @@ window.SAMVET_FIREBASE = {
   appId: "1:236606054255:web:3c636c2e721cb249eb529a",
   // Anexos (PDF, raio-X) usam o Storage, que exige o plano Blaze no Firebase.
   // Se ainda não ativou, deixe false: o resto do VetCamp funciona normalmente.
-  storage: false
+  storage: false,
+  // Proteção extra (App Check): cole aqui a "chave do site" do reCAPTCHA v3 depois de criar
+  // em https://www.google.com/recaptcha/admin e registrar em Firebase › App Check. Vazio = desligado.
+  appCheckKey: ""
 };

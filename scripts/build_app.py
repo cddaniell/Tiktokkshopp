@@ -16,7 +16,7 @@ FONTE = RAIZ / "vetcamp.html"
 SHIM = RAIZ / "app" / "src" / "shim.js"
 SAIDA = RAIZ / "app" / "public"
 FIREBASE_VERSAO = "10.12.2"
-SDK = ["app", "auth", "firestore", "storage"]
+SDK = ["app", "app-check", "auth", "firestore", "storage"]
 
 PAGINA = """<!doctype html>
 <html lang="pt-BR">

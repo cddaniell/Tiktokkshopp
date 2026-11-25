@@ -575,10 +575,17 @@ async function reenviar(){
     catch(e){if(e&&PERM.includes(e.code)){LS.set(PFX+'pendentes',pendentes().filter(x=>!(x.col===op.col&&x.id===op.id)));toast(errMsg(e))}else{falhou=true;break}}
   }}finally{enviando=false;semRede=falhou;avisoPend()}
 }
+const ultimo={},emVoo=new Set();
+/* enquanto um registro está sendo enviado, a versão local vale mais que a resposta antiga do banco */
+function mesclarSnap(col,lista,local){const pend=[...emVoo].filter(k=>k.startsWith(col+'/')).map(k=>k.slice(col.length+1));if(!pend.length)return lista;const m=new Map(lista.map(x=>[x.id,x]));for(const id of pend){const l=local.find(x=>x.id===id);if(l)m.set(id,l);else m.delete(id)}return[...m.values()]}
 function enviar(col,id,body,del){
   const k=col+'/'+id,op={col,id,body,del:!!del,t:Date.now()};
   if(!navigator.onLine){enfileirar(op);return Promise.resolve()}
-  queue[k]=(queue[k]||Promise.resolve()).then(()=>del?colRef(col).doc(id).delete():colRef(col).doc(id).set(body)).catch(e=>{if(e&&PERM.includes(e.code))toast(errMsg(e));else enfileirar(op)});
+  // várias gravações seguidas do mesmo registro viram uma só (evita sobrecarga e cobrança extra)
+  const jaNaFila=k in ultimo;ultimo[k]=op;emVoo.add(k);
+  if(jaNaFila)return queue[k];
+  queue[k]=(queue[k]||Promise.resolve()).then(async()=>{await new Promise(r=>setTimeout(r,150));const o=ultimo[k];delete ultimo[k];
+    try{if(o.del)await colRef(col).doc(id).delete();else await colRef(col).doc(id).set(o.body)}catch(e){if(e&&PERM.includes(e.code))toast(errMsg(e));else enfileirar(o)}finally{if(!(k in ultimo))emVoo.delete(k)}});
   return queue[k];
 }
 function gravar(col,obj,arr){
@@ -606,6 +613,8 @@ function renderNav(){
     estoque:S.est.filter(estAlerta).length};
   $('nav').innerHTML=VIEWS.map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
 }
+let renderTimer=null;
+function renderLogo(){if(renderTimer)return;renderTimer=setTimeout(()=>{renderTimer=null;render()},60)}
 function render(){
   renderNav();renderWho();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
@@ -1562,9 +1571,10 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
   for(const f of fs.filter(f=>f.re))$('f_'+f.k).onchange=()=>{const o=ler();abrirForm(titulo,todos,o,{...p,...o},onSave,onDel)};
   $('cancel').onclick=fechar;
   if(onDel){let arm=0;$('del').onclick=()=>{if(!arm){arm=1;$('del').textContent='Toque de novo para excluir';return}onDel();fechar()}}
-  $('frm').onsubmit=e=>{e.preventDefault();const o=ler();
+  let salvando=false;
+  $('frm').onsubmit=e=>{e.preventDefault();if(salvando)return;const o=ler();
     const falta=fs.find(f=>f.req&&!o[f.k]);if(falta){toast('Preencha: '+falta.l);$('f_'+falta.k).focus();return}
-    const t0=Date.now();onSave(o);fechar();if(lastToast<t0)toast('Salvo')};
+    salvando=true;const t0=Date.now();onSave(o);fechar();if(lastToast<t0)toast('Salvo')};
 }
 function fechar(){pararMic();$('sheet').classList.remove('on');render()}
 function pararMic(){if(dict&&micBtn)dict.stop().catch(()=>{})}
@@ -1623,6 +1633,8 @@ document.addEventListener('change',e=>{if(e.target.id==='cmpA'||e.target.id==='c
   if(e.target.id==='st'){const p=cur();if(p){salvar({...p,status:e.target.value});toast('Status atualizado')}}});
 $('fileup').onchange=async e=>{
   const f=e.target.files[0],p=cur();e.target.value='';if(!f||!p||!assets)return;
+  if(f.size>20*1024*1024){toast('Arquivo grande demais: o limite é 20 MB.');return}
+  if(!/^image\//.test(f.type)&&f.type!=='application/pdf'){toast('Envie uma imagem (foto, raio-X) ou um PDF.');return}
   toast('Enviando…');
   try{const r=await assets.upload(f);const q=cur()||p;salvar({...q,anexos:[...(q.anexos||[]),{id:uid(),assetId:r.id,nome:f.name,tipo:r.contentType||f.type,data:hoje()}]});toast('Anexo salvo')}
   catch(err){toast(err&&err.message?'Não foi possível anexar: '+err.message:'Não foi possível anexar.')}
@@ -1637,6 +1649,7 @@ $('fotoup').onchange=async e=>{
 };
 $('fileimp').onchange=e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(f.size>60*1024*1024){toast('Arquivo grande demais para ser um backup do VetCamp.');return}
   const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const ps=Array.isArray(d)?d:d.pacientes||[];let n=0;
     for(const p of ps){if(!p||!p.nome)continue;const o={...p,id:p.id||uid()};S.pac=S.pac.filter(x=>x.id!==o.id);salvar(o);n++}
     for(const c of (d.clientes||[])){if(c&&c.nome)salvarCli({...c,id:c.id||uid()})}
@@ -1772,15 +1785,15 @@ render();
   const idle=()=>!$('sheet').classList.contains('on');
   colRef('pacientes').onSnapshot(snap=>{
     if(!snap.metadata.fromCache){clearTimeout(timer);note('')}
-    S.pac=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
+    S.pac=mesclarSnap('pacientes',snap.docs.map(d=>({...d.data(),id:d.id})),S.pac);LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
     if(S.sel&&!cur())S.sel=null;
-    if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))render();
+    if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))renderLogo();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
-  colRef('despesas').onSnapshot(snap=>{S.desp=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-despesas',S.desp);if(idle()&&['caixa','relat'].includes(S.vis)&&!S.sel)render()},()=>{});
-  colRef('orcamentos').onSnapshot(snap=>{S.orc=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))render()},()=>{});
-  colRef('clientes').onSnapshot(snap=>{S.cli=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))render()},()=>{});
-  colRef('estoque').onSnapshot(snap=>{S.est=snap.docs.map(d=>({...d.data(),id:d.id}));LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)render();else renderNav()},()=>{});
-  cfgRef().onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))render()},()=>{});
+  colRef('despesas').onSnapshot(snap=>{S.desp=mesclarSnap('despesas',snap.docs.map(d=>({...d.data(),id:d.id})),S.desp);LS.set(PFX+'cache-despesas',S.desp);if(idle()&&['caixa','relat'].includes(S.vis)&&!S.sel)renderLogo()},()=>{});
+  colRef('orcamentos').onSnapshot(snap=>{S.orc=mesclarSnap('orcamentos',snap.docs.map(d=>({...d.data(),id:d.id})),S.orc);LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))renderLogo()},()=>{});
+  colRef('clientes').onSnapshot(snap=>{S.cli=mesclarSnap('clientes',snap.docs.map(d=>({...d.data(),id:d.id})),S.cli);LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))renderLogo()},()=>{});
+  colRef('estoque').onSnapshot(snap=>{S.est=mesclarSnap('estoque',snap.docs.map(d=>({...d.data(),id:d.id})),S.est);LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)renderLogo();else renderNav()},()=>{});
+  cfgRef().onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))renderLogo()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render();if(pendentes().length&&navigator.onLine)reenviar()},60000);
   addEventListener('online',()=>{avisoPend();reenviar()});addEventListener('offline',avisoPend);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&pendentes().length)reenviar()});

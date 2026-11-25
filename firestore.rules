@@ -1,9 +1,18 @@
 rules_version = '2';
-// VetCamp: cada pessoa só lê e grava os próprios dados, em data/users/<seu id>/...
+// VetCamp: cada pessoa só lê e grava os próprios dados, em data/users/<seu id>/samvet/...
+// Proteções: só as coleções que o app usa, documentos com quantidade limitada de campos
+// e nenhum outro caminho aberto. O Firestore já limita cada documento a 1 MiB.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /data/users/{uid}/{documento=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    function dono(uid) { return request.auth != null && request.auth.uid == uid; }
+    function colecaoValida(col) {
+      return col in ['pacientes', 'clientes', 'estoque', 'orcamentos', 'despesas', 'config'];
+    }
+    function tamanhoOk() { return request.resource.data.size() <= 400; }
+
+    match /data/users/{uid}/samvet/{col}/{doc} {
+      allow read, delete: if dono(uid) && colecaoValida(col);
+      allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk();
     }
     // qualquer outro caminho fica fechado
     match /{caminho=**} {

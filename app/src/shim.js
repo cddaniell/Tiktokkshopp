@@ -78,6 +78,7 @@
     if(!configurado){msg('Configuração do Firebase pendente. Preencha o arquivo firebase-config.js.','inf');$('a_ok').disabled=true;return}
     // o login com Google passa por CFG.authDomain (vetcamp.web.app), liberado no Google Cloud
     firebase.initializeApp(CFG);
+    if(CFG.appCheckKey&&firebase.appCheck&&!DEMO){try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(CFG.appCheckKey),true)}catch(e){}}
     auth=firebase.auth();fs=firebase.firestore();
     if(DEMO){auth.useEmulator('http://'+location.hostname+':9099',{disableWarnings:true});fs.useEmulator(location.hostname,8080)}
     fs.settings({ignoreUndefinedProperties:true,merge:true});
@@ -103,9 +104,11 @@
       if(!err||!['auth/popup-closed-by-user','auth/cancelled-popup-request','auth/user-cancelled'].includes(err.code))msg(traduz(err));
     }finally{b.disabled=false}
   });
+  let falhas=0,bloqueioAte=0;
   document.addEventListener('submit',async e=>{
     if(e.target.id!=='a_form')return;e.preventDefault();if(!auth)return;
     const email=$('a_email').value.trim(),senha=$('a_senha').value;
+    const espera=Math.ceil((bloqueioAte-Date.now())/1000);if(espera>0){msg('Muitas tentativas. Aguarde '+espera+' s e tente de novo.');return}
     $('a_ok').disabled=true;msg('');
     try{
       if(recuperar){await auth.sendPasswordResetEmail(email);msg('Enviamos um link para '+email+' criar uma nova senha. Confira também a caixa de spam.','inf');recuperar=false;$('l_senha').hidden=false;$('a_ok').textContent='Entrar'}
@@ -117,7 +120,7 @@
         await r.user.updateProfile({displayName:nome});
         try{await r.user.sendEmailVerification()}catch(_){}
       }else await auth.signInWithEmailAndPassword(email,senha);
-    }catch(err){msg(traduz(err))}
+    }catch(err){msg(traduz(err));if(err&&/credential|password|user-not-found/.test(err.code||'')){falhas++;if(falhas>=5){bloqueioAte=Date.now()+30000*Math.min(4,falhas-4);msg('Muitas tentativas erradas. Aguarde '+Math.round((bloqueioAte-Date.now())/1000)+' s. Se esqueceu a senha, use "Esqueci minha senha".')}}}
     finally{$('a_ok').disabled=false}
   });
   document.addEventListener('click',e=>{if(e.target&&e.target.id==='a_esq'){recuperar=true;$('l_senha').hidden=true;$('a_ok').textContent='Enviar link para nova senha';msg('Digite seu e-mail e toque no botão. Você vai receber um link para criar uma nova senha.','inf')}});
