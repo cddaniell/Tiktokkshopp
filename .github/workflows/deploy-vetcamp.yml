@@ -7,7 +7,7 @@ name: Publicar VetCamp (site próprio)
 on:
   push:
     branches: [main, "claude/samvet-sonnet-file-sfo8st"]
-    paths: ["vetcamp.html", "app/**", ".github/workflows/deploy-vetcamp.yml", "scripts/build_app.py", "firebase.json", "firestore.rules", "storage.rules"]
+    paths: ["vetcamp.html", "app/**", ".github/workflows/deploy-vetcamp.yml", "scripts/build_app.py", "firebase.json", "firestore.rules", "storage.rules", "functions/**"]
   workflow_dispatch:
 
 concurrency:
@@ -76,6 +76,27 @@ jobs:
           ALVOS="firestore:rules"
           if grep -q 'storage: *true' app/public/firebase-config.js; then ALVOS="$ALVOS,storage"; fi
           npx --yes firebase-tools@13.29.1 deploy --project "$PROJ" --only "$ALVOS" --non-interactive
+      - name: Publicar o e-mail de boas-vindas
+        # só roda quando BREVO_API_KEY e EMAIL_REMETENTE estão nos segredos (e o projeto está no plano Blaze)
+        if: env.PULAR != '1'
+        continue-on-error: true
+        env:
+          PROJ: ${{ secrets.FIREBASE_PROJECT_ID }}
+          BREVO: ${{ secrets.BREVO_API_KEY }}
+          REMET: ${{ secrets.EMAIL_REMETENTE }}
+        run: |
+          if [ -z "$BREVO" ] || [ -z "$REMET" ]; then
+            echo "E-mail de boas-vindas desligado: cadastre BREVO_API_KEY e EMAIL_REMETENTE nos segredos para ligar."
+            exit 0
+          fi
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          printf 'BREVO_API_KEY=%s\nEMAIL_REMETENTE=%s\nSITE_URL=https://vetcamp.web.app\n' "$BREVO" "$REMET" > functions/.env
+          (cd functions && npm install --no-audit --no-fund)
+          if ! npx --yes firebase-tools@13.29.1 deploy --project "$PROJ" --only functions --non-interactive --force; then
+            echo "::warning::Não foi possível publicar o e-mail de boas-vindas. Confira se o projeto está no plano Blaze e se a chave tem o papel Administrador do Cloud Functions."
+            exit 1
+          fi
+          rm -f functions/.env
       - name: Apagar a chave do servidor
         if: always()
         run: rm -f "$RUNNER_TEMP/sa.json"

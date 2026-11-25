@@ -1,0 +1,11 @@
+{
+  "name": "vetcamp-functions",
+  "private": true,
+  "description": "VetCamp: e-mail de boas-vindas para contas novas",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.1"
+  }
+}

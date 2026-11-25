@@ -83,6 +83,21 @@ Cada pessoa tem o **espaço pessoal** (só dela) e pode participar de uma ou mai
 - **Haras atendido por clínicas diferentes:** cada clínica tem os próprios dados. Entre clínicas, compartilhe por PDF (ficha, carteira de sanidade).
 - Dentro do Claude (artifact) cada pessoa continua com o próprio VetCamp; a equipe funciona no site.
 
+## E-mail de boas-vindas (conta nova)
+Toda conta nova (e-mail e senha ou Google) recebe um e-mail "Parabéns, <nome>!" com os primeiros passos.
+O código já está pronto em `functions/`. Para ligar (uma vez):
+1. **Plano Blaze** no Firebase (engrenagem › Uso e faturamento › Modificar plano). No volume do VetCamp o custo costuma ser zero.
+2. Crie a conta gratuita em https://www.brevo.com (300 e-mails por dia).
+   - **Remetentes, domínios e IPs** → adicione e confirme o e-mail que vai enviar (ex.: o seu, ou `contato@seudominio.com.br` quando tiver domínio).
+   - **SMTP e API › Chaves de API** → **Gerar nova chave** e copie.
+3. No GitHub, **Settings › Secrets and variables › Actions**, crie:
+   - `BREVO_API_KEY` → a chave do Brevo.
+   - `EMAIL_REMETENTE` → o e-mail confirmado no passo 2.
+4. Na conta de serviço `firebase-adminsdk-...` (Google Cloud › IAM), adicione o papel **Administrador do Cloud Functions**.
+5. Rode **Actions › Publicar VetCamp › Run workflow**. Pronto.
+
+Sem esses segredos, a publicação do site continua normal e só o e-mail fica desligado. Dica: com domínio próprio o e-mail cai menos no spam.
+
 ## Como as contas são protegidas
 - Cada pessoa só lê e grava os próprios dados; na clínica, só os membros acessam, conforme o papel (`firestore.rules` e `storage.rules`).
 - Senhas ficam com o serviço de login do Google, nunca no banco.
