@@ -39,6 +39,16 @@ a{color:inherit}
 .who{display:inline-flex;align-items:center;gap:8px;border:1px solid color-mix(in srgb,var(--barink) 35%,transparent);background:transparent;color:var(--barink);border-radius:99px;padding:4px 12px 4px 4px;min-height:40px;font-size:14px;font-weight:700}
 .who img{width:30px;height:30px;border-radius:50%;flex:none}
 .who .wn{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .espchip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--act,#2b6);color:#fff;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.espaco{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#ddd4)}.espaco.atual b{color:var(--act)}
+body.sem-fin :is(.fichafin,[data-tab=fin],[data-vis=caixa],[data-vis=relat],[data-pixpac],[data-despnova],[data-socios],[data-cortesia],[data-gerdoc=orcamento],[data-quick],[data-csv]){display:none!important}
+body.sem-orc :is([data-vis=orc],[data-orcpac],[data-orcnovo]){display:none!important}
+body.sem-admin :is([data-vis=precos],[data-importar],.soadmin){display:none!important}
+body.sem-presc :is([data-add=meds],[data-edit=meds],[data-protapl],[data-tab=docs],[data-gerdoc]:not([data-gerdoc=orcamento]),.sopresc){display:none!important}
+body.sem-clin :is(#novo,[data-add],[data-edit],[data-rapido],[data-aplic],[data-repetir],[data-agendar],[data-vis=estoque],[data-fotopac],[data-editp],[data-upload],[data-desfaz]){display:none!important}
+body.sem-clin #st{pointer-events:none;opacity:.75}
+body.sem-est [data-estnovo]{display:none!important}
+@media(max-width:600px){.who .espchip{max-width:70px;font-size:10px}}
 .who .dot{width:10px;height:10px;border-radius:50%;background:var(--barink);opacity:.5;margin-left:8px}
 .nav{display:flex;gap:2px;overflow-x:auto;margin-top:8px;scrollbar-width:none}
 .nav button{border:0;background:none;color:var(--barink);opacity:.78;min-height:42px;padding:0 12px;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap;flex:none}
@@ -456,7 +466,7 @@ function syncFin(p){
   const want=new Map();
   for(const m of MODS){if(SEMVALOR.includes(m.key))continue;for(const it of (p[m.key]||[])){
     const v=valorItem(m,it),dk=m.dateK||'data',n=(it.aplic||[]).length;
-    if(v>0)want.set(it.id,{mod:m.key,tipo:TIPOFIN[m.key]||'Serviço',data:it[dk]||hoje(),desc:m.tab+': '+tituloIt(m,it)+(m.key==='meds'&&num(it.valorAplic)?` (${n} aplicação(ões) × ${R$(it.valorAplic)}${num(it.valor)?' + medicamento '+R$(it.valor):''})`:''),total:v});
+    if(v>0)want.set(it.id,{mod:m.key,tipo:TIPOFIN[m.key]||'Serviço',data:it[dk]||hoje(),desc:m.tab+': '+tituloIt(m,it)+(m.key==='meds'&&num(it.valorAplic)?` (${n} aplicação(ões) × ${R$(it.valorAplic)}${num(it.valor)?' + medicamento '+R$(it.valor):''})`:''),total:v,...(it.por?{por:it.por}:{})});
     if(m.key==='consultas'&&num(it.kmrod)&&num(S.cfg.kmval))want.set(it.id+'-km',{mod:'consultas',tipo:'Deslocamento (km)',data:it.data||hoje(),desc:'Deslocamento: '+it.kmrod+' km',total:num(it.kmrod)*num(S.cfg.kmval),qtd:String(it.kmrod),unit:String(S.cfg.kmval)});
   }}
   const out=[];
@@ -487,7 +497,8 @@ function rodapeFin(p){
   :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a aba Preços para o valor entrar sozinho.</p>'}</section>`;
 }
 const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
-const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p));
+const VALORK=['valor','valorAplic','kmrod'];
+const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p)&&(!CLIN||pode('financeiro')||!(VALORK.includes(f.k)||f.sec==='Valor')));
 const saldo=x=>x.sit==='Orçamento'?0:Math.max(0,num(x.total)-num(x.pago));
 
 const note=(t,btn)=>{$('note').innerHTML=t?`<span>${esc(t)}</span>${btn||''}`:'';$('note').classList.toggle('on',!!t)};
@@ -544,9 +555,9 @@ const protocolos=()=>S.cfg.protocolos||PROT_BASE;
 const TIPOS_PROT=['Medicação','Vacina','Vermífugo','Exame','Serviço'];
 
 function pendencias(p){
-  const out=[],add=(d,txt,tab,warn=0,h='')=>d&&out.push({d,txt,tab,warn,p,h});
+  const out=[],add=(d,txt,tab,warn=0,h='',resp='')=>d&&out.push({d,txt,tab,warn,p,h,resp});
   if(ativo(p)){const r=ult(p)[0];if(r&&r.retorno)add(r.retorno,'Retorno','consultas')}
-  for(const a of (p.agend||[]))if(['Agendado','Confirmado'].includes(a.situacao))add(a.data,a.tipo+(a.situacao==='Confirmado'?' (confirmado)':'')+(a.local?' · '+a.local:''),'agend',0,a.hora||'');
+  for(const a of (p.agend||[]))if(['Agendado','Confirmado'].includes(a.situacao))add(a.data,a.tipo+(a.situacao==='Confirmado'?' (confirmado)':'')+(a.local?' · '+a.local:''),'agend',0,a.hora||'',a.resp||'');
   const ultPor=(l,k)=>{const m={};for(const x of ord(l))if(!m[x[k]])m[x[k]]=x;return Object.values(m)};
   for(const v of ultPor(p.vacinas,'nome'))if(v.prox)add(v.prox,(v.tipo==='Vacina'?'Vacina: ':v.tipo==='Vermífugo'?'Vermífugo: ':'OPG: ')+v.nome,'vacinas');
   for(const k of ['locomotor','odonto','casco']){const m=MODS.find(x=>x.key===k);if(!modVis(m,p))continue;const x=ord(p[k])[0];if(x&&x.prox)add(x.prox,{locomotor:'Reavaliação locomotora',odonto:'Revisão odontológica',casco:'Casco / ferrageamento'}[k],k)}
@@ -615,19 +626,225 @@ function apagar(col,id){
 }
 const salvar=p=>gravar('pacientes',syncFin(vincCli(p)),S.pac);
 const salvarEst=it=>gravar('estoque',it,S.est);
-function salvarCfg(c,msg='Dados da clínica salvos',quiet){S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}LS.set(PFX+'cache-config',c);cfgRef().set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
+function salvarCfg(c,msg='Dados da clínica salvos',quiet){if(CLIN)return salvarCfgClin(c,msg,quiet);S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}LS.set(PFX+'cache-config',c);cfgRef().set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
+
+/* ---------- equipe / clínica (só no site próprio) ---------- */
+/* Espaço pessoal: data/users/<id>/samvet. Clínica: clinicas/<cid>/app/samvet, com papéis conferidos também nas regras do banco. */
+let CLIN=null,CONVITES=[],armEq={k:'',t:0};
+const PAPEIS={dono:'Dono',veterinario:'Veterinário(a)',estagiario:'Estagiário(a)',financeiro:'Financeiro'};
+const PAPEL_TXT={
+  dono:'Tudo: atende como veterinário(a), convida e remove pessoas, altera dados da clínica, preços e modelos, vê o caixa.',
+  veterinario:'Prontuário completo, receitas, documentos com o próprio CRMV e assinatura, agenda e estoque. Caixa e relatórios só se o dono liberar.',
+  estagiario:'Cadastra animais e clientes, registra consultas, evolução e exames, aplica as doses já prescritas e dá baixa no estoque. Não prescreve, não emite documentos e não vê valores.',
+  financeiro:'Caixa, cobranças, Pix, despesas, orçamentos e relatórios. Vê as fichas, mas não altera o prontuário.'};
+const PES_VET=['vet','crmv','cpfvet','assinVet','apelido','foto'],PES_TODOS=['apelido','foto'];
+const ehVetPapel=p=>p==='dono'||p==='veterinario';
+const chavesPessoais=()=>CLIN&&ehVetPapel(CLIN.papel)?PES_VET:PES_TODOS;
+const nomeMembro=x=>x?(x.vet||x.apelido||x.nome||x.email||'Membro'):'';
+const membroPor=id=>CLIN&&CLIN.membros.find(x=>x.uid===id);
+function pode(a){
+  if(!CLIN)return true;const p=CLIN.papel,vet=ehVetPapel(p);
+  const r={admin:p==='dono',financeiro:p==='dono'||p==='financeiro'||(p==='veterinario'&&!!(CLIN.eu&&CLIN.eu.verFinanceiro)),
+    orcamentos:p!=='estagiario',prescrever:vet,excluir:vet,clinico:p!=='financeiro',estoque:p!=='financeiro',estoqueCad:vet}[a];
+  return !!r;
+}
+const visOk=k=>({caixa:pode('financeiro'),relat:pode('financeiro'),orc:pode('orcamentos'),precos:pode('admin'),estoque:pode('estoque')})[k]!==false;
+function pessoaisDe(eu){
+  const o={};if(!eu)return o;
+  for(const k of chavesPessoais())o[k]=eu[k]||'';
+  if(ehVetPapel(CLIN.papel)&&!o.vet)o.vet=eu.nome||'';
+  return o;
+}
+function cfgFinal(c){if(!CLIN)return c;CLIN.cfg=c||{};CLIN.cfgOk=true;return {...CLIN.cfg,...pessoaisDe(CLIN.eu)}}
+const ordenado=o=>JSON.stringify(Object.keys(o||{}).sort().map(k=>[k,o[k]]));
+function salvarCfgClin(c,msg,quiet){
+  const K=chavesPessoais(),cli={...c};
+  for(const k of K){delete cli[k];if(CLIN.cfg&&k in CLIN.cfg)cli[k]=CLIN.cfg[k]}
+  const eu={...CLIN.eu};for(const k of K){if(c[k])eu[k]=c[k];else delete eu[k]}
+  const mudouEu=ordenado(eu)!==ordenado(CLIN.eu),mudouCli=ordenado(cli)!==ordenado(CLIN.cfg||{});
+  if(mudouCli&&CLIN.papel!=='dono'){toast('Só o dono da clínica altera os dados da clínica, os preços e os modelos.');S.cfg=cfgFinal(CLIN.cfg);if(!quiet)render();return}
+  S.cfg=c;LS.set(PFX+'cache-config',c);
+  const ps=[];
+  if(mudouEu){eu.atualizado=Date.now();CLIN.eu=eu;ps.push(db.doc(`clinicas/${CLIN.cid}/membros/${meId()}`).set(eu))}
+  if(mudouCli){CLIN.cfg=cli;ps.push(cfgRef().set(cli))}
+  Promise.all(ps).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));
+  if(!quiet)render();
+}
+function aplicarPapel(){
+  const b=document.body.classList;['eq','sem-fin','sem-orc','sem-admin','sem-presc','sem-clin','sem-est'].forEach(c=>b.remove(c));
+  if(!CLIN)return;b.add('eq');
+  if(!pode('financeiro'))b.add('sem-fin');if(!pode('orcamentos'))b.add('sem-orc');if(!pode('admin'))b.add('sem-admin');
+  if(!pode('prescrever'))b.add('sem-presc');if(!pode('clinico'))b.add('sem-clin');if(!pode('estoqueCad'))b.add('sem-est');
+  const ag=MODS.find(m=>m.key==='agend');
+  if(!ag.f.some(f=>f.k==='resp')){
+    ag.f.splice(2,0,{k:'resp',l:'Veterinário(a) responsável',t:'select',h:1,o:()=>[['','— sem responsável —'],...CLIN.membros.filter(x=>x.papel!=='financeiro').map(x=>[x.uid,nomeMembro(x)])]});
+    const d0=ag.def;ag.def=p=>({...d0(p),resp:ehVetPapel(CLIN.papel)?meId():''});
+  }
+}
+/* bloqueio de segurança na tela (o banco também recusa) */
+function permitido(t){
+  const d=t.dataset;
+  if(d.add||d.edit){const k=d.add||d.edit;return k==='fin'?pode('financeiro'):k==='meds'?pode('prescrever'):pode('clinico')}
+  if(t.id==='novo'||'rapido' in d||'aplic' in d&&d.aplic||'repetir' in d||'agendar' in d||'fotopac' in d||'editp' in d||'upload' in d||'desfaz' in d&&d.desfaz)return pode('clinico');
+  if('protapl' in d||'assinvet' in d)return pode('prescrever');
+  if(d.gerdoc)return d.gerdoc==='orcamento'?pode('financeiro'):pode('prescrever');
+  if('pixpac' in d||'socios' in d||'despnova' in d||'cortesia' in d&&d.cortesia||'quick' in d&&d.quick)return pode('financeiro');
+  if('orcpac' in d||'orcnovo' in d)return pode('orcamentos');
+  if('estnovo' in d)return pode('estoqueCad');
+  if('importar' in d)return pode('admin');
+  if(d.vis)return visOk(d.vis);
+  return true;
+}
+document.addEventListener('click',e=>{
+  if(!CLIN)return;const t=e.target.closest('button');if(!t||t.closest('#eqbox'))return;
+  if(!permitido(t)){e.stopImmediatePropagation();e.preventDefault();toast('Seu papel na clínica ('+PAPEIS[CLIN.papel]+') não permite essa ação.')}
+},true);
+
+const espKey=()=>'vetcamp-espaco-'+meId();
+function trocarEspaco(e){LS.set(espKey(),e||null);location.reload()}
+async function entrarEspaco(uid){
+  const e=LS.get('vetcamp-espaco-'+uid,null);if(!e||!e.cid)return;
+  let m=null;
+  try{const s=await db.doc(`clinicas/${e.cid}/membros/${uid}`).get();
+    if(!s.exists){LS.set('vetcamp-espaco-'+uid,null);db.doc(`usuarios/${uid}/clinicas/${e.cid}`).delete().catch(()=>{});setTimeout(()=>toast('Você não faz mais parte da clínica '+(e.nome||'')+'. Voltou ao seu espaço pessoal.'),900);return}
+    m={...s.data(),uid}}
+  catch(err){if(err&&PERM.includes(err.code)){LS.set('vetcamp-espaco-'+uid,null);return}if(!e.eu)return;m=e.eu}
+  CLIN={cid:e.cid,nome:e.nome||'Clínica',papel:m.papel,eu:m,membros:[m],cfg:{},cfgOk:false};
+  LS.set('vetcamp-espaco-'+uid,{cid:e.cid,nome:CLIN.nome,eu:m});
+  BASE=`clinicas/${e.cid}/app/samvet`;PFX='samvet-c'+e.cid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+uid.replace(/[^A-Za-z0-9]/g,'').slice(-6)+'-';
+  aplicarPapel();
+  db.collection(`clinicas/${e.cid}/membros`).onSnapshot(s=>{
+    CLIN.membros=s.docs.map(d=>({...d.data(),uid:d.id}));
+    const eu=CLIN.membros.find(x=>x.uid===uid);
+    if(!eu){if(!s.metadata.fromCache){LS.set('vetcamp-espaco-'+uid,null);toast('Você foi removido(a) da clínica. Voltando ao espaço pessoal…');setTimeout(()=>location.reload(),1500)}return}
+    const mudou=eu.papel!==CLIN.papel||!!eu.verFinanceiro!==!!CLIN.eu.verFinanceiro;
+    CLIN.eu=eu;CLIN.papel=eu.papel;LS.set('vetcamp-espaco-'+uid,{cid:CLIN.cid,nome:CLIN.nome,eu});
+    for(const x of CLIN.membros)nomesCache[x.uid]=nomeMembro(x);
+    if(CLIN.cfgOk)S.cfg=cfgFinal(CLIN.cfg);
+    if(mudou){aplicarPapel();if(!visOk(S.vis))S.vis='pac'}
+    if(!$('sheet').classList.contains('on'))renderLogo();
+  },e=>{if(e&&PERM.includes(e.code)){LS.set('vetcamp-espaco-'+uid,null);toast('Você não faz mais parte desta clínica. Voltando ao espaço pessoal…');setTimeout(()=>location.reload(),1500)}});
+}
+async function carregarConvites(){
+  if(!STANDALONE||!db||!me||!me.email)return;
+  try{const s=await db.collection('convites').where('email','==',String(me.email).toLowerCase()).get();
+    CONVITES=s.docs.map(d=>({...d.data(),id:d.id}));renderNav();if(S.vis==='conta'&&!S.sel&&$('eqconv'))desenharConvites();
+    if(CONVITES.length&&!LS.get('vetcamp-conv-aviso-'+CONVITES.map(x=>x.id).join(),0)){LS.set('vetcamp-conv-aviso-'+CONVITES.map(x=>x.id).join(),1);toast('Você recebeu convite para a equipe '+(CONVITES[0].clinicaNome||'')+'. Veja em Conta.')}
+  }catch(e){}
+}
+function meusPessoais(){const src=CLIN?CLIN.eu:S.cfg,o={};for(const k of PES_VET)if(src&&src[k])o[k]=src[k];return o}
+async function aceitarConvite(cv){
+  if(AUTH&&AUTH.verificado&&!AUTH.verificado()){toast('Confirme seu e-mail antes de aceitar (veja a mensagem que enviamos).');return}
+  const uid=meId(),nome=(CLIN?CLIN.eu.nome:S.cfg.apelido)||me.name||me.email;
+  const base={uid,papel:cv.papel,nome:String(nome).slice(0,120),email:String(me.email||'').toLowerCase(),verFinanceiro:!!cv.verFinanceiro,desde:Date.now()};
+  const pes=meusPessoais();if(!ehVetPapel(cv.papel))for(const k of ['vet','crmv','cpfvet','assinVet'])delete pes[k];
+  try{await db.doc(`clinicas/${cv.cid}/membros/${uid}`).set({...base,...pes});
+    await db.doc(`usuarios/${uid}/clinicas/${cv.cid}`).set({nome:cv.clinicaNome||'Clínica',papel:cv.papel,desde:Date.now()});
+    await db.doc('convites/'+cv.id).delete().catch(()=>{});
+    toast('Bem-vindo(a) à equipe!');trocarEspaco({cid:cv.cid,nome:cv.clinicaNome||'Clínica'})}
+  catch(e){toast(e&&PERM.includes(e.code)?'Convite inválido ou já usado. Peça ao dono para convidar de novo.':errMsg(e))}
+}
+async function criarClinica(nome,copiar){
+  if(CLIN){toast('Volte ao espaço pessoal para criar uma clínica.');return}
+  const uid=meId(),cid=db.collection('clinicas').doc().id,agora=Date.now();
+  const b=$('eqcriar');if(b){b.disabled=true;b.textContent='Criando…'}
+  try{
+    await db.doc('clinicas/'+cid).set({nome,dono:uid,criada:agora});
+    await db.doc(`clinicas/${cid}/membros/${uid}`).set({uid,papel:'dono',nome:String(S.cfg.apelido||me.name||me.email||'Dono').slice(0,120),email:String(me.email||'').toLowerCase(),verFinanceiro:true,desde:agora,...meusPessoais()});
+    await db.doc(`usuarios/${uid}/clinicas/${cid}`).set({nome,papel:'dono',desde:agora});
+    const cfgC={...S.cfg};for(const k of PES_VET)if(k!=='vet'&&k!=='crmv'&&k!=='cpfvet')delete cfgC[k];cfgC.clinica=nome;
+    const raiz=`clinicas/${cid}/app/samvet`;
+    await db.doc(raiz+'/config/clinica').set(cfgC);
+    if(copiar){
+      const ops=[];for(const [col,a] of Object.entries(COLS))for(const x of S[a]){const body=JSON.parse(JSON.stringify(x));delete body.id;ops.push([`${raiz}/${col}/${x.id}`,body])}
+      for(let i=0;i<ops.length;i+=100){const bt=db.batch();for(const [pth,body] of ops.slice(i,i+100))bt.set(db.doc(pth),body);await bt.commit();if(b)b.textContent=`Copiando… ${Math.min(i+100,ops.length)}/${ops.length}`}
+    }
+    toast('Clínica criada');trocarEspaco({cid,nome});
+  }catch(e){toast(errMsg(e));if(b){b.disabled=false;b.textContent='Criar clínica'}}
+}
+function msgConvite(email,papel){return `Olá! Você foi convidado(a) para a equipe ${CLIN.nome} no VetCamp como ${PAPEIS[papel]}.\n1. Abra ${location.origin}\n2. Entre (ou crie a conta) com o e-mail ${email}\n3. Vá em Conta e toque em Aceitar no convite.`}
+function equipeHtml(){
+  if(!STANDALONE)return `<div class="box"><h3>Equipe e clínica</h3><p class="hint" style="margin:0">Para trabalhar em equipe (dono, veterinários, estagiários e financeiro na mesma clínica, cada um com o próprio login, CRMV e assinatura), use o site <a href="${SITE_OFICIAL}" target="_blank" rel="noopener">${SITE_OFICIAL.replace('https://','')}</a>.</p></div>`;
+  if(!db)return '';
+  const dono=CLIN&&CLIN.papel==='dono';
+  return `<div class="box" id="eqbox"><div class="bar"><h3>Equipe e clínica</h3><span class="pill" style="--c:var(--${CLIN?'act':'s-acompanhamento'})">${CLIN?esc(CLIN.nome)+' · '+PAPEIS[CLIN.papel]:'Espaço pessoal'}</span></div>
+   <p class="hint" style="margin:0 0 10px">${CLIN?'Você está trabalhando nos dados da clínica, compartilhados com a equipe conforme o papel de cada um. Seu espaço pessoal continua separado.':'Você está no seu espaço pessoal: só você vê estes dados. Crie uma clínica para trabalhar em equipe ou aceite um convite.'}</p>
+   <div id="eqconv"></div>
+   <h3 class="sec">Seus espaços</h3><div id="eqesp"><p class="meta">Carregando…</p></div>
+   ${dono?`<h3 class="sec">Membros da equipe</h3><div id="eqmem"></div>
+   <h3 class="sec">Convidar pessoa</h3><form id="eqinv" class="f"><div class="fld h"><label for="eq_email">E-mail da pessoa</label><input id="eq_email" type="email" autocomplete="off" placeholder="nome@email.com"></div>
+    <div class="fld h"><label for="eq_papel">Papel</label><select id="eq_papel"><option value="veterinario">Veterinário(a)</option><option value="estagiario" selected>Estagiário(a)</option><option value="financeiro">Financeiro</option></select></div>
+    <div class="fld" id="eq_finw" hidden><label><input type="checkbox" id="eq_fin"> Pode ver caixa e relatórios</label></div>
+    <div class="acts"><button class="btn pri" id="eqinvbtn">Convidar</button></div></form><p class="meta" id="eq_papeltxt">${PAPEL_TXT.estagiario}</p><div id="eqpend"></div>`:''}
+   ${CLIN&&!dono?`<div class="btns" style="margin-top:10px"><button class="btn sm ghost" data-eqsair>Sair desta clínica</button></div>`:''}
+   ${!CLIN?`<h3 class="sec">Criar uma clínica</h3><form id="eqnova" class="f"><div class="fld"><label for="eq_nome">Nome da clínica</label><input id="eq_nome" maxlength="120" value="${esc(S.cfg.clinica||'')}"></div>
+    <div class="fld"><label><input type="checkbox" id="eq_copiar"> Copiar meus pacientes, clientes, estoque, orçamentos e despesas para a clínica (os pessoais continuam guardados aqui)</label></div>
+    <div class="acts"><button class="btn pri" id="eqcriar">Criar clínica</button></div></form><p class="meta">Você será o dono e também pode atender como veterinário(a). Depois é só convidar a equipe pelo e-mail.</p>`:''}
+   <details style="margin-top:10px"><summary>O que cada papel pode fazer</summary><div class="tw"><table>${Object.keys(PAPEIS).map(k=>`<tr><td><b>${PAPEIS[k]}</b></td><td>${PAPEL_TXT[k]}</td></tr>`).join('')}</table></div></details>
+  </div>`;
+}
+function desenharConvites(){
+  const el=$('eqconv');if(!el)return;
+  const nv=AUTH&&AUTH.verificado&&!AUTH.verificado();
+  el.innerHTML=CONVITES.map(cv=>`<div class="info"><b>Convite:</b> ${esc(cv.clinicaNome||'Clínica')} como <b>${PAPEIS[cv.papel]||cv.papel}</b>${cv.convidadoPor?' · enviado por '+esc(cv.convidadoPor):''}
+    <div class="btns" style="margin-top:6px"><button class="btn pri sm" data-eqaceita="${esc(cv.id)}">Aceitar</button><button class="btn sm ghost" data-eqrecusa="${esc(cv.id)}">Recusar</button></div>${nv?'<p class="late" style="margin:6px 0 0">Confirme seu e-mail para aceitar (abra a mensagem que enviamos e depois recarregue esta página).</p>':''}</div>`).join('');
+}
+async function ligarEquipe(){
+  const box=$('eqbox');if(!box)return;const uid=meId();
+  desenharConvites();carregarConvites();
+  const dono=CLIN&&CLIN.papel==='dono';
+  if(dono){
+    const m=CLIN.membros;
+    $('eqmem').innerHTML=`<div class="tw"><table><tr><th>Pessoa</th><th>Papel</th><th></th></tr>${[...m].sort((a,b)=>(a.papel==='dono'?-1:0)-(b.papel==='dono'?-1:0)).map(x=>`<tr><td><b>${esc(nomeMembro(x))}</b><br><span class="meta">${esc(x.email||'')}${x.crmv?' · CRMV '+esc(x.crmv):''}</span></td>
+      <td>${x.papel==='dono'?'Dono':`<select data-eqpapel="${esc(x.uid)}" aria-label="Papel de ${esc(nomeMembro(x))}">${['veterinario','estagiario','financeiro'].map(p=>`<option value="${p}"${x.papel===p?' selected':''}>${PAPEIS[p]}</option>`).join('')}</select>${x.papel==='veterinario'?`<label class="meta" style="display:block;margin-top:4px"><input type="checkbox" data-eqfin="${esc(x.uid)}"${x.verFinanceiro?' checked':''}> vê caixa</label>`:''}`}</td>
+      <td>${x.papel==='dono'?'':`<button class="btn sm ghost" data-eqrm="${esc(x.uid)}">Remover</button>`}</td></tr>`).join('')}</table></div>`;
+    const papelSel=$('eq_papel'),upd=()=>{$('eq_finw').hidden=papelSel.value!=='veterinario';$('eq_papeltxt').textContent=PAPEL_TXT[papelSel.value]};papelSel.onchange=upd;upd();
+    $('eqinv').onsubmit=async e=>{e.preventDefault();const email=$('eq_email').value.trim().toLowerCase(),papel=papelSel.value;
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('Digite um e-mail válido');$('eq_email').focus();return}
+      if(CLIN.membros.some(x=>x.email===email)){toast('Essa pessoa já está na equipe');return}
+      const cv={email,cid:CLIN.cid,clinicaNome:CLIN.nome,papel,verFinanceiro:papel==='veterinario'&&$('eq_fin').checked,convidadoPor:nomeMembro(CLIN.eu),criado:Date.now()};
+      try{await db.doc('convites/'+email+'_'+CLIN.cid).set(cv);toast('Convite criado. Avise a pessoa pelo WhatsApp ou e-mail.');$('eq_email').value='';pendentesEquipe()}catch(err){toast(errMsg(err))}};
+    pendentesEquipe();
+  }
+  try{const s=await db.collection(`usuarios/${uid}/clinicas`).get();const cl=s.docs.map(d=>({...d.data(),cid:d.id}));
+    const linha=(nome,sub,atual,btn)=>`<div class="espaco${atual?' atual':''}"><div><b>${esc(nome)}</b><br><span class="meta">${sub}</span></div>${atual?'<span class="pill" style="--c:var(--okc)">Em uso</span>':btn}</div>`;
+    $('eqesp').innerHTML=linha('Pessoal','Só você vê',!CLIN,'<button class="btn sm" data-eqir="">Usar</button>')+cl.map(c=>linha(c.nome||'Clínica',PAPEIS[c.papel]||'',CLIN&&CLIN.cid===c.cid,`<button class="btn sm" data-eqir="${esc(c.cid)}" data-eqnome="${esc(c.nome||'')}">Abrir</button>`)).join('');
+  }catch(e){$('eqesp').innerHTML='<p class="meta">Não foi possível carregar seus espaços agora.</p>'}
+  const nova=$('eqnova');if(nova)nova.onsubmit=e=>{e.preventDefault();const n=$('eq_nome').value.trim();if(!n){toast('Digite o nome da clínica');$('eq_nome').focus();return}criarClinica(n.slice(0,120),$('eq_copiar').checked)};
+  box.onchange=async e=>{const t=e.target;
+    try{if(t.dataset.eqpapel){const x=membroPor(t.dataset.eqpapel);if(x){const o={...x,papel:t.value};if(t.value!=='veterinario')o.verFinanceiro=false;await db.doc(`clinicas/${CLIN.cid}/membros/${x.uid}`).set(o);toast('Papel alterado para '+PAPEIS[t.value])}}
+      else if(t.dataset.eqfin){const x=membroPor(t.dataset.eqfin);if(x){await db.doc(`clinicas/${CLIN.cid}/membros/${x.uid}`).set({...x,verFinanceiro:t.checked});toast(t.checked?'Agora vê o caixa':'Não vê mais o caixa')}}}
+    catch(err){toast(errMsg(err))}};
+    box.onclick=async e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+    try{
+      if('eqir' in d){trocarEspaco(d.eqir?{cid:d.eqir,nome:d.eqnome||'Clínica'}:null)}
+      else if(d.eqaceita){const cv=CONVITES.find(x=>x.id===d.eqaceita);if(cv){t.disabled=true;await aceitarConvite(cv);t.disabled=false}}
+      else if(d.eqrecusa){await db.doc('convites/'+d.eqrecusa).delete();CONVITES=CONVITES.filter(x=>x.id!==d.eqrecusa);desenharConvites();renderNav();toast('Convite recusado')}
+      else if(d.eqcancel){await db.doc('convites/'+d.eqcancel).delete();pendentesEquipe();toast('Convite cancelado')}
+      else if(d.eqrm){if(armEq.k!==d.eqrm||Date.now()-armEq.t>8000){armEq={k:d.eqrm,t:Date.now()};t.textContent='Toque de novo para remover';return}armEq={k:'',t:0};await db.doc(`clinicas/${CLIN.cid}/membros/${d.eqrm}`).delete();toast('Pessoa removida da equipe')}
+      else if('eqsair' in d){if(t.dataset.arm!=='1'){t.dataset.arm='1';t.textContent='Toque de novo para sair da clínica';return}
+        await db.doc(`clinicas/${CLIN.cid}/membros/${uid}`).delete();await db.doc(`usuarios/${uid}/clinicas/${CLIN.cid}`).delete().catch(()=>{});trocarEspaco(null)}
+    }catch(err){toast(errMsg(err))}};
+}
+async function pendentesEquipe(){
+  const el=$('eqpend');if(!el||!CLIN)return;
+  try{const s=await db.collection('convites').where('cid','==',CLIN.cid).get();const l=s.docs.map(d=>({...d.data(),id:d.id}));
+    el.innerHTML=l.length?`<h3 class="sec">Convites aguardando</h3>${l.map(cv=>{const msg=msgConvite(cv.email,cv.papel);return `<div class="espaco"><div><b>${esc(cv.email)}</b><br><span class="meta">${PAPEIS[cv.papel]}</span></div><div class="btns"><a class="btn sm wa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a><a class="btn sm" href="mailto:${encodeURIComponent(cv.email)}?subject=${encodeURIComponent('Convite para a equipe '+CLIN.nome+' no VetCamp')}&body=${encodeURIComponent(msg)}">E-mail</a><button class="btn sm ghost" data-eqcancel="${esc(cv.id)}">Cancelar</button></div></div>`}).join('')}`:'';
+  }catch(e){el.innerHTML=''}
+}
 
 /* ---------- navegação ---------- */
 const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['clientes','Clientes'],['caixa','Caixa'],['orc','Orçamentos'],['relat','Relatórios'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
 function renderNav(){
   const n={agenda:S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=0&&x.tab!=='fin').length,
     intern:S.pac.filter(p=>p.status==='internado').length,
-    estoque:S.est.filter(estAlerta).length};
-  $('nav').innerHTML=VIEWS.map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
+    estoque:S.est.filter(estAlerta).length,conta:CONVITES.length};
+  $('nav').innerHTML=VIEWS.filter(([k])=>visOk(k)).map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
 }
 let renderTimer=null;
 function renderLogo(){if(renderTimer)return;renderTimer=setTimeout(()=>{renderTimer=null;render()},60)}
 function render(){
+  if(!visOk(S.vis))S.vis='pac';
   renderNav();renderWho();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
   if(p)return renderFicha(p);
@@ -652,7 +869,7 @@ function renderLista(){
   if(list.length>(S.limPac||80))rows+=`<button class="btn" data-maispac style="width:100%;margin-top:4px">Mostrar mais ${Math.min(80,list.length-(S.limPac||80))} de ${list.length-(S.limPac||80)} restantes</button>`;
   const hj=new Date(),hr=hj.getHours(),nm=(S.cfg.apelido||me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
-  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''} · ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${(()=>{const h=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').sort((a,b)=>String(a.h||'99').localeCompare(String(b.h||'99'))).slice(0,5);return h.length?`<div class="hojel">${h.map(x=>`<button class="hj" data-id="${esc(x.p.id)}" data-gotab="${esc(x.tab)}"><b>${esc(x.h||'—')}</b><span>${esc(x.p.nome)} · ${esc(x.txt)}</span></button>`).join('')}</div>`:''})()}<p><button class="btn pri sm" data-rapido>Atendimento rápido</button></p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
+  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>${CLIN?`Equipe · você entra como <b>${PAPEIS[CLIN.papel]}</b>`:'Prontuário veterinário · equinos, grandes e pequenos animais'}</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''} · ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${(()=>{const h=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').sort((a,b)=>String(a.h||'99').localeCompare(String(b.h||'99'))).slice(0,5);return h.length?`<div class="hojel">${h.map(x=>`<button class="hj" data-id="${esc(x.p.id)}" data-gotab="${esc(x.tab)}"><b>${esc(x.h||'—')}</b><span>${esc(x.p.nome)} · ${esc(x.txt)}</span></button>`).join('')}</div>`:''})()}<p><button class="btn pri sm" data-rapido>Atendimento rápido</button></p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
   $('view').innerHTML=capa+`<div class="counts">${[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('')}</div>
   <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro, microchip ou treinador" aria-label="Buscar paciente" value="${esc(S.q)}">
   <div id="rows">${rows}</div>`;
@@ -660,14 +877,15 @@ function renderLista(){
 }
 function msgLembrete(x){const c=S.cfg.clinica||'VetCamp';return `Olá, ${x.p.tutor||''}! Aqui é da ${c}. Lembrete: ${x.txt} de ${x.p.nome} ${dias(x.d)===0?'hoje':'em '+br(x.d)}${x.h?' às '+x.h:''}. Podemos confirmar?`}
 function renderAgenda(){
-  const lim=30,its=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=lim).sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
+  const lim=30,fr=CLIN?(S.agResp??LS.get('vetcamp-agresp','')):'',its=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=lim).filter(x=>!fr||x.tab!=='agend'||x.resp===(fr==='eu'?meId():fr)).sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
   let last='',html='';
   for(const x of its){
     const g=dias(x.d)<0?'Vencidos':dias(x.d)===0?'Hoje':dias(x.d)===1?'Amanhã':dias(x.d)<=7?'Próximos 7 dias':'Até 30 dias';
     if(g!==last){html+=`<h3 class="dayh">${g}</h3>`;last=g}
-    html+=`<div class="ag${dias(x.d)<0?' late':''}"><button data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${x.h?esc(x.h)+' · ':''}${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>${waLink(x.p.tel,x.tab==='fin'?`Olá, ${x.p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. ${x.txt.replace('Cobrança: ','Consta em aberto: ')}, referente a ${x.p.nome}. Chave Pix: ${S.cfg.pix||'—'}.`:msgLembrete(x))}</div>`;
+    html+=`<div class="ag${dias(x.d)<0?' late':''}"><button data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${x.h?esc(x.h)+' · ':''}${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}${CLIN&&x.resp?' · <i>'+esc(nomeMembro(membroPor(x.resp)))+'</i>':''}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>${waLink(x.p.tel,x.tab==='fin'?`Olá, ${x.p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. ${x.txt.replace('Cobrança: ','Consta em aberto: ')}, referente a ${x.p.nome}. Chave Pix: ${S.cfg.pix||'—'}.`:msgLembrete(x))}</div>`;
   }
-  $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><div class="btns">${(()=>{const e=rotaHoje();return e.length?`<a class="btn sm" href="${esc(rotaUrl(e))}" target="_blank" rel="noopener">Rota de hoje no mapa (${e.length})</a>`:''})()}${dl?'<button class="btn sm" data-ics>Exportar para o calendário</button>':''}<button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>')+(()=>{const e=S.est.filter(estAlerta);return e.length?`<h3 class="dayh">Estoque</h3>${e.map(x=>`<div class="ag"><button data-vis="estoque"><span class="d">${x.val&&dias(x.val)<=60?br(x.val).slice(0,5):'—'}<small>${x.val&&dias(x.val)<=60?quando(x.val):'mínimo'}</small></span><span><b>${esc(x.nome)}</b> · ${num(x.qtd)<=num(x.min)&&x.min!==''&&x.min!==undefined?'acabando: '+fx(num(x.qtd),2)+' '+esc(x.un||''):'validade próxima'}</span></button></div>`).join('')}`:''})();
+  $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><div class="btns">${CLIN?`<select id="ag_resp" class="minp" aria-label="Agenda de quem"><option value="">Toda a equipe</option><option value="eu"${fr==='eu'?' selected':''}>Só a minha agenda</option>${CLIN.membros.filter(x=>x.uid!==meId()&&x.papel!=='financeiro').map(x=>`<option value="${esc(x.uid)}"${fr===x.uid?' selected':''}>${esc(nomeMembro(x))}</option>`).join('')}</select>`:''}${(()=>{const e=rotaHoje();return e.length?`<a class="btn sm" href="${esc(rotaUrl(e))}" target="_blank" rel="noopener">Rota de hoje no mapa (${e.length})</a>`:''})()}${dl?'<button class="btn sm" data-ics>Exportar para o calendário</button>':''}<button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>')+(()=>{const e=S.est.filter(estAlerta);return e.length?`<h3 class="dayh">Estoque</h3>${e.map(x=>`<div class="ag"><button data-vis="estoque"><span class="d">${x.val&&dias(x.val)<=60?br(x.val).slice(0,5):'—'}<small>${x.val&&dias(x.val)<=60?quando(x.val):'mínimo'}</small></span><span><b>${esc(x.nome)}</b> · ${num(x.qtd)<=num(x.min)&&x.min!==''&&x.min!==undefined?'acabando: '+fx(num(x.qtd),2)+' '+esc(x.un||''):'validade próxima'}</span></button></div>`).join('')}`:''})();
+  if($('ag_resp'))$('ag_resp').onchange=ev=>{S.agResp=ev.target.value;LS.set('vetcamp-agresp',ev.target.value);render()};
 }
 function renderIntern(){
   const ps=S.pac.filter(p=>p.status==='internado');
@@ -825,11 +1043,12 @@ function renderConta(){
    <div class="grow"><h3>Seu perfil</h3><form id="perff" class="addrow"><input id="pf_apelido" placeholder="Como quer ser chamado(a)" aria-label="Nome de exibição" value="${esc(S.cfg.apelido||'')}"><button class="btn sm">Salvar nome</button></form>
    <div class="btns" style="margin-top:8px"><button class="btn sm" data-fotoperfil>${fotoPerfil()?'Trocar foto':'Adicionar foto'}</button>${fotoPerfil()?'<button class="btn sm ghost" data-fotoperfilrm>Remover foto</button>':''}</div>
    <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p></div></div>
+  ${equipeHtml()}
   ${tutorialInstalar()}
   ${db&&!STANDALONE?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
   <div class="cols">
   <div class="box"><h3>${db?'Conectado':'Você está no modo local'}</h3>
-   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> ${STANDALONE?'Cada pessoa entra com o próprio e-mail e tem o próprio VetCamp.':'Outras pessoas que usam este mesmo link têm o próprio VetCamp'} e não veem seus pacientes, clientes nem caixa.</p>${STANDALONE&&AUTH?`<p class="meta">E-mail: <b>${esc(AUTH.email()||'')}</b>${AUTH.verificado()?' · confirmado':' · <span class="late">ainda não confirmado</span>'}</p><div class="btns">${AUTH.verificado()?'':'<button class="btn sm" data-reverif>Reenviar confirmação</button>'}<button class="btn sm" data-trocasenha>Trocar senha</button><button class="btn sm del" data-sair>Sair da conta</button></div>`:''}`
+   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p>${CLIN?`<p><b>Dados da clínica ${esc(CLIN.nome)}.</b> Você vê e altera o que o papel <b>${PAPEIS[CLIN.papel]}</b> permite. Seus dados pessoais ficam separados (troque em Equipe e clínica).</p>`:''}<p${CLIN?' hidden':''}><b>Seus dados são só seus.</b> ${STANDALONE?'Cada pessoa entra com o próprio e-mail e tem o próprio VetCamp.':'Outras pessoas que usam este mesmo link têm o próprio VetCamp'} e não veem seus pacientes, clientes nem caixa.</p>${STANDALONE&&AUTH?`<p class="meta">E-mail: <b>${esc(AUTH.email()||'')}</b>${AUTH.verificado()?' · confirmado':' · <span class="late">ainda não confirmado</span>'}</p><div class="btns">${AUTH.verificado()?'':'<button class="btn sm" data-reverif>Reenviar confirmação</button>'}<button class="btn sm" data-trocasenha>Trocar senha</button><button class="btn sm del" data-sair>Sair da conta</button></div>`:''}`
    :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login ${STANDALONE?'':'do Claude '}e abra o VetCamp pelo link abaixo.</p>`}
    <span class="lbl">Link do VetCamp</span><p class="link" id="lnk">${LINK}</p>
    <div class="btns"><button class="btn sm" data-copylink>Copiar link</button><a class="btn sm" href="${LINK}" target="_blank" rel="noopener">Abrir em nova aba</a></div></div>
@@ -842,13 +1061,15 @@ function renderConta(){
    <li>Dê acesso de <b>edição</b>. Só visualizar não deixa salvar.</li>
    <li>A pessoa entra com o próprio login do Claude e começa com um VetCamp vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`}</ol></div>
   </div>
-  <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.</p>
-   <form id="cfgf"><div class="f">
-   ${[['clinica','Nome da clínica / serviço'],['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ'],['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['pixNome','Nome do recebedor do Pix (como no banco)'],['pixCidade','Cidade do recebedor do Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
+  ${CLIN&&ehVetPapel(CLIN.papel)?`<div class="box"><div class="bar"><h3>Seus dados profissionais</h3></div><p class="hint" style="margin:0 0 10px">Saem nas receitas, atestados e laudos que <b>você</b> emitir nesta clínica. Cada veterinário(a) da equipe tem os seus.</p>
+   <form id="proff"><div class="f">${[['vet','Seu nome profissional'],['crmv','Seu CRMV (nº e UF)'],['cpfvet','Seu CPF']].map(([k,l])=>`<div class="fld h"><label for="pr_${k}">${l}</label><input id="pr_${k}" value="${esc(c[k]||'')}"></div>`).join('')}</div><div class="acts"><button class="btn pri">Salvar meus dados</button></div></form></div>`:''}
+  <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.${CLIN&&!pode('admin')?' <b>Só o dono da clínica altera.</b>':''}</p>
+   <form id="cfgf"><fieldset style="border:0;padding:0;margin:0"${CLIN&&!pode('admin')?' disabled':''}><div class="f">
+   ${[['clinica','Nome da clínica / serviço'],...(CLIN?[]:[['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ']]),['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['pixNome','Nome do recebedor do Pix (como no banco)'],['pixCidade','Cidade do recebedor do Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
    <div class="fld h"><label for="cf_pixTipo">Tipo da chave Pix</label><select id="cf_pixTipo">${['','CPF / CNPJ','Celular','E-mail','Aleatória'].map(x=>`<option${(c.pixTipo||'')===x?' selected':''}>${x}</option>`).join('')}</select></div>
-   </div><div class="acts"><button class="btn pri">Salvar dados da clínica</button></div></form></div>
-  <div class="box"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
-  <div class="box"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
+   </div>${CLIN&&!pode('admin')?'':'<div class="acts"><button class="btn pri">Salvar dados da clínica</button></div>'}</fieldset></form></div>
+  <div class="box soadmin"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
+  <div class="box sopresc"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
   ${aparenciaHtml()}
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, clientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}. ${(()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último backup baixado neste aparelho: '+new Date(t).toLocaleDateString('pt-BR')+'.':'Nenhum backup baixado ainda neste aparelho.'})()}</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button>${dl?'<button class="btn sm" data-csvpac>Lista de animais (.csv)</button>':''}</div></div>
@@ -858,6 +1079,8 @@ function renderConta(){
   if($('padV'))window._padV=padAssin($('padV'));
   if($('meName'))$('meName').textContent=S.cfg.apelido||nome||(STANDALONE?'Sua conta':'Conta Claude');
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input,select'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
+  if($('proff'))$('proff').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('proff').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o,'Seus dados profissionais foram salvos')};
+  ligarEquipe();
 }
 
 /* ---------- clientes ---------- */
@@ -930,6 +1153,7 @@ function renderRelat(){
   <div class="cols">
    <div class="box"><h3>Por seção</h3>${porSec.length?tbl(['Seção','Itens','Valor'],porSec.map(([k,v])=>[esc(k),v.n,R$(v.v)])):'<p class="meta">Sem lançamentos no mês.</p>'}</div>
    <div class="box"><h3>Por cliente</h3>${porCli.length?tbl(['Cliente','Itens','Valor'],porCli.map(([k,v])=>[esc(k),v.n,R$(v.v)])):'<p class="meta">Sem lançamentos no mês.</p>'}</div>
+   ${CLIN?(()=>{const g={};const ad=id=>g[id]=g[id]||{n:0,v:0,r:0};for(const x of doMes){const k=x.f.por||'';ad(k);g[k].v+=num(x.f.total);g[k].r+=num(x.f.pago)}for(const c of S.pac.flatMap(p=>(p.consultas||[]).filter(c=>(c.data||'').startsWith(mes))))ad(c.por||'').n++;const l=Object.entries(g).sort((a,b)=>b[1].v-a[1].v);return `<div class="box"><h3>Por veterinário(a)</h3>${l.length?tbl(['Quem atendeu','Consultas','Faturado','Recebido'],l.map(([k,v])=>[esc(k?nomeMembro(membroPor(k))||'Ex-membro':'Sem registro'),v.n,R$(v.v),R$(v.r)])):'<p class="meta">Sem lançamentos no mês.</p>'}</div>`})():''}
    <div class="box"><h3>Em aberto por tempo</h3>${tbl(['Atraso','Itens','Valor'],aging.map(([l,n,v])=>[l,n,`<span class="${v?'late':''}">${R$(v)}</span>`]))}</div>
    <div class="box"><h3>Atendimentos por tipo</h3>${Object.keys(porTipo).length?tbl(['Tipo','Qtd.'],Object.entries(porTipo).sort((a,b)=>b[1]-a[1]).map(([k,n])=>[esc(k),n])):'<p class="meta">Nenhuma consulta no mês.</p>'}<h3 style="margin-top:12px">Pacientes ativos por espécie</h3>${tbl(['Espécie','Qtd.'],Object.entries(esp).sort((a,b)=>b[1]-a[1]).map(([k,n])=>[esc(k),n]))}</div>
   </div>`;
@@ -1499,14 +1723,14 @@ function esquecidasHtml(){const l=semCobranca();if(!l.length)return '';
 
 /* ---------- ficha ---------- */
 function renderFicha(p){
-  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']];
+  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']].filter(([k])=>!(k==='fin'&&!pode('financeiro'))&&!(k==='docs'&&!pode('prescrever')));
   if(!tabs.some(t=>t[0]===S.tab))S.tab='resumo';
   $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Voltar</button>
   <div class="head"><button class="fotobtn" data-fotopac aria-label="${p.foto?'Trocar':'Adicionar'} foto de ${esc(p.nome)}">${avatar(p)}<span class="cam">${p.foto?'Trocar':'+ Foto'}</span></button><div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
   ${chipsAlerta(p)}
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
-  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${rodapeFin(p)}`;
+  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${pode('financeiro')?rodapeFin(p):''}`;
   const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
   const at=document.querySelector('.tab[aria-selected=true]');if(at&&at.scrollIntoView)at.scrollIntoView({block:'nearest',inline:'nearest'});
   hidratarNomes();
@@ -1535,7 +1759,7 @@ function resumo(p){
   ${p.cronicas?`<div class="box"><h3>Observações gerais</h3><p>${esc(p.cronicas)}</p></div>`:''}
   <div class="btns"><button class="btn sm" data-copy>Copiar ficha completa</button><button class="btn sm" data-baixarficha>Baixar ficha</button>${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}, sobre ${p.nome}.`)}</div>`;
 }
-const fmt=(f,v)=>f.k==='clienteId'?((S.cli.find(c=>c.id===v)||{}).nome||'—'):Array.isArray(v)?v.join(', '):f.t==='date'?br(v):v;
+const fmt=(f,v)=>f.k==='resp'?(nomeMembro(membroPor(v))||'—'):f.k==='clienteId'?((S.cli.find(c=>c.id===v)||{}).nome||'—'):Array.isArray(v)?v.join(', '):f.t==='date'?br(v):v;
 const vazio=v=>v===undefined||v===null||v===''||(Array.isArray(v)&&!v.length);
 function modulo(m,p){
   const fs=campos(m.f,p).filter(f=>f.k),dk=m.dateK||'data';
@@ -1845,7 +2069,7 @@ document.addEventListener('click',e=>{
   else if('fotopacrm' in d){const q={...p};delete q.foto;salvar(q);toast('Foto removida')}
   else if(d.anexoedit){const a=(p.anexos||[]).find(x=>x.id===d.anexoedit);if(a)abrirForm('Legenda do anexo',[{k:'desc',l:'Descrição'},{k:'regiao',l:'Região do corpo',h:1,list:[...REG_CORPO,...MEMB.flatMap(mb=>REG_MEMBRO.map(r=>mb+' · '+r))]},{k:'data',l:'Data',t:'date',h:1}],a,p,o=>salvar({...p,anexos:p.anexos.map(x=>x.id===a.id?o:x)}))}
   else if(d.desfaz){const m=p.meds.find(x=>x.id===d.desfaz);salvar({...p,meds:p.meds.map(x=>x.id===d.desfaz?{...x,aplic:(x.aplic||[]).slice(0,-1)}:x)});if(m&&num(m.consumo)&&moverEstoque(m.estId||m.med,-num(m.consumo),'Estorno · '+p.nome))toast('Aplicação desfeita · estoque devolvido')}
-  else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),()=>{const velho=JSON.parse(JSON.stringify(p));apagar('pacientes',p.id);desfazivel(velho.nome+' excluído.',()=>salvar(velho))});
+  else if('editp' in d)abrirForm('Dados do paciente',F_PAC,p,p,o=>salvar(o),!pode('excluir')?null:()=>{const velho=JSON.parse(JSON.stringify(p));apagar('pacientes',p.id);desfazivel(velho.nome+' excluído.',()=>salvar(velho))});
   else if('copy' in d)copiar(textoFicha(p),'Ficha copiada');
   else if('baixarficha' in d)baixarPdf(`Ficha clinica - ${p.nome}.pdf`,()=>pdfTexto('Ficha clínica',textoFicha(p),{dir:[p.nome,'Emitida em '+br(hoje())]}));
   else if('carteira' in d)baixarPdf(`Carteira de sanidade - ${p.nome}.pdf`,()=>pdfCarteira(p));
@@ -1858,7 +2082,7 @@ document.addEventListener('click',e=>{
 function renderWho(){
   const w=$('who');
   const f=fotoPerfil(),nm=(S.cfg.apelido||me&&me.name||'').split(' ')[0];
-  if(db&&me){w.innerHTML=`<img src="${f||esc(me.avatarUrl)}" alt=""><span class="wn"></span>`;w.querySelector('span').textContent=nm||'Perfil';w.setAttribute('aria-label','Conta de '+(nm||'usuário'))}
+  if(db&&me){w.innerHTML=`<img src="${f||esc(me.avatarUrl)}" alt=""><span class="wn"></span>${CLIN?'<span class="espchip"></span>':''}`;w.querySelector('span').textContent=nm||'Perfil';if(CLIN)w.querySelector('.espchip').textContent=CLIN.nome;w.setAttribute('aria-label','Conta de '+(nm||'usuário')+(CLIN?' · equipe '+CLIN.nome:''))}
   else if(f){w.innerHTML=`<img src="${f}" alt=""><span class="wn"></span>`;w.querySelector('span').textContent=nm||'Modo local'}
   else w.innerHTML='<span class="dot"></span>Entrar';
 }
@@ -1872,7 +2096,8 @@ render();
   const uid=me&&me.id;
   if(db&&!uid){db=null;window.__semId=1}
   if(db){BASE=`data/users/${uid}/samvet`;PFX='samvet-'+uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-';
-    const velho=LS.get('samvet-pendentes',null);if(velho&&velho.length){LS.set(PFX+'pendentes',[...LS.get(PFX+'pendentes',[]),...velho]);try{localStorage.removeItem('samvet-pendentes')}catch(e){}}}
+    const velho=LS.get('samvet-pendentes',null);if(velho&&velho.length){LS.set(PFX+'pendentes',[...LS.get(PFX+'pendentes',[]),...velho]);try{localStorage.removeItem('samvet-pendentes')}catch(e){}}
+    if(STANDALONE)await entrarEspaco(uid)}
   renderWho();
   if(dict){
     dict.onState(({state})=>{if(micBtn){micBtn.classList.toggle('on',state==='listening');micBtn.textContent=state==='listening'?'Parar':'Ditar';if(state==='idle')micBtn=null}});
@@ -1895,13 +2120,13 @@ render();
   colRef('orcamentos').onSnapshot(snap=>{S.orc=mesclarSnap('orcamentos',snap.docs.map(d=>({...d.data(),id:d.id})),S.orc);LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))renderLogo()},()=>{});
   colRef('clientes').onSnapshot(snap=>{S.cli=mesclarSnap('clientes',snap.docs.map(d=>({...d.data(),id:d.id})),S.cli);LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))renderLogo()},()=>{});
   colRef('estoque').onSnapshot(snap=>{S.est=mesclarSnap('estoque',snap.docs.map(d=>({...d.data(),id:d.id})),S.est);LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)renderLogo();else renderNav()},()=>{});
-  cfgRef().onSnapshot(s=>{S.cfg=s.exists?(s.data()||{}):{};LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))renderLogo()},()=>{});
+  cfgRef().onSnapshot(s=>{S.cfg=cfgFinal(s.exists?(s.data()||{}):{});LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))renderLogo()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render();if(pendentes().length&&navigator.onLine)reenviar()},60000);
   addEventListener('online',()=>{avisoPend();reenviar()});addEventListener('offline',avisoPend);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&pendentes().length)reenviar()});
   addEventListener('beforeunload',e=>{if(pendentes().length){e.preventDefault();e.returnValue=''}});
   setInterval(()=>{if(pendentes().length&&navigator.onLine)reenviar()},15000);avisoPend();
-  reenviar();
+  reenviar();setTimeout(carregarConvites,1500);
 })();
 }
 </script>

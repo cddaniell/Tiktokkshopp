@@ -64,8 +64,27 @@ Fotos de perfil e dos animais já funcionam. Para anexar PDF e raio-X:
 2. No site novo: crie a conta, vá em **Conta › Importar backup** e escolha o arquivo.
 Cada pessoa faz isso com a própria conta.
 
+## Clínica com equipe (só no site próprio)
+Cada pessoa tem o **espaço pessoal** (só dela) e pode participar de uma ou mais **clínicas**. A troca é feita em **Conta › Equipe e clínica**.
+- **Criar clínica:** quem cria vira **Dono** e pode atender como veterinário(a). Pode copiar os dados pessoais para a clínica; os pessoais continuam guardados.
+- **Convidar:** o dono digita o e-mail e escolhe o papel. Depois avisa a pessoa pelo botão de WhatsApp ou de e-mail. A pessoa entra no site com aquele e-mail (confirmado) e toca em **Aceitar**.
+- **Papéis:**
+
+| Papel | Pode |
+|---|---|
+| Dono | Tudo: atende, convida e remove pessoas, altera dados da clínica, preços e modelos, vê o caixa |
+| Veterinário(a) | Prontuário completo, receitas e documentos com o **próprio** nome, CRMV e assinatura, agenda e estoque. Vê o caixa só se o dono liberar |
+| Estagiário(a) | Cadastra animais e clientes, registra consultas, evolução e exames, aplica doses já prescritas. Não prescreve, não emite documentos e não vê valores |
+| Financeiro | Caixa, cobranças, Pix, despesas, orçamentos e relatórios. Vê as fichas sem alterar o prontuário |
+
+- **Agenda:** cada agendamento tem o veterinário responsável, com o filtro "Só a minha agenda".
+- **Relatórios:** tabela "Por veterinário(a)" com consultas, faturado e recebido.
+- **Permissões conferidas no servidor:** as regras do banco (`firestore.rules`) recusam o que o papel não permite, mesmo que alguém tente fora do app.
+- **Haras atendido por clínicas diferentes:** cada clínica tem os próprios dados. Entre clínicas, compartilhe por PDF (ficha, carteira de sanidade).
+- Dentro do Claude (artifact) cada pessoa continua com o próprio VetCamp; a equipe funciona no site.
+
 ## Como as contas são protegidas
-- Cada pessoa só lê e grava os próprios dados (`firestore.rules` e `storage.rules`).
+- Cada pessoa só lê e grava os próprios dados; na clínica, só os membros acessam, conforme o papel (`firestore.rules` e `storage.rules`).
 - Senhas ficam com o serviço de login do Google, nunca no banco.
 - A página `privacidade.html` é um modelo de política de privacidade (LGPD): preencha os campos entre colchetes.
 
@@ -103,3 +122,5 @@ Já ativo no site (gratuito):
 - **WhatsApp automático** (lembretes enviados sozinhos): exige a API oficial do WhatsApp Business, cobrada por conversa.
 - **Monitor de erros** como o Sentry: tem plano gratuito limitado; os pagos começam por volta de US$ 26/mês.
 - **Lojas**: Google Play (taxa única de US$ 25) e App Store (US$ 99/ano).
+- **Planos pagos do VetCamp (cobrar dos usuários)**: precisa de plano Blaze, de um meio de pagamento (ex.: Mercado Pago, Stripe ou Asaas) e de CNPJ. Pode ser feito depois: a separação por clínica e por papel já está pronta para limitar recursos por plano.
+- **E-mail de convite enviado sozinho**: hoje o dono avisa pelo WhatsApp ou pelo próprio e-mail. O envio automático precisa de Blaze e de um serviço de e-mail (ex.: a extensão "Trigger Email" do Firebase com SendGrid ou Brevo).

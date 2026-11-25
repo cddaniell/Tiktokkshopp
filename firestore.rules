@@ -1,19 +1,137 @@
 rules_version = '2';
-// VetCamp: cada pessoa só lê e grava os próprios dados, em data/users/<seu id>/samvet/...
+// VetCamp
+// 1) Espaço pessoal: cada pessoa só lê e grava os próprios dados, em data/users/<seu id>/samvet/...
+// 2) Clínica (equipe): dados em clinicas/<id>/app/samvet/..., liberados conforme o papel
+//    de cada membro (dono, veterinario, estagiario, financeiro).
 // Proteções: só as coleções que o app usa, documentos com quantidade limitada de campos
 // e nenhum outro caminho aberto. O Firestore já limita cada documento a 1 MiB.
 service cloud.firestore {
   match /databases/{database}/documents {
-    function dono(uid) { return request.auth != null && request.auth.uid == uid; }
+    function logado() { return request.auth != null; }
+    function dono(uid) { return logado() && request.auth.uid == uid; }
     function colecaoValida(col) {
       return col in ['pacientes', 'clientes', 'estoque', 'orcamentos', 'despesas', 'config'];
     }
     function tamanhoOk() { return request.resource.data.size() <= 400; }
+    function meuEmail() { return request.auth.token.email.lower(); }
+    function emailConfirmado() { return request.auth.token.email_verified == true; }
+    function texto(v, max) { return v is string && v.size() <= max; }
 
+    // ---------- espaço pessoal ----------
     match /data/users/{uid}/samvet/{col}/{doc} {
       allow read, delete: if dono(uid) && colecaoValida(col);
       allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk();
     }
+
+    // ---------- clínica ----------
+    function membroPath(cid) { return /databases/$(database)/documents/clinicas/$(cid)/membros/$(request.auth.uid); }
+    function membro(cid) { return logado() && exists(membroPath(cid)); }
+    function eu(cid) { return get(membroPath(cid)).data; }
+    function papel(cid) { return eu(cid).papel; }
+    function ehDono(cid) { return membro(cid) && papel(cid) == 'dono'; }
+    function ehVet(cid) { return membro(cid) && papel(cid) in ['dono', 'veterinario']; }
+    function veFin(cid) {
+      return membro(cid) && (papel(cid) in ['dono', 'financeiro']
+        || (papel(cid) == 'veterinario' && eu(cid).get('verFinanceiro', false) == true));
+    }
+    function papelConvidavel(p) { return p in ['veterinario', 'estagiario', 'financeiro']; }
+    function camposMembro() {
+      return request.resource.data.keys().hasOnly(['uid', 'papel', 'nome', 'email', 'verFinanceiro', 'desde',
+        'vet', 'crmv', 'cpfvet', 'assinVet', 'apelido', 'foto', 'tel', 'atualizado']);
+    }
+    // campos que cada pessoa pode mudar no próprio cadastro de membro
+    function camposProprios() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['nome', 'vet', 'crmv', 'cpfvet', 'assinVet', 'apelido', 'foto', 'tel', 'atualizado']);
+    }
+    function conviteId(cid) { return meuEmail() + '_' + cid; }
+    function convitePath(cid) { return /databases/$(database)/documents/convites/$(conviteId(cid)); }
+
+    match /clinicas/{cid} {
+      allow read: if membro(cid) || (logado() && resource.data.dono == request.auth.uid);
+      allow create: if logado() && request.resource.data.dono == request.auth.uid
+        && request.resource.data.keys().hasOnly(['nome', 'dono', 'criada'])
+        && texto(request.resource.data.nome, 120);
+      allow update: if ehDono(cid) && request.resource.data.dono == resource.data.dono
+        && request.resource.data.keys().hasOnly(['nome', 'dono', 'criada'])
+        && texto(request.resource.data.nome, 120);
+      allow delete: if false;
+
+      match /membros/{uid} {
+        allow read: if membro(cid);
+        allow create: if dono(uid) && camposMembro() && request.resource.data.uid == uid && (
+          // quem criou a clínica entra como dono
+          (request.resource.data.papel == 'dono'
+            && get(/databases/$(database)/documents/clinicas/$(cid)).data.dono == uid)
+          // convidado: e-mail confirmado e convite com o mesmo papel
+          || (emailConfirmado() && exists(convitePath(cid))
+            && get(convitePath(cid)).data.papel == request.resource.data.papel
+            && request.resource.data.get('verFinanceiro', false) == get(convitePath(cid)).data.get('verFinanceiro', false)
+            && papelConvidavel(request.resource.data.papel))
+        );
+        allow update: if camposMembro() && request.resource.data.uid == resource.data.uid && (
+          // dono muda papel e permissão financeira dos outros (nunca cria outro dono)
+          (ehDono(cid) && !dono(uid) && papelConvidavel(request.resource.data.papel))
+          // cada um atualiza os próprios dados profissionais
+          || (dono(uid) && camposProprios())
+        );
+        allow delete: if (ehDono(cid) && !dono(uid)) || (dono(uid) && resource.data.papel != 'dono');
+      }
+
+      match /app/samvet/{col}/{doc} {
+        allow read: if membro(cid) && colecaoValida(col);
+
+        allow write: if col == 'config' && ehDono(cid) && (request.resource == null || tamanhoOk());
+
+        allow write: if col == 'despesas' && veFin(cid) && (request.resource == null || tamanhoOk());
+
+        allow write: if col == 'orcamentos' && membro(cid) && papel(cid) in ['dono', 'veterinario', 'financeiro']
+          && (request.resource == null || tamanhoOk());
+
+        allow create, update: if col == 'clientes' && membro(cid) && tamanhoOk();
+        allow delete: if col == 'clientes' && ehVet(cid);
+
+        allow update: if col == 'estoque' && membro(cid) && papel(cid) in ['dono', 'veterinario', 'estagiario'] && tamanhoOk();
+        allow create, delete: if col == 'estoque' && ehVet(cid) && (request.resource == null || tamanhoOk());
+
+        allow create: if col == 'pacientes' && membro(cid) && tamanhoOk() && (
+          ehVet(cid)
+          || (papel(cid) == 'estagiario'
+            && request.resource.data.get('meds', []).size() == 0
+            && request.resource.data.get('docs', []).size() == 0));
+        allow update: if col == 'pacientes' && membro(cid) && tamanhoOk() && (
+          ehVet(cid)
+          // estagiário: registra evolução, aplica doses e cadastra, mas não prescreve,
+          // não emite documentos e não apaga lançamentos financeiros
+          || (papel(cid) == 'estagiario'
+            && request.resource.data.get('docs', []) == resource.data.get('docs', [])
+            && request.resource.data.get('meds', []).size() <= resource.data.get('meds', []).size()
+            && request.resource.data.get('fin', []).size() >= resource.data.get('fin', []).size())
+          // financeiro: só o financeiro do animal e os dados de cobrança
+          || (papel(cid) == 'financeiro'
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['fin', 'socios', 'atualizado', 'tutor', 'tel', 'cpf', 'email', 'prop'])));
+        allow delete: if col == 'pacientes' && ehVet(cid);
+      }
+    }
+
+    // convites por e-mail: o id é <email>_<clinica>
+    match /convites/{id} {
+      allow read: if logado() && (resource.data.email == meuEmail() || ehDono(resource.data.cid));
+      allow create: if logado() && ehDono(request.resource.data.cid)
+        && id == request.resource.data.email + '_' + request.resource.data.cid
+        && request.resource.data.keys().hasOnly(['email', 'cid', 'clinicaNome', 'papel', 'verFinanceiro', 'convidadoPor', 'criado'])
+        && texto(request.resource.data.email, 200) && request.resource.data.email == request.resource.data.email.lower()
+        && papelConvidavel(request.resource.data.papel);
+      allow delete: if logado() && (resource.data.email == meuEmail() || ehDono(resource.data.cid));
+    }
+
+    // lista das clínicas de cada pessoa (só um atalho; o acesso de verdade vem de "membros")
+    match /usuarios/{uid}/clinicas/{cid} {
+      allow read, delete: if dono(uid);
+      allow create, update: if dono(uid) && request.resource.data.keys().hasOnly(['nome', 'papel', 'desde']);
+    }
+
     // qualquer outro caminho fica fechado
     match /{caminho=**} {
       allow read, write: if false;
