@@ -76,7 +76,9 @@
 
   function iniciar(){
     if(!configurado){msg('Configuração do Firebase pendente. Preencha o arquivo firebase-config.js.','inf');$('a_ok').disabled=true;return}
-    const hostFirebase=/\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
+    // authDomain próprio do site só quando o endereço estiver liberado no Google (CFG.authNoSite=true);
+    // por padrão usa o domínio do projeto, que o Google já aceita.
+    const hostFirebase=CFG.authNoSite===true&&/\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
     firebase.initializeApp(hostFirebase&&!DEMO?{...CFG,authDomain:location.hostname}:CFG);
     auth=firebase.auth();fs=firebase.firestore();
     if(DEMO){auth.useEmulator('http://'+location.hostname+':9099',{disableWarnings:true});fs.useEmulator(location.hostname,8080)}
