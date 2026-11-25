@@ -67,3 +67,7 @@ python3 scripts/build_app.py
 npx firebase-tools emulators:start --project demo-samvet --only auth,firestore,storage,hosting
 ```
 Com um `firebase-config.js` cujo `projectId` comece com `demo-`, o site usa os simuladores locais.
+
+## Situação
+- Projeto Firebase: `vetcamp-1704e`
+- Segredos do GitHub (`FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`) cadastrados em 25/11/2026.
