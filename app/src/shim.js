@@ -76,10 +76,8 @@
 
   function iniciar(){
     if(!configurado){msg('Configuração do Firebase pendente. Preencha o arquivo firebase-config.js.','inf');$('a_ok').disabled=true;return}
-    // authDomain próprio do site só quando o endereço estiver liberado no Google (CFG.authNoSite=true);
-    // por padrão usa o domínio do projeto, que o Google já aceita.
-    const hostFirebase=CFG.authNoSite===true&&/\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
-    firebase.initializeApp(hostFirebase&&!DEMO?{...CFG,authDomain:location.hostname}:CFG);
+    // o login com Google passa por CFG.authDomain (vetcamp.web.app), liberado no Google Cloud
+    firebase.initializeApp(CFG);
     auth=firebase.auth();fs=firebase.firestore();
     if(DEMO){auth.useEmulator('http://'+location.hostname+':9099',{disableWarnings:true});fs.useEmulator(location.hostname,8080)}
     fs.settings({ignoreUndefinedProperties:true,merge:true});

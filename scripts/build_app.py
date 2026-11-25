@@ -30,6 +30,12 @@ PAGINA = """<!doctype html>
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="VetCamp">
+<script>
+/* endereço oficial: https://vetcamp.web.app — os endereços técnicos do projeto levam para ele */
+(function(){{var h=location.hostname;if(h!=='vetcamp-1704e.web.app'&&h!=='vetcamp-1704e.firebaseapp.com')return;
+try{{for(var i=0;i<localStorage.length;i++){{var k=localStorage.key(i);if(/pendentes$/.test(k)&&(JSON.parse(localStorage.getItem(k)||'[]')||[]).length)return}}}}catch(e){{}}
+location.replace('https://vetcamp.web.app'+location.pathname+location.search+location.hash)}})();
+</script>
 <style>:root{{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}html,body{{margin:0}}img{{max-width:100%}}[hidden]{{display:none!important}}</style>
 </head>
 <body>

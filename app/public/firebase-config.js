@@ -5,7 +5,7 @@
    vem das regras de segurança (firestore.rules e storage.rules). */
 window.SAMVET_FIREBASE = {
   apiKey: "AIzaSyDDFXIyk98wt5riMolK_2yDl4UBnnV7y3k",
-  authDomain: "vetcamp-1704e.firebaseapp.com",
+  authDomain: "vetcamp.web.app",
   projectId: "vetcamp-1704e",
   storageBucket: "vetcamp-1704e.firebasestorage.app",
   messagingSenderId: "236606054255",
