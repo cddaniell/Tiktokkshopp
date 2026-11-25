@@ -1,17 +1,17 @@
-name: Publicar SAMVET (site próprio)
+name: Publicar VetCamp (site próprio)
 
-# Publica o site no Firebase sempre que samvet.html ou os arquivos do app mudarem.
+# Publica o site no Firebase sempre que vetcamp.html ou os arquivos do app mudarem.
 # Precisa de dois itens em Settings › Secrets and variables › Actions:
 #   FIREBASE_SERVICE_ACCOUNT  -> conteúdo do arquivo JSON da conta de serviço do Firebase
 #   FIREBASE_PROJECT_ID       -> o ID do projeto (ex.: samvet-12345)
 on:
   push:
     branches: [main, "claude/samvet-sonnet-file-sfo8st"]
-    paths: ["samvet.html", "app/**", "scripts/build_app.py", "firebase.json", "firestore.rules", "storage.rules"]
+    paths: ["vetcamp.html", "app/**", "scripts/build_app.py", "firebase.json", "firestore.rules", "storage.rules"]
   workflow_dispatch:
 
 concurrency:
-  group: publicar-samvet
+  group: publicar-vetcamp
   cancel-in-progress: true
 
 jobs:

@@ -1,5 +1,5 @@
 rules_version = '2';
-// SAMVET: cada pessoa só lê e grava os próprios dados, em data/users/<seu id>/...
+// VetCamp: cada pessoa só lê e grava os próprios dados, em data/users/<seu id>/...
 service cloud.firestore {
   match /databases/{database}/documents {
     match /data/users/{uid}/{documento=**} {

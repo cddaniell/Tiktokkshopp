@@ -1,4 +1,4 @@
-<title>SAMVET</title>
+<title>VetCamp</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
@@ -219,7 +219,7 @@ body.semrede .wrap{padding-bottom:200px}
 
 <header class="top"><div class="topin">
   <div class="toprow">
-    <div class="brandrow"><span class="logo" role="img" aria-label="Logo SAMVET"></span><h1>SAMVET<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
+    <div class="brandrow"><span class="logo" role="img" aria-label="Logo VetCamp"></span><h1>VetCamp<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
     <button class="who" id="who" data-vis="conta"><span class="dot"></span>Entrar</button>
     <button class="btn pri sm" id="novo" aria-label="Novo paciente">+ <span class="nl">Paciente</span></button>
   </div>
@@ -450,7 +450,7 @@ function rodapeFin(p){
   ${ks.length?`<div class="tw"><table><tr><th>Seção</th><th class="n">Itens</th><th class="n">Valor</th><th class="n">Em aberto</th></tr>${ks.map(k=>`<tr><td>${esc(k)}</td><td class="n">${r.g[k].n}</td><td class="n">${R$(r.g[k].t)}</td><td class="n ${r.g[k].a?'late':''}">${R$(r.g[k].a)}</td></tr>`).join('')}
   <tr class="totrow"><td><b>Total</b></td><td></td><td class="n"><b>${R$(r.tot)}</b></td><td class="n ${r.ab?'late':'ok'}"><b>${R$(r.ab)}</b></td></tr></table></div>
   <div class="counts" style="margin:12px 0 0"><div class="count"><b>${R$(r.tot)}</b><span>Total do animal</span></div><div class="count" style="color:var(--okc)"><b>${R$(r.rec)}</b><span>Recebido</span></div><div class="count" style="color:var(--warn)"><b>${R$(r.ab)}</b><span>Em aberto</span></div>${r.orc?`<div class="count"><b>${R$(r.orc)}</b><span>Em orçamento</span></div>`:''}</div>
-  ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button></div>`:''}`
+  ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button></div>`:''}`
   :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a aba Preços para o valor entrar sozinho.</p>'}</section>`;
 }
 const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
@@ -530,7 +530,7 @@ function alertas(p){
 
 /* ---------- gravação ---------- */
 const LS={get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'null')??d}catch(e){return d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const errMsg=e=>e&&['invalid_argument','permission-denied','invalid-argument'].includes(e.code)?'Seu acesso não permite salvar. Peça ao dono do SAMVET para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
+const errMsg=e=>e&&['invalid_argument','permission-denied','invalid-argument'].includes(e.code)?'Seu acesso não permite salvar. Peça ao dono do VetCamp para te convidar com acesso de uso.':e&&e.code==='quota_exceeded'?'Limite de armazenamento atingido.':'Não salvou. Tente de novo.';
 const COLS={pacientes:'pac',estoque:'est',clientes:'cli',orcamentos:'orc'};
 const colRef=c=>db.collection(BASE+'/'+c);
 const cfgRef=()=>db.doc(BASE+'/config/clinica');
@@ -543,7 +543,7 @@ function avisoPend(){
   const n=pendentes().length,off=!!db&&(!navigator.onLine||semRede),el=$('rede');
   if(!db||(!off&&!n)){el.hidden=true;document.body.classList.remove('semrede');if(balaoVisto){balaoVisto=false;toast('Internet de volta. Tudo foi enviado.')}return}
   balaoVisto=true;el.hidden=false;document.body.classList.add('semrede');
-  el.innerHTML=`<span class="pulso${off?'':' ok'}" aria-hidden="true"></span><div class="rtxt"><b>${off?'Você está sem rede, sem sinal':'Internet de volta. Enviando…'}</b><p>${off?'Pode continuar lançando. Tudo fica guardado e será enviado quando a internet voltar.':'Enviando o que ficou guardado.'}</p><p><b>Não feche o SAMVET.</b> Deixe aberto em segundo plano até este aviso sumir.</p>${n?`<p class="rq">${n} alteração(ões) aguardando envio</p>`:''}</div>${off?'<button class="btn sm" data-reenviar>Tentar agora</button>':''}`;
+  el.innerHTML=`<span class="pulso${off?'':' ok'}" aria-hidden="true"></span><div class="rtxt"><b>${off?'Você está sem rede, sem sinal':'Internet de volta. Enviando…'}</b><p>${off?'Pode continuar lançando. Tudo fica guardado e será enviado quando a internet voltar.':'Enviando o que ficou guardado.'}</p><p><b>Não feche o VetCamp.</b> Deixe aberto em segundo plano até este aviso sumir.</p>${n?`<p class="rq">${n} alteração(ões) aguardando envio</p>`:''}</div>${off?'<button class="btn sm" data-reenviar>Tentar agora</button>':''}`;
 }
 let enviando=false;
 async function reenviar(){
@@ -609,20 +609,20 @@ function renderLista(){
   else rows=list.map(({p,a})=>{const u=ult(p)[0];const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);return`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}${a.slice(0,2).map(x=>`<span class="flag">● ${esc(x)}</span>`).join('')}</h3><span class="meta">${esc([p.especie,p.raca,p.categoria,idade(p.nasc)].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.prop?' · '+esc(p.prop):''}${u?' · Última: '+br(u.data):''}${deb?` · <span class="late">deve ${R$(deb)}</span>`:''}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`}).join('');
   const hj=new Date(),hr=hj.getHours(),nm=(S.cfg.apelido||me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
-  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo SAMVET"></span><div><h2>${esc(S.cfg.clinica||'SAMVET')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
+  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>Prontuário veterinário · equinos, grandes e pequenos animais</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''}. ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
   $('view').innerHTML=capa+`<div class="counts">${[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('')}</div>
   <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro, microchip ou treinador" aria-label="Buscar paciente" value="${esc(S.q)}">
   <div id="rows">${rows}</div>`;
   $('q').oninput=e=>{S.q=e.target.value;const pos=e.target.selectionStart;renderLista();$('q').focus();try{$('q').setSelectionRange(pos,pos)}catch(_){}};
 }
-function msgLembrete(x){const c=S.cfg.clinica||'SAMVET';return `Olá, ${x.p.tutor||''}! Aqui é da ${c}. Lembrete: ${x.txt} de ${x.p.nome} ${dias(x.d)===0?'hoje':'em '+br(x.d)}${x.h?' às '+x.h:''}. Podemos confirmar?`}
+function msgLembrete(x){const c=S.cfg.clinica||'VetCamp';return `Olá, ${x.p.tutor||''}! Aqui é da ${c}. Lembrete: ${x.txt} de ${x.p.nome} ${dias(x.d)===0?'hoje':'em '+br(x.d)}${x.h?' às '+x.h:''}. Podemos confirmar?`}
 function renderAgenda(){
   const lim=30,its=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=lim).sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
   let last='',html='';
   for(const x of its){
     const g=dias(x.d)<0?'Vencidos':dias(x.d)===0?'Hoje':dias(x.d)===1?'Amanhã':dias(x.d)<=7?'Próximos 7 dias':'Até 30 dias';
     if(g!==last){html+=`<h3 class="dayh">${g}</h3>`;last=g}
-    html+=`<div class="ag${dias(x.d)<0?' late':''}"><button data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${x.h?esc(x.h)+' · ':''}${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>${waLink(x.p.tel,x.tab==='fin'?`Olá, ${x.p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}. ${x.txt.replace('Cobrança: ','Consta em aberto: ')}, referente a ${x.p.nome}. Chave Pix: ${S.cfg.pix||'—'}.`:msgLembrete(x))}</div>`;
+    html+=`<div class="ag${dias(x.d)<0?' late':''}"><button data-id="${esc(x.p.id)}" data-gotab="${x.tab}"><span class="d">${br(x.d).slice(0,5)}<small>${x.h?esc(x.h)+' · ':''}${quando(x.d)}</small></span><span><b>${esc(x.p.nome)}</b> · ${esc(x.txt)}<br><span class="meta">${esc(x.p.tutor||'')}${x.p.prop?' · '+esc(x.p.prop):''}</span></span></button>${waLink(x.p.tel,x.tab==='fin'?`Olá, ${x.p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. ${x.txt.replace('Cobrança: ','Consta em aberto: ')}, referente a ${x.p.nome}. Chave Pix: ${S.cfg.pix||'—'}.`:msgLembrete(x))}</div>`;
   }
   $('view').innerHTML=`<div class="bar"><h2>Agenda</h2><button class="btn pri sm" data-agendar>+ Agendar atendimento</button></div><p class="hint">Agendamentos, retornos, vacinas, vermífugos, casco, dentes, AIE/mormo, partos e cobranças vencidas e dos próximos ${lim} dias. O botão WhatsApp abre a mensagem de lembrete pronta.</p>`+(its.length?html:'<div class="empty"><p>Nada pendente nos próximos 30 dias.</p></div>');
 }
@@ -654,7 +654,7 @@ function renderCaixa(){
   const ordL=[...fil].sort((a,b)=>(b.f.data||'').localeCompare(a.f.data||''));
   $('view').innerHTML=`<div class="bar"><h2>Caixa</h2><span class="meta">${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</span></div>
   <div class="counts"><div class="count"><b>${R$(aRec)}</b><span>A receber</span></div><div class="count" style="color:var(--warn)"><b>${R$(venc)}</b><span>Vencido</span></div><div class="count"><b>${R$(fat)}</b><span>Faturado no mês</span></div><div class="count" style="color:var(--okc)"><b>${R$(rec)}</b><span>Recebido no mês</span></div></div>
-  ${tut.length?`<div class="box"><h3>Em aberto por tutor</h3><div class="tw"><table><tr><th>Tutor</th><th>Animais</th><th class="n">Saldo</th><th></th></tr>${tut.map(t=>`<tr><td><b>${esc(t.tutor)}</b></td><td>${esc([...new Set(t.itens.map(x=>x.p.nome))].join(', '))}</td><td class="n late">${R$(t.total)}</td><td>${waLink(t.tel,`Olá, ${t.tutor}! Aqui é da ${S.cfg.clinica||'SAMVET'}. Segue o resumo em aberto:\n${t.itens.map(x=>`• ${x.p.nome}: ${x.f.desc} (${br(x.f.data)}) ${R$(saldo(x.f))}`).join('\n')}\nTotal: ${R$(t.total)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}</td></tr>`).join('')}</table></div></div>`:''}
+  ${tut.length?`<div class="box"><h3>Em aberto por tutor</h3><div class="tw"><table><tr><th>Tutor</th><th>Animais</th><th class="n">Saldo</th><th></th></tr>${tut.map(t=>`<tr><td><b>${esc(t.tutor)}</b></td><td>${esc([...new Set(t.itens.map(x=>x.p.nome))].join(', '))}</td><td class="n late">${R$(t.total)}</td><td>${waLink(t.tel,`Olá, ${t.tutor}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Segue o resumo em aberto:\n${t.itens.map(x=>`• ${x.p.nome}: ${x.f.desc} (${br(x.f.data)}) ${R$(saldo(x.f))}`).join('\n')}\nTotal: ${R$(t.total)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}</td></tr>`).join('')}</table></div></div>`:''}
   <div class="bar"><h3>Lançamentos</h3><div class="chips" style="margin:0">${[['pend','Em aberto'],['mes','Este mês'],['todos','Todos']].map(([k,l])=>`<button class="btn sm${S.finF===k?' pri':''}" data-finf="${k}">${l}</button>`).join('')}</div></div>
   ${ordL.length?`<div class="tw"><table><tr><th>Data</th><th>Paciente</th><th>Descrição</th><th class="n">Total</th><th class="n">Saldo</th><th></th></tr>${ordL.map(({f,p})=>`<tr><td>${br(f.data)}</td><td>${esc(p.nome)}<br><span class="meta">${esc(p.tutor||'')}</span></td><td>${esc(f.desc)}<br><span class="meta">${esc(f.sit)}${f.forma?' · '+esc(f.forma):''}</span></td><td class="n">${R$(f.total)}</td><td class="n ${saldo(f)?'late':'ok'}">${R$(saldo(f))}</td><td>${saldo(f)?`<button class="btn sm" data-quitar="${esc(f.id)}" data-pid="${esc(p.id)}">Receber</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="empty"><p>Nenhum lançamento aqui. Lance pela aba Financeiro da ficha do paciente ou informe o valor ao salvar uma consulta.</p></div>'}`;
 }
@@ -758,18 +758,18 @@ function renderConta(){
   ${db&&!STANDALONE?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
   <div class="cols">
   <div class="box"><h3>${db?'Conectado':'Você está no modo local'}</h3>
-   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> ${STANDALONE?'Cada pessoa entra com o próprio e-mail e tem o próprio SAMVET.':'Outras pessoas que usam este mesmo link têm o próprio SAMVET'} e não veem seus pacientes, clientes nem caixa.</p>${STANDALONE&&AUTH?`<p class="meta">E-mail: <b>${esc(AUTH.email()||'')}</b>${AUTH.verificado()?' · confirmado':' · <span class="late">ainda não confirmado</span>'}</p><div class="btns">${AUTH.verificado()?'':'<button class="btn sm" data-reverif>Reenviar confirmação</button>'}<button class="btn sm" data-trocasenha>Trocar senha</button><button class="btn sm del" data-sair>Sair da conta</button></div>`:''}`
-   :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login ${STANDALONE?'':'do Claude '}e abra o SAMVET pelo link abaixo.</p>`}
-   <span class="lbl">Link do SAMVET</span><p class="link" id="lnk">${LINK}</p>
+   ${db?`<p>${fotoPerfil()||me&&me.avatarUrl?`<img src="${fotoPerfil()||esc(me.avatarUrl)}" alt="" width="40" height="40" style="border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">`:''}<b id="meName"></b></p><p class="ok">Os dados estão salvos na nuvem e aparecem iguais no celular, no tablet e no computador.</p><p><b>Seus dados são só seus.</b> ${STANDALONE?'Cada pessoa entra com o próprio e-mail e tem o próprio VetCamp.':'Outras pessoas que usam este mesmo link têm o próprio VetCamp'} e não veem seus pacientes, clientes nem caixa.</p>${STANDALONE&&AUTH?`<p class="meta">E-mail: <b>${esc(AUTH.email()||'')}</b>${AUTH.verificado()?' · confirmado':' · <span class="late">ainda não confirmado</span>'}</p><div class="btns">${AUTH.verificado()?'':'<button class="btn sm" data-reverif>Reenviar confirmação</button>'}<button class="btn sm" data-trocasenha>Trocar senha</button><button class="btn sm del" data-sair>Sair da conta</button></div>`:''}`
+   :`<p class="late">Os dados ficam só neste navegador e não aparecem em outro aparelho.</p><p>Para usar a mesma conta em qualquer lugar, entre com seu login ${STANDALONE?'':'do Claude '}e abra o VetCamp pelo link abaixo.</p>`}
+   <span class="lbl">Link do VetCamp</span><p class="link" id="lnk">${LINK}</p>
    <div class="btns"><button class="btn sm" data-copylink>Copiar link</button><a class="btn sm" href="${LINK}" target="_blank" rel="noopener">Abrir em nova aba</a></div></div>
   <div class="box"><h3>Como entrar de outro aparelho</h3><ol class="steps">
-   ${STANDALONE?`<li>No celular ou computador, abra o link do SAMVET (acima).</li><li>Entre com o mesmo e-mail e senha. No celular, use "Adicionar à tela de início" para ter o ícone do aplicativo.</li>`:`<li>No celular ou computador, acesse <b>claude.ai</b> e entre com o mesmo e-mail e senha da sua conta.</li>
-   <li>Abra o link do SAMVET (acima). Ele também fica na sua lista de artifacts.</li>`}
+   ${STANDALONE?`<li>No celular ou computador, abra o link do VetCamp (acima).</li><li>Entre com o mesmo e-mail e senha. No celular, use "Adicionar à tela de início" para ter o ícone do aplicativo.</li>`:`<li>No celular ou computador, acesse <b>claude.ai</b> e entre com o mesmo e-mail e senha da sua conta.</li>
+   <li>Abra o link do VetCamp (acima). Ele também fica na sua lista de artifacts.</li>`}
    <li>Pronto: pacientes, agenda, caixa e estoque são os mesmos, atualizados ao vivo.</li></ol>
-   <h3 style="margin-top:12px">Outra pessoa usar o SAMVET dela</h3><ol class="steps">
-   ${STANDALONE?`<li>Mande o link do SAMVET para a pessoa.</li><li>Ela toca em <b>Criar conta</b> e se cadastra com o próprio e-mail.</li><li>Ela começa com um SAMVET vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`:`<li>No topo do SAMVET, toque em <b>Compartilhar</b> e convide a pessoa pelo e-mail.</li>
+   <h3 style="margin-top:12px">Outra pessoa usar o VetCamp dela</h3><ol class="steps">
+   ${STANDALONE?`<li>Mande o link do VetCamp para a pessoa.</li><li>Ela toca em <b>Criar conta</b> e se cadastra com o próprio e-mail.</li><li>Ela começa com um VetCamp vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`:`<li>No topo do VetCamp, toque em <b>Compartilhar</b> e convide a pessoa pelo e-mail.</li>
    <li>Dê acesso de <b>edição</b>. Só visualizar não deixa salvar.</li>
-   <li>A pessoa entra com o próprio login do Claude e começa com um SAMVET vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`}</ol></div>
+   <li>A pessoa entra com o próprio login do Claude e começa com um VetCamp vazio, só dela. Ela não vê os seus dados e você não vê os dela.</li>`}</ol></div>
   </div>
   <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.</p>
    <form id="cfgf"><div class="f">
@@ -809,7 +809,7 @@ function renderCliente(c){
   const its=itensFatura(c,mes,ant),tot=its.reduce((s,x)=>s+num(x.f.total),0),ab=its.reduce((s,x)=>s+saldo(x.f),0);
   $('view').innerHTML=`<button class="btn ghost sm" data-clivolta>← Clientes</button>
   <div class="head"><span class="av">${esc(String(c.nome).slice(0,2).toUpperCase())}</span><div class="grow"><h2>${esc(c.nome)}</h2><div class="meta">${esc([c.tipo,c.doc,c.tel,c.email,c.cidade].filter(Boolean).join(' · '))}${c.contato?'<br>Contato: '+esc(c.contato):''}</div></div>
-  <div class="btns"><button class="btn sm" data-orccli="${esc(c.id)}">Novo orçamento</button><button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button>${waLink(c.tel,`Olá, ${c.contato||c.nome}! Aqui é da ${S.cfg.clinica||'SAMVET'}.`)}</div></div>
+  <div class="btns"><button class="btn sm" data-orccli="${esc(c.id)}">Novo orçamento</button><button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button>${waLink(c.tel,`Olá, ${c.contato||c.nome}! Aqui é da ${S.cfg.clinica||'VetCamp'}.`)}</div></div>
   <div class="box"><div class="bar"><h3>Animais (${ps.length})</h3><button class="btn sm" data-clipac="${esc(c.id)}">+ Animal deste cliente</button></div>
   ${ps.length?ps.map(p=>`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}</h3><span class="meta">${esc([p.especie,p.raca,p.lote].filter(Boolean).join(' · '))}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`).join(''):'<p class="meta">Nenhum animal vinculado.</p>'}</div>
   ${(()=>{const os=S.orc.filter(o=>o.clienteId===c.id).sort((a,b)=>String(b.numero).localeCompare(String(a.numero)));return os.length?`<div class="box"><h3>Orçamentos (${os.length})</h3>${os.map(o=>`<button class="row" data-orc="${esc(o.id)}"><span class="av">Or</span><span><h3>${esc(o.numero)}</h3><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''}</span></span><span class="end"><b class="tnum">${R$(orcTotais(o).total)}</b><br><span class="pill" style="--c:var(--s-${ORC_COR[orcStatus(o)]})">${orcStatus(o)}</span></span></button>`).join('')}</div>`:''})()}
@@ -1038,7 +1038,7 @@ function editarOrc(o0,novo){
 }
 function textoOrc(o){
   const t=orcTotais(o),c=S.cfg;
-  return `*${c.clinica||'SAMVET'}* · Orçamento ${o.numero}\nCliente: ${o.cliente}${o.animal?'\nAnimal: '+o.animal:''}\nData: ${br(o.data)} · Válido até ${br(orcValidade(o))}\n\n`+
+  return `*${c.clinica||'VetCamp'}* · Orçamento ${o.numero}\nCliente: ${o.cliente}${o.animal?'\nAnimal: '+o.animal:''}\nData: ${br(o.data)} · Válido até ${br(orcValidade(o))}\n\n`+
    t.its.map(i=>`• ${i.desc}${num(i.qtd||1)!==1?' ('+fx(num(i.qtd),2)+' × '+R$(i.unit)+')':''}: ${R$(num(i.qtd||1)*num(i.unit))}`).join('\n')+
    `\n\nSubtotal: ${R$(t.sub)}${t.desc?'\nDesconto: − '+R$(t.desc):''}${t.km?'\nDeslocamento: '+R$(t.km):''}\n*Total: ${R$(t.total)}*${o.cond?'\n\nPagamento: '+o.cond:''}${c.pix?'\nChave Pix: '+c.pix:''}${o.obs?'\n\nObs.: '+o.obs:''}`;
 }
@@ -1131,7 +1131,7 @@ async function pdfOrc(o){
   // cabeçalho
   d.setFillColor(...MARROM);d.rect(0,0,W,38,'F');
   const lg=await logoTingido('#f6e8d4');let x0=M;if(lg){d.addImage(lg,'PNG',M,7,24,24);x0=M+29}
-  d.setTextColor(...CREME);d.setFont('helvetica','bold');d.setFontSize(17);d.text(c.clinica||'SAMVET',x0,15);
+  d.setTextColor(...CREME);d.setFont('helvetica','bold');d.setFontSize(17);d.text(c.clinica||'VetCamp',x0,15);
   d.setFont('helvetica','normal');d.setFontSize(8.5);
   const lin=[[c.vet,c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),[c.endc,c.cidade].filter(Boolean).join(' · '),[c.telc,c.emailc,c.cpfvet?'CPF/CNPJ '+c.cpfvet:''].filter(Boolean).join(' · ')].filter(Boolean);
   lin.forEach((l,i)=>d.text(d.splitTextToSize(l,105)[0],x0,21+i*4.4));
@@ -1170,11 +1170,11 @@ async function pdfOrc(o){
   d.text(d.splitTextToSize([c.vet||'Médico(a)-veterinário(a)',c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),78)[0],M,ya+4.5);
   d.text('De acordo: '+d.splitTextToSize(o.cliente,60)[0],W-M-78,ya+4.5);d.setTextColor(...CINZA);d.text('Data: ____/____/______',W-M-78,ya+9.5);
   // rodapé
-  const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setDrawColor(216,193,162);d.line(M,284,W-M,284);d.setFontSize(7.5);d.setTextColor(...CINZA);d.text(`${c.clinica||'SAMVET'} · Orçamento ${o.numero}`,M,288.5);d.text(`Página ${i} de ${n}`,W-M,288.5,{align:'right'})}
+  const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);d.setDrawColor(216,193,162);d.line(M,284,W-M,284);d.setFontSize(7.5);d.setTextColor(...CINZA);d.text(`${c.clinica||'VetCamp'} · Orçamento ${o.numero}`,M,288.5);d.text(`Página ${i} de ${n}`,W-M,288.5,{align:'right'})}
   return d;
 }
 async function exportarPdfOrc(o){
-  if(!dl){toast(STANDALONE?'Não foi possível baixar aqui.':'Para baixar o PDF, abra o SAMVET pelo link do Claude com sua conta.');return}
+  if(!dl){toast(STANDALONE?'Não foi possível baixar aqui.':'Para baixar o PDF, abra o VetCamp pelo link do Claude com sua conta.');return}
   toast('Gerando PDF…');
   try{const d=await pdfOrc(o);const nome=`Orçamento ${o.numero} - ${o.cliente}.pdf`.replace(/[\/\\:*?"<>|]/g,'-');
     const r=await dl.save({filename:nome,data:d.output('blob')});if(r&&r.status==='saved')toast('PDF salvo: '+nome);
@@ -1217,7 +1217,7 @@ function resumo(p){
   ${pend.length?`<div class="box"><h3>Próximas datas</h3>${pend.map(x=>`<p class="${dias(x.d)<0?'late':''}">${br(x.d)}${x.h?' '+esc(x.h):''} · ${esc(x.txt)} <span class="meta">(${quando(x.d)})</span></p>`).join('')}</div>`:''}
   ${ult(p).filter(c=>c.peso).length>1?`<div class="box"><h3>Evolução do peso (kg)</h3><div class="fig"><svg role="img" aria-label="Gráfico de peso"></svg></div></div>`:''}
   ${p.cronicas?`<div class="box"><h3>Observações gerais</h3><p>${esc(p.cronicas)}</p></div>`:''}
-  <div class="btns"><button class="btn sm" data-copy>Copiar ficha completa</button><button class="btn sm" data-baixarficha>Baixar ficha</button>${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}, sobre ${p.nome}.`)}</div>`;
+  <div class="btns"><button class="btn sm" data-copy>Copiar ficha completa</button><button class="btn sm" data-baixarficha>Baixar ficha</button>${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}, sobre ${p.nome}.`)}</div>`;
 }
 const fmt=(f,v)=>f.k==='clienteId'?((S.cli.find(c=>c.id===v)||{}).nome||'—'):Array.isArray(v)?v.join(', '):f.t==='date'?br(v):v;
 const vazio=v=>v===undefined||v===null||v===''||(Array.isArray(v)&&!v.length);
@@ -1237,7 +1237,7 @@ function modulo(m,p){
     if(m.key==='fin')extra=`<p><b>Total ${R$(it.total)}</b> · <span class="${saldo(it)?'late':'ok'}">${saldo(it)?'em aberto '+R$(saldo(it)):it.sit==='Orçamento'?'orçamento':'pago'}</span></p>${saldo(it)?`<button class="btn sm" data-quitar="${esc(it.id)}" data-pid="${esc(p.id)}">Marcar como pago</button>`:''}`;
     if(m.key!=='fin'&&!SEMVALOR.includes(m.key)){const fl=(p.fin||[]).filter(f=>f.ref===it.id||f.ref===it.id+'-km');if(fl.length)extra+=`<p class="vl">${fl.map(f=>`${esc(f.tipo==='Deslocamento (km)'?'Deslocamento':'Valor')} <b>${R$(f.total)}</b> <span class="pill" style="--c:var(--s-${saldo(f)?'tratamento':'alta'})">${saldo(f)?'em aberto':'pago'}</span>`).join(' · ')}</p>`;else if(!num(it.valor)&&!num(it.valorAplic))extra+=`<p class="meta">Sem valor lançado.</p>`}
     if(m.key==='fin'&&it.auto)extra+=`<p class="meta">Gerado automaticamente por ${esc(secaoFin(it))}. Para mudar o valor, edite o registro de origem.</p>`;
-    if(m.key==='agend')extra=`<div class="btns">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'SAMVET'}. Confirmando ${it.tipo} de ${p.nome} em ${br(it.data)}${it.hora?' às '+it.hora:''}${it.local?' ('+it.local+')':''}. Pode confirmar?`)}</div>`;
+    if(m.key==='agend')extra=`<div class="btns">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Confirmando ${it.tipo} de ${p.nome} em ${br(it.data)}${it.hora?' às '+it.hora:''}${it.local?' ('+it.local+')':''}. Pode confirmar?`)}</div>`;
     const tit=m.key==='agend'?`${br(it.data)} ${esc(it.hora||'')} · ${esc(it.tipo)} <span class="pill" style="--c:var(--s-${it.situacao==='Realizado'?'alta':it.situacao==='Confirmado'?'acompanhamento':['Faltou','Cancelado'].includes(it.situacao)?'obito':'tratamento'})">${esc(it.situacao||'')}</span>`:m.key==='evolucao'?`${br(it.data)} ${esc(it.hora||'')} · ${esc(it.turno||'')}`:`${br(it[dk])} · ${m.titleK==='grau'&&it.grau?'Grau ':''}${esc(String(it[m.titleK]||'').split(' – ')[0]||m.tab)}`;
     return `<article class="item"><header><h3>${tit}</h3>${it.por?`<span class="meta" data-uid="${esc(it.por)}"></span>`:''}<button class="btn sm" data-edit="${m.key}" data-iid="${esc(it.id)}">Editar</button></header>
     ${m.titleK==='grau'&&it.grau?`<div class="vl">${esc(it.grau)}</div>`:''}${curto.length?`<div class="vl">${esc(curto.filter(s=>!/^(Hora|Turno|Situação|Tipo): /.test(s)||!['agend','evolucao'].includes(m.key)).join(' · '))}</div>`:''}
@@ -1248,7 +1248,7 @@ function dados(p){
 }
 /* ---------- documentos ---------- */
 const DOCS=[['receita','Receituário'],['precompra','Laudo de exame pré-compra'],['atestado','Atestado de saúde'],['termo_cir','Termo de consentimento (cirurgia / anestesia)'],['termo_int','Termo de internação'],['termo_euta','Termo de autorização para eutanásia'],['obito','Declaração de óbito'],['encam','Encaminhamento'],['orcamento','Orçamento'],['recibo','Recibo']];
-function cabec(){const c=S.cfg;return [c.clinica||'SAMVET',[c.vet,c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),[c.endc,c.cidade].filter(Boolean).join(' · '),[c.telc,c.emailc].filter(Boolean).join(' · ')].filter(Boolean).join('\n')}
+function cabec(){const c=S.cfg;return [c.clinica||'VetCamp',[c.vet,c.crmv?'CRMV '+c.crmv:''].filter(Boolean).join(' · '),[c.endc,c.cidade].filter(Boolean).join(' · '),[c.telc,c.emailc].filter(Boolean).join(' · ')].filter(Boolean).join('\n')}
 function identA(p){return `Animal: ${p.nome} · ${[p.especie,p.raca,p.sexo,p.pelagem,idade(p.nasc)].filter(Boolean).join(' · ')}${p.chip?'\nIdentificação: '+p.chip:''}${p.registro?' · Registro: '+p.registro:''}\nTutor: ${p.tutor||''}${p.cpf?' · CPF/CNPJ '+p.cpf:''}${p.tel?' · '+p.tel:''}${p.prop?'\nPropriedade: '+p.prop:''}${p.end?' · '+p.end:''}`}
 function assin(){const c=S.cfg;return `\n\n${c.cidade||'________________'}, ${new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}.\n\n\n_______________________________\n${c.vet||'Médico(a)-veterinário(a)'}${c.crmv?'\nCRMV '+c.crmv:''}`}
 const assTutor=p=>`\n\n_______________________________\n${p.tutor||'Tutor / responsável'}${p.cpf?'\nCPF/CNPJ '+p.cpf:''}`;
@@ -1296,7 +1296,7 @@ function anexos(p){
   const u=a=>blobSrc(a.assetId);
   const A=imgs.find(a=>a.id===S.cmpA)||imgs[imgs.length-1],B=imgs.find(a=>a.id===S.cmpB)||imgs[0];
   return `<div class="bar"><h3>Fotos, laudos e exames</h3>${assets?'<button class="btn pri sm" data-upload>+ Anexar arquivo</button>':''}</div>
-  <p class="hint">${assets?'Fotos de feridas, radiografias, laudos em PDF. Ficam guardados junto da ficha.':db?'Só quem tem acesso de edição ao SAMVET pode anexar arquivos.':'Anexos precisam do login: abra o SAMVET pelo link do Claude.'}</p>
+  <p class="hint">${assets?'Fotos de feridas, radiografias, laudos em PDF. Ficam guardados junto da ficha.':db?'Só quem tem acesso de edição ao VetCamp pode anexar arquivos.':'Anexos precisam do login: abra o VetCamp pelo link do Claude.'}</p>
   ${imgs.length>1?`<div class="box"><h3>Antes e depois</h3><div class="cmp"><div><select id="cmpA" aria-label="Foto de antes">${imgs.map(a=>`<option value="${esc(a.id)}"${a===A?' selected':''}>${br(a.data)} · ${esc(a.desc||a.nome)}</option>`).join('')}</select><img src="${u(A)}" alt="Antes"></div><div><select id="cmpB" aria-label="Foto de depois">${imgs.map(a=>`<option value="${esc(a.id)}"${a===B?' selected':''}>${br(a.data)} · ${esc(a.desc||a.nome)}</option>`).join('')}</select><img src="${u(B)}" alt="Depois"></div></div>${A&&B&&A.data&&B.data?`<p class="meta" style="margin:6px 0 0">${Math.abs(dias(B.data)-dias(A.data))} dia(s) entre as fotos</p>`:''}</div>`:''}
   ${l.length?`<div class="thumbs">${l.map(a=>`<div class="thumb">${/^image\//.test(a.tipo)?`<a href="${u(a)}" target="_blank" rel="noopener"><img src="${u(a)}" alt="${esc(a.desc||a.nome)}" loading="lazy"></a>`:`<a href="${u(a)}" target="_blank" rel="noopener" class="ph">PDF</a>`}<div class="t"><b>${esc(a.desc||a.nome)}</b><br><span class="meta">${br(a.data)}${a.regiao?' · '+esc(a.regiao):''}</span><br><div class="btns"><button class="btn sm ghost" data-anexoedit="${esc(a.id)}">Legenda</button><button class="btn sm ghost" data-rmanexo="${esc(a.id)}">Remover</button></div></div></div>`).join('')}</div>`:'<div class="empty"><p>Nenhum anexo.</p></div>'}`;
 }
@@ -1370,7 +1370,7 @@ function editarItem(p,key,id){
     if(key==='consultas'&&sel.value==='Atendimento a campo'&&p.km&&$('f_kmrod')&&!$('f_kmrod').value)$('f_kmrod').value=String(num(p.km)*2)})}
 }
 function textoFicha(p){
-  const L=[`${S.cfg.clinica||'SAMVET'} · FICHA CLÍNICA: ${p.nome}`];
+  const L=[`${S.cfg.clinica||'VetCamp'} · FICHA CLÍNICA: ${p.nome}`];
   for(const f of campos(F_PAC,p))if(f.k&&!vazio(p[f.k]))L.push(`${f.l}: ${f.k==='status'?stLabel(p.status):fmt(f,p[f.k])}`);
   for(const m of MODS.filter(m=>modVis(m,p))){const l=ord(p[m.key],m.dateK||'data');if(!l.length)continue;L.push('',m.titulo.toUpperCase());
     for(const it of l){L.push('— '+br(it[m.dateK||'data'])+' · '+(it[m.titleK]||''));for(const f of campos(m.f,p))if(f.k&&f.k!==(m.dateK||'data')&&f.k!==m.titleK&&!vazio(it[f.k]))L.push(`${f.l}: ${fmt(f,it[f.k])}`);if(it.aplic&&it.aplic.length)L.push('Aplicações: '+it.aplic.map(hora).join(', '))}}
@@ -1417,7 +1417,7 @@ $('fileimp').onchange=e=>{
     for(const o of (d.orcamentos||[])){if(o&&o.numero)salvarOrc({...o,id:o.id||uid()})}
     for(const it of (d.estoque||[])){if(it&&it.nome)salvarEst({...it,id:it.id||uid()})}
     if(d.config&&typeof d.config==='object')salvarCfg({...S.cfg,...d.config});
-    toast(n+' paciente(s) importado(s)')}catch(err){toast('Arquivo inválido. Use um backup .json do SAMVET.')}};r.readAsText(f);
+    toast(n+' paciente(s) importado(s)')}catch(err){toast('Arquivo inválido. Use um backup .json do VetCamp.')}};r.readAsText(f);
 };
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t||t.closest('#card')&&t.dataset.pick)return;const d=t.dataset;let p=cur();
@@ -1448,9 +1448,9 @@ document.addEventListener('click',e=>{
   else if('orcmais' in d){S.orcMais=1;render()}
   else if(d.orc){const o=S.orc.find(x=>x.id===d.orc);if(o)verOrc(o)}
   else if(d.orcf){S.orcF=d.orcf;render()}
-  else if('orccsv' in d)baixar(`samvet-orcamentos-${hoje()}.csv`,csvOrc(),'text/csv');
+  else if('orccsv' in d)baixar(`vetcamp-orcamentos-${hoje()}.csv`,csvOrc(),'text/csv');
   else if(d.orccli){const c=S.cli.find(x=>x.id===d.orccli);if(c)novoOrc({clienteId:c.id,cliente:c.nome,tel:c.tel||'',doc:c.doc||'',km:c.km?String(num(c.km)*2):''})}
-  else if('csv' in d)baixar(`samvet-lancamentos-${hoje()}.csv`,csvLanc(),'text/csv');
+  else if('csv' in d)baixar(`vetcamp-lancamentos-${hoje()}.csv`,csvLanc(),'text/csv');
   else if('reenviar' in d)reenviar();
   else if('protnovo' in d)editarProtocolo(null);
   else if(d.protedit)editarProtocolo(d.protedit);
@@ -1476,7 +1476,7 @@ document.addEventListener('click',e=>{
   else if('trocasenha' in d&&AUTH)AUTH.trocarSenha().then(m=>toast(m));
   else if('reverif' in d&&AUTH)AUTH.reenviar().then(m=>toast(m));
   else if('copylink' in d)copiar(LINK,'Link copiado');
-  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`samvet-backup-${hoje()}.json`,JSON.stringify({app:'SAMVET',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,orcamentos:S.orc,config:S.cfg},null,1),'application/json')}
+  else if('backup' in d){LS.set(PFX+'ultimo-backup',Date.now());baixar(`vetcamp-backup-${hoje()}.json`,JSON.stringify({app:'VetCamp',data:new Date().toISOString(),pacientes:S.pac,estoque:S.est,clientes:S.cli,orcamentos:S.orc,config:S.cfg},null,1),'application/json')}
   else if('importar' in d)$('fileimp').click();
   else if('back' in d){S.sel=null;render()}
   else if(d.tab&&p){S.tab=d.tab;render()}

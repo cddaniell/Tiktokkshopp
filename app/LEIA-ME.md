@@ -1,20 +1,20 @@
-# SAMVET · site próprio
+# VetCamp · site próprio
 
-O SAMVET roda em dois lugares, com o **mesmo código** (`samvet.html`):
+O VetCamp roda em dois lugares, com o **mesmo código** (`vetcamp.html`):
 
 | Onde | Login | Endereço |
 |---|---|---|
 | Dentro do Claude (artifact) | conta Claude | https://claude.ai/artifact/D2CL9WbAYCemogA4goCkSN |
-| Site próprio | e-mail e senha do próprio SAMVET | o seu domínio (ou `https://SEU-PROJETO.web.app`) |
+| Site próprio | e-mail e senha do próprio VetCamp | o seu domínio (ou `https://SEU-PROJETO.web.app`) |
 
-O script `scripts/build_app.py` gera o site (`app/public/index.html`) a partir do `samvet.html`.
-Toda mudança feita no SAMVET vale para os dois.
+O script `scripts/build_app.py` gera o site (`app/public/index.html`) a partir do `vetcamp.html`.
+Toda mudança feita no VetCamp vale para os dois.
 
 ## Configurar uma vez (cerca de 20 minutos)
 
 ### 1. Criar o projeto no Firebase
 1. Acesse https://console.firebase.google.com e entre com sua conta Google.
-2. **Adicionar projeto** → nome `samvet` → pode desligar o Google Analytics → **Criar projeto**.
+2. **Adicionar projeto** → nome `vetcamp` → pode desligar o Google Analytics → **Criar projeto**.
 
 ### 2. Ligar o login por e-mail
 1. No menu, **Criação › Authentication › Vamos começar**.
@@ -27,7 +27,7 @@ Toda mudança feita no SAMVET vale para os dois.
 
 ### 4. Registrar o site e copiar a configuração
 1. Engrenagem **⚙ › Configurações do projeto** → em "Seus apps", toque no ícone **</>** (Web).
-2. Apelido `samvet` → marque **Também configurar o Firebase Hosting** → **Registrar app**.
+2. Apelido `vetcamp` → marque **Também configurar o Firebase Hosting** → **Registrar app**.
 3. Copie o bloco `firebaseConfig` e **mande para o Claude**. Ele preenche o arquivo `app/public/firebase-config.js`.
    (Esses valores não são senhas: são feitos para ficar no site.)
 
@@ -36,9 +36,9 @@ Toda mudança feita no SAMVET vale para os dois.
    Guarde com cuidado: esse arquivo **é** uma senha.
 2. No GitHub, abra o repositório → **Settings › Secrets and variables › Actions › New repository secret**:
    - `FIREBASE_SERVICE_ACCOUNT` → cole **todo** o conteúdo do arquivo `.json`.
-   - `FIREBASE_PROJECT_ID` → o ID do projeto (aparece em Configurações do projeto, ex.: `samvet-1a2b3`).
+   - `FIREBASE_PROJECT_ID` → o ID do projeto (aparece em Configurações do projeto, ex.: `vetcamp-1a2b3`).
 3. Pronto: a cada mudança, o GitHub publica o site sozinho (aba **Actions** mostra o andamento).
-   Também dá para publicar na mão em **Actions › Publicar SAMVET › Run workflow**.
+   Também dá para publicar na mão em **Actions › Publicar VetCamp › Run workflow**.
 
 ### 6. (Opcional) Anexos de arquivos
 Fotos de perfil e dos animais já funcionam. Para anexar PDF e raio-X:
@@ -47,12 +47,12 @@ Fotos de perfil e dos animais já funcionam. Para anexar PDF e raio-X:
 3. Peça ao Claude para ligar `storage: true` no `firebase-config.js`.
 
 ### 7. (Opcional) Seu domínio
-1. Compre o domínio (ex.: `samvet.com.br` no https://registro.br).
+1. Compre o domínio (ex.: `vetcamp.com.br` no https://registro.br).
 2. Firebase → **Hosting › Adicionar domínio personalizado** → siga as instruções (copiar 2 registros para o registro.br).
 3. Em **Authentication › Configurações › Domínios autorizados**, confira se o domínio aparece.
 
-## Passar os dados do SAMVET do Claude para o site
-1. No SAMVET do Claude: **Conta › Baixar backup**.
+## Passar os dados do VetCamp do Claude para o site
+1. No VetCamp do Claude: **Conta › Baixar backup**.
 2. No site novo: crie a conta, vá em **Conta › Importar backup** e escolha o arquivo.
 Cada pessoa faz isso com a própria conta.
 

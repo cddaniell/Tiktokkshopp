@@ -1,7 +1,7 @@
-/* SAMVET · versão site próprio.
-   Liga o SAMVET ao Firebase (login por e-mail, banco Firestore, arquivos no Storage)
+/* VetCamp · versão site próprio.
+   Liga o VetCamp ao Firebase (login por e-mail, banco Firestore, arquivos no Storage)
    oferecendo a mesma interface window.claude.use(...) que o app usa dentro do Claude.
-   Assim o mesmo samvet.html roda nos dois lugares. */
+   Assim o mesmo vetcamp.html roda nos dois lugares. */
 (function(){
   'use strict';
   window.SAMVET_STANDALONE=true;
@@ -33,8 +33,8 @@
   #verifbar button{border:1px solid var(--line,#d8c1a2);background:var(--card,#fbf6ef);border-radius:8px;min-height:34px;padding:0 10px;font-weight:700;color:inherit}`;
   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
-  const tela=document.createElement('div');tela.id='auth';tela.setAttribute('role','dialog');tela.setAttribute('aria-label','Entrar no SAMVET');
-  tela.innerHTML=`<div class="ab"><div class="alogo" aria-hidden="true"></div><h1>SAMVET</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p>
+  const tela=document.createElement('div');tela.id='auth';tela.setAttribute('role','dialog');tela.setAttribute('aria-label','Entrar no VetCamp');
+  tela.innerHTML=`<div class="ab"><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p>
    <div class="tabs2" role="group" aria-label="Entrar ou criar conta"><button type="button" data-m="entrar" aria-pressed="true">Entrar</button><button type="button" data-m="criar" aria-pressed="false">Criar conta</button></div>
    <div class="msg" id="a_msg" role="status"></div>
    <form id="a_form" novalidate>
@@ -111,7 +111,7 @@
     b.querySelector('#vb_x').onclick=()=>b.remove();
   }
 
-  /* ---------- interface usada pelo SAMVET ---------- */
+  /* ---------- interface usada pelo VetCamp ---------- */
   const iniciais=n=>{const s=String(n||'?').trim().split(/\s+/);return((s[0]||'?')[0]+((s[1]||'')[0]||'')).toUpperCase()};
   const avatar=n=>'data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="32" fill="#965a27"/><text x="32" y="41" font-family="Arial" font-size="26" font-weight="700" fill="#fff" text-anchor="middle">${iniciais(n)}</text></svg>`)));
   const nomeDe=u=>u.displayName||String(u.email||'').split('@')[0];

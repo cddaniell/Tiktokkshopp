@@ -1,6 +1,6 @@
 {
-  "name": "SAMVET · Prontuário veterinário",
-  "short_name": "SAMVET",
+  "name": "VetCamp · Prontuário veterinário",
+  "short_name": "VetCamp",
   "description": "Prontuário veterinário para equinos, grandes e pequenos animais.",
   "lang": "pt-BR",
   "start_url": "./",

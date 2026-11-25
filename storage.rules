@@ -1,5 +1,5 @@
 rules_version = '2';
-// SAMVET: anexos e fotos ficam em users/<seu id>/...; só a própria pessoa envia e lê.
+// VetCamp: anexos e fotos ficam em users/<seu id>/...; só a própria pessoa envia e lê.
 service firebase.storage {
   match /b/{bucket}/o {
     match /users/{uid}/{arquivo=**} {
