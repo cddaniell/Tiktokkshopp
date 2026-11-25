@@ -931,7 +931,8 @@ function salvarCfgClin(c,msg,quiet){
   const K=chavesPessoais(),cli={...c};
   for(const k of K){delete cli[k];if(CLIN.cfg&&k in CLIN.cfg)cli[k]=CLIN.cfg[k]}
   const eu={...CLIN.eu};for(const k of K){if(c[k])eu[k]=c[k];else delete eu[k]}
-  const mudouEu=ordenado(eu)!==ordenado(CLIN.eu),mudouCli=ordenado(cli)!==ordenado(CLIN.cfg||{});
+  // enquanto os dados da clínica não chegaram do banco, só grava os dados pessoais
+  const mudouEu=ordenado(eu)!==ordenado(CLIN.eu),mudouCli=!!CLIN.cfgOk&&ordenado(cli)!==ordenado(CLIN.cfg||{});
   if(mudouCli&&CLIN.papel!=='dono'){toast('Só o dono da clínica altera os dados da clínica, os preços e os modelos.');S.cfg=cfgFinal(CLIN.cfg);if(!quiet)render();return}
   S.cfg=c;LS.set(PFX+'cache-config',c);
   const ps=[];
@@ -992,7 +993,7 @@ async function entrarEspaco(uid){
     const mudou=eu.papel!==CLIN.papel||!!eu.verFinanceiro!==!!CLIN.eu.verFinanceiro;
     CLIN.eu=eu;CLIN.papel=eu.papel;LS.set('vetcamp-espaco-'+uid,{cid:CLIN.cid,nome:CLIN.nome,eu});
     for(const x of CLIN.membros)nomesCache[x.uid]=nomeMembro(x);
-    if(CLIN.cfgOk)S.cfg=cfgFinal(CLIN.cfg);
+    S.cfg=CLIN.cfgOk?cfgFinal(CLIN.cfg):{...S.cfg,...pessoaisDe(eu)};
     if(mudou){aplicarPapel();if(!visOk(S.vis))S.vis='pac'}
     if(!$('sheet').classList.contains('on'))renderLogo();
   },e=>{if(e&&PERM.includes(e.code)){LS.set('vetcamp-espaco-'+uid,null);toast('Você não faz mais parte desta clínica. Voltando ao espaço pessoal…');setTimeout(()=>location.reload(),1500)}});
@@ -1021,6 +1022,7 @@ async function criarClinica(nome,copiar){
   const uid=meId(),cid=db.collection('clinicas').doc().id,agora=Date.now();
   const b=$('eqcriar');if(b){b.disabled=true;b.textContent='Criando…'}
   try{
+    try{const d=await cfgRef().get();if(d.exists)S.cfg={...d.data(),...S.cfg}}catch(e){}
     await db.doc('clinicas/'+cid).set({nome,dono:uid,criada:agora});
     await db.doc(`clinicas/${cid}/membros/${uid}`).set({uid,papel:'dono',nome:String(S.cfg.apelido||me.name||me.email||'Dono').slice(0,120),email:String(me.email||'').toLowerCase(),verFinanceiro:true,desde:agora,...meusPessoais()});
     await db.doc(`usuarios/${uid}/clinicas/${cid}`).set({nome,papel:'dono',desde:agora});
@@ -2378,7 +2380,7 @@ render();
   if(!db){
     S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.orc=LS.get('samvet-orcamentos',[]);S.desp=LS.get('samvet-despesas',[]);S.cfg=LS.get('samvet-config',{});
     note(window.__semId?'Não foi possível identificar sua conta neste link, então os dados ficam só neste aparelho. Peça a quem compartilhou para te convidar com acesso de edição.':'Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
-  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=LS.get(PFX+'cache-orcamentos',[]);S.desp=LS.get(PFX+'cache-despesas',[]);S.cfg=LS.get(PFX+'cache-config',{});render();
+  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=LS.get(PFX+'cache-orcamentos',[]);S.desp=LS.get(PFX+'cache-despesas',[]);S.cfg=LS.get(PFX+'cache-config',{});if(CLIN)S.cfg={...S.cfg,...pessoaisDe(CLIN.eu)};render();
   note(S.pac.length?'Mostrando os dados salvos neste aparelho enquanto conecta…':'Carregando pacientes…');
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
