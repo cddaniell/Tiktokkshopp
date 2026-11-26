@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-y261ey8LPEttnkQK9HK/Nbc0Kd42S72XwUB6h7C92fQ=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-w5MVmaxwZAeB7KzQnvyZpLHfKo4ANqnUmwnz0IGlCVw=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -1543,9 +1543,11 @@ const orcValidade=o=>addD(o.data||hoje(),+o.validade||15);
 const orcStatus=o=>(o.status==='Enviado'||o.status==='Rascunho')&&dias(orcValidade(o))<0?'Vencido':o.status||'Rascunho';
 const ORC_COR={Rascunho:'obito',Enviado:'acompanhamento',Aprovado:'alta',Recusado:'internado',Vencido:'tratamento'};
 function orcTotais(o){
-  const its=(o.itens||[]).filter(i=>i.desc);const sub=its.reduce((s,i)=>s+num(i.qtd||1)*num(i.unit),0);
-  const desc=o.descTipo==='%'?sub*num(o.descValor)/100:num(o.descValor);
-  const km=num(o.km)*num(o.kmval!==undefined&&o.kmval!==''?o.kmval:S.cfg.kmval);
+  // nada negativo: quantidade, preço, desconto (até 100%) e km
+  const pos=v=>Math.max(0,num(v));
+  const its=(o.itens||[]).filter(i=>i.desc);const sub=its.reduce((s,i)=>s+pos(i.qtd||1)*pos(i.unit),0);
+  const desc=o.descTipo==='%'?sub*Math.min(100,pos(o.descValor))/100:pos(o.descValor);
+  const km=pos(o.km)*pos(o.kmval!==undefined&&o.kmval!==''?o.kmval:S.cfg.kmval);
   return{its,sub,desc:Math.min(desc,sub),km,total:Math.max(0,sub-Math.min(desc,sub)+km)};
 }
 function proxNumOrc(){const ano=hoje().slice(0,4);const n=S.orc.map(o=>String(o.numero||'')).filter(x=>x.startsWith('ORC-'+ano)).map(x=>+x.split('-')[2]||0);return `ORC-${ano}-${String((n.length?Math.max(...n):0)+1).padStart(4,'0')}`}
@@ -1579,7 +1581,7 @@ function novoOrc(pre={}){
 function orcDePaciente(p){const c=cliDe(p);return{pacienteId:p.id,animal:p.nome+(p.especie?' ('+[p.especie,p.raca].filter(Boolean).join(', ')+')':''),clienteId:c?c.id:'',cliente:c?c.nome:(p.tutor||''),tel:c?c.tel:(p.tel||''),doc:c?c.doc:(p.cpf||''),km:(p.km||c&&c.km)?String(num(p.km||c.km)*2):''}}
 function editarOrc(o0,novo){
   const o=JSON.parse(JSON.stringify(o0));const cat=catalogo();
-  const linha=(i,k)=>`<div class="oline" data-k="${k}"><input data-f="desc" list="dl_cat" placeholder="Serviço, exame, medicamento…" aria-label="Descrição do item" value="${esc(i.desc||'')}"><input data-f="qtd" type="number" step="any" min="0" inputmode="decimal" aria-label="Quantidade" value="${esc(i.qtd||'1')}"><input data-f="unit" type="number" step="any" min="0" inputmode="decimal" placeholder="R$" aria-label="Valor unitário" value="${esc(i.unit||'')}"><span class="otot tnum"></span><button type="button" class="x" data-rmi="${k}" aria-label="Remover item">×</button></div>`;
+  const linha=(i,k)=>`<div class="oline" data-k="${k}"><input data-f="desc" list="dl_cat" placeholder="Serviço, exame, medicamento…" aria-label="Descrição do item" value="${esc(i.desc||'')}"><input data-f="qtd" type="number" min="0" step="any" min="0" inputmode="decimal" aria-label="Quantidade" value="${esc(i.qtd||'1')}"><input data-f="unit" type="number" min="0" step="any" min="0" inputmode="decimal" placeholder="R$" aria-label="Valor unitário" value="${esc(i.unit||'')}"><span class="otot tnum"></span><button type="button" class="x" data-rmi="${k}" aria-label="Remover item">×</button></div>`;
   const pacs=[...S.pac].sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
   $('card').innerHTML=`<h2>${novo?'Novo orçamento':'Editar orçamento'} · ${esc(o.numero)}</h2>
   <div class="f">
@@ -1590,15 +1592,15 @@ function editarOrc(o0,novo){
    <div class="fld h"><label for="o_doc">CPF / CNPJ</label><input id="o_doc" value="${esc(o.doc||'')}"></div>
    <div class="fld h"><label for="o_animal">Animal(is)</label><input id="o_animal" value="${esc(o.animal||'')}" placeholder="Ex.: Trovão e Estrela"></div>
    <div class="fld h"><label for="o_data">Data</label><input id="o_data" type="date" value="${esc(o.data)}"></div>
-   <div class="fld h"><label for="o_val">Validade (dias)</label><input id="o_val" type="number" min="1" inputmode="numeric" value="${esc(o.validade)}"></div>
+   <div class="fld h"><label for="o_val">Validade (dias)</label><input id="o_val" type="number" min="0" min="1" inputmode="numeric" value="${esc(o.validade)}"></div>
    <h3 class="sec">Itens</h3>
    <div class="fld"><datalist id="dl_cat">${cat.map(c=>`<option value="${esc(c.nome)}">${esc(c.g)} · ${R$(c.valor)}</option>`).join('')}</datalist>
     <div class="ohead"><span>Descrição</span><span>Qtd.</span><span>Valor unit.</span><span>Total</span><span></span></div>
     <div id="o_itens">${(o.itens||[]).map(linha).join('')}</div>
     <div class="btns" style="margin-top:8px"><button type="button" class="btn sm" id="o_add">+ Item</button>${cat.length?`<select id="o_tab" class="minp" aria-label="Adicionar da tabela de preços"><option value="">+ Da tabela de preços…</option>${[...new Set(cat.map(c=>c.g))].map(g=>`<optgroup label="${esc(g)}">${cat.map((c,i)=>c.g===g?`<option value="${i}">${esc(c.nome)} · ${R$(c.valor)}</option>`:'').join('')}</optgroup>`).join('')}</select>`:'<span class="meta">Preencha a aba Preços para escolher itens prontos.</span>'}</div></div>
    <h3 class="sec">Totais</h3>
-   <div class="fld h"><label for="o_dv">Desconto</label><div class="addrow" style="margin:0"><select id="o_dt" aria-label="Tipo de desconto"><option${o.descTipo==='R$'?' selected':''}>R$</option><option${o.descTipo==='%'?' selected':''}>%</option></select><input id="o_dv" type="number" step="any" min="0" inputmode="decimal" value="${esc(o.descValor||'')}"></div></div>
-   <div class="fld h"><label for="o_km">Deslocamento (km) <span class="meta">${num(S.cfg.kmval)?R$(S.cfg.kmval)+'/km':'defina o valor do km em Preços'}</span></label><input id="o_km" type="number" step="any" min="0" inputmode="decimal" value="${esc(o.km||'')}"></div>
+   <div class="fld h"><label for="o_dv">Desconto</label><div class="addrow" style="margin:0"><select id="o_dt" aria-label="Tipo de desconto"><option${o.descTipo==='R$'?' selected':''}>R$</option><option${o.descTipo==='%'?' selected':''}>%</option></select><input id="o_dv" type="number" min="0" step="any" min="0" inputmode="decimal" value="${esc(o.descValor||'')}"></div></div>
+   <div class="fld h"><label for="o_km">Deslocamento (km) <span class="meta">${num(S.cfg.kmval)?R$(S.cfg.kmval)+'/km':'defina o valor do km em Preços'}</span></label><input id="o_km" type="number" min="0" step="any" min="0" inputmode="decimal" value="${esc(o.km||'')}"></div>
    <div class="fld"><div class="ototais" id="o_tot"></div></div>
    <div class="fld"><label for="o_cond">Condições de pagamento</label><textarea id="o_cond">${esc(o.cond||'')}</textarea></div>
    <div class="fld"><label for="o_obs">Observações</label><textarea id="o_obs" placeholder="Ex.: valores de medicação podem variar conforme a resposta ao tratamento.">${esc(o.obs||'')}</textarea></div>
@@ -1606,9 +1608,9 @@ function editarOrc(o0,novo){
   </div>
   <div class="acts">${novo?'':'<button type="button" class="btn ghost del" id="del">Excluir</button>'}<button type="button" class="btn" id="cancel">Cancelar</button><button type="button" class="btn" id="o_save">Salvar</button><button type="button" class="btn pri" id="o_pdf">Salvar e gerar PDF</button></div>`;
   $('sheet').classList.add('on');$('card').scrollTop=0;
-  const ler=()=>{const its=[...$('o_itens').querySelectorAll('.oline')].map(r=>{const x={};r.querySelectorAll('[data-f]').forEach(e=>x[e.dataset.f]=e.value.trim());return x});
+  const ler=()=>{const its=[...$('o_itens').querySelectorAll('.oline')].map(r=>{const x={};r.querySelectorAll('[data-f]').forEach(e=>x[e.dataset.f]=e.value.trim());for(const k of ['qtd','unit'])if(x[k]&&num(x[k])<0)x[k]='0';return x});
     return{...o,clienteId:$('o_cli').value,pacienteId:$('o_pac').value,cliente:$('o_cliente').value.trim(),tel:$('o_tel').value.trim(),doc:$('o_doc').value.trim(),animal:$('o_animal').value.trim(),data:$('o_data').value||hoje(),validade:$('o_val').value||'15',itens:its,descTipo:$('o_dt').value,descValor:$('o_dv').value.trim(),km:$('o_km').value.trim(),kmval:num(S.cfg.kmval)?String(S.cfg.kmval):'',cond:$('o_cond').value.trim(),obs:$('o_obs').value.trim(),status:$('o_st').value}};
-  const calc=()=>{const x=ler(),t=orcTotais(x);$('o_itens').querySelectorAll('.oline').forEach(r=>{const q=num(r.querySelector('[data-f=qtd]').value||1),u=num(r.querySelector('[data-f=unit]').value);r.querySelector('.otot').textContent=r.querySelector('[data-f=desc]').value.trim()?R$(q*u):''});
+  const calc=()=>{const x=ler(),t=orcTotais(x);$('o_itens').querySelectorAll('.oline').forEach(r=>{const q=Math.max(0,num(r.querySelector('[data-f=qtd]').value||1)),u=Math.max(0,num(r.querySelector('[data-f=unit]').value));r.querySelector('.otot').textContent=r.querySelector('[data-f=desc]').value.trim()?R$(q*u):''});
     $('o_tot').innerHTML=`<div><span>Subtotal</span><b class="tnum">${R$(t.sub)}</b></div>${t.desc?`<div><span>Desconto${x.descTipo==='%'?' ('+esc(x.descValor)+'%)':''}</span><b class="tnum">− ${R$(t.desc)}</b></div>`:''}${t.km?`<div><span>Deslocamento (${esc(x.km)} km)</span><b class="tnum">${R$(t.km)}</b></div>`:''}<div class="otg"><span>Total</span><b class="tnum">${R$(t.total)}</b></div>`};
   const bind=()=>{$('o_itens').querySelectorAll('[data-f=desc]').forEach(inp=>{inp.oninput=inp.onchange=()=>{const c=cat.find(z=>z.nome===inp.value.trim());const u=inp.closest('.oline').querySelector('[data-f=unit]');if(c&&!u.value)u.value=c.valor;calc()}});
     $('o_itens').querySelectorAll('input[type=number]').forEach(n=>n.onfocus=()=>{try{n.select()}catch(e){}});
@@ -2164,7 +2166,7 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
     else if(f.t==='regioes'||f.t==='triadan')inp=campoEspecial(f,v,id);
     else if(f.t==='checks')inp=`<div class="ck" id="${id}">${f.o.map(o=>`<label><input type="checkbox" value="${esc(o)}"${(Array.isArray(v)?v:[]).includes(o)?' checked':''}>${esc(o)}</label>`).join('')}</div>`;
     else{const lst=f.listEst?S.est.map(x=>x.nome):typeof f.list==='function'?f.list(p):f.list;
-      inp=`<input id="${id}" type="${f.t||'text'}" ${f.t==='number'?'step="any" inputmode="decimal"':''} value="${esc(v)}"${lst&&lst.length?` list="dl_${f.k}"`:''}>${lst&&lst.length?`<datalist id="dl_${f.k}">${lst.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:''}`}
+      inp=`<input id="${id}" type="${f.t||'text'}" ${f.t==='number'?'step="any" min="0" inputmode="decimal"':''} value="${esc(v)}"${lst&&lst.length?` list="dl_${f.k}"`:''}>${lst&&lst.length?`<datalist id="dl_${f.k}">${lst.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:''}`}
     const hint=f.hint2||(f.hint?(f.hint.eq&&spOk('eq',p)?f.hint.eq:f.hint.rum&&spOk('rum',p)?f.hint.rum:''):'');
     return `<div class="fld${f.h?' h':''}"><label for="${id}">${f.l}${f.req?' *':''}${hint?` <span class="meta">${hint}</span>`:''}${f.t==='ta'?`<span class="lbtns"><button type="button" class="mic" data-modelos="${id}">Modelos</button>${dict?`<button type="button" class="mic" data-mic="${id}">Ditar</button>`:''}</span>`:''}</label>${inp}</div>`};
   $('card').innerHTML=`<h2>${esc(titulo)}</h2><form id="frm" novalidate><div class="f">${fs.map(fld).join('')}</div><div class="acts">${onDel?'<button type="button" class="btn ghost del" id="del">Excluir</button>':''}<button type="button" class="btn" id="cancel">Cancelar</button><button class="btn pri">Salvar</button></div></form>`;
@@ -2177,6 +2179,7 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
   let salvando=false;
   $('frm').onsubmit=e=>{e.preventDefault();if(salvando)return;const o=ler();
     const falta=fs.find(f=>f.req&&!o[f.k]);if(falta){toast('Preencha: '+falta.l);$('f_'+falta.k).focus();return}
+    const neg=fs.find(f=>f.t==='number'&&o[f.k]!==''&&o[f.k]!=null&&(num(o[f.k])<0||!isFinite(parseFloat(String(o[f.k]).replace(',','.')))));if(neg){toast(neg.l.replace(/ \(.*\)$/,'')+': use um número positivo');$('f_'+neg.k).focus();return}
     salvando=true;const t0=Date.now();onSave(o);fechar();if(lastToast<t0)toast('Salvo')};
 }
 let formSujo=false;

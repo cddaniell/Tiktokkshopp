@@ -139,6 +139,16 @@ service cloud.firestore {
       allow create, update: if dono(uid) && request.resource.data.keys().hasOnly(['nome', 'papel', 'desde']);
     }
 
+    // plano e assinatura de cada conta: a pessoa só lê. Quem grava é o servidor, depois que a
+    // empresa de pagamento confirma o pagamento (Pix falso, preço trocado ou cupom repetido não liberam nada)
+    match /planos/{uid} {
+      allow read: if dono(uid);
+      allow write: if false;
+    }
+    match /cupons/{codigo} {
+      allow read, write: if false;
+    }
+
     // qualquer outro caminho fica fechado
     match /{caminho=**} {
       allow read, write: if false;

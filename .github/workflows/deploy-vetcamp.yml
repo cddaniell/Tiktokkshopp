@@ -25,6 +25,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: Procurar senhas e chaves esquecidas no código
+        # trava a publicação se aparecer chave privada, chave do Brevo, Asaas, Stripe, AWS ou GitHub
+        run: |
+          PADRAO='-----BEGIN [A-Z ]*PRIVATE KEY|"private_key"[[:space:]]*:|xkeysib-[a-z0-9]{20,}|\$aact_[A-Za-z0-9]{10,}|sk_live_[0-9A-Za-z]{10,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}'
+          if grep -rIlE --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.github -e "$PADRAO" .; then
+            echo "::error::Encontrei algo parecido com senha ou chave nos arquivos acima. Tire do código e guarde nos segredos do GitHub."
+            exit 1
+          fi
+          echo "Nenhuma senha ou chave encontrada no código."
       - name: Conferir segredos
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

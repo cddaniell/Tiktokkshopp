@@ -131,6 +131,30 @@ Já ativo no site (gratuito):
 - **Sem segredos no código**: nenhuma chave privada no repositório nem no histórico. As chaves ficam só nos segredos do GitHub.
 - **No app**: gravações seguidas do mesmo registro viram uma só, proteção contra clique duplo, tela redesenhada em lote, lista de pacientes em páginas de 80, pausa progressiva após 5 senhas erradas, limites de tamanho em anexos e backups.
 
+## Os 14 ataques mais comuns em sites feitos com IA (testados no VetCamp)
+O teste `t23` ataca o site no simulador com cada truque. Resultado: 43 de 43 bloqueados.
+
+| # | Ataque | Como o VetCamp se protege |
+|---|---|---|
+| 1 | Digitar /admin | Não existe painel escondido. /admin, /.env, /.git, regras e código-fonte respondem 404 |
+| 2 | Trocar o ID na URL | O acesso é decidido no banco pela conta logada. Trocar o ID de outra pessoa ou clínica é recusado |
+| 3 | Chave de API no navegador | A chave do Firebase é pública por natureza e não dá acesso a nada sozinha (as regras mandam). Brevo e Asaas ficam só no servidor, nos segredos do GitHub. Falta você restringir a chave ao domínio (abaixo) |
+| 4 | Mudar o preço | Valores negativos são recusados; desconto limitado a 100%. O preço dos planos pagos será definido no servidor, nunca pelo navegador |
+| 5 | Comprar −1 item | Quantidade negativa é recusada no formulário e zerada no orçamento |
+| 6 | Fingir o Pix pago | O plano só é liberado pelo servidor depois que a empresa de pagamento confirma. O navegador não consegue gravar "pago" (`planos/` é só leitura) |
+| 7 | Cupom 100 vezes | Cupons só existem no servidor (`cupons/` fechado para o navegador) |
+| 8 | Premium sem pagar | Ninguém se dá plano: `planos/` só o servidor grava |
+| 9 | Admin no cadastro | Papel de dono só para quem criou a clínica; convite exige e-mail confirmado e o mesmo papel; campos extras ("admin") recusados |
+| 10 | Adivinhar o código | IDs aleatórios; convite só abre com o e-mail da pessoa; pausa após 5 senhas erradas |
+| 11 | Mandar a IA ignorar | O VetCamp não usa IA por dentro, então não há o que enganar. Se um dia usar, o texto dos pacientes entra como dado, nunca como ordem |
+| 12 | Script no usuário (XSS) | Política de conteúdo com hash + tudo escapado. Teste com código malicioso em 139 tipos de campo: nada executa |
+| 13 | Senhas no GitHub | Nenhuma no repositório nem no histórico; a publicação trava sozinha se aparecer uma chave no código |
+| 14 | Abrir teu banco de dados | Sem login nada abre; logado, cada um só vê o seu ou o da sua clínica; buscar "todos os pacientes" é recusado |
+
+### O que você precisa fazer para fechar os itens 3 e 13 (grátis)
+- **Restringir a chave do Firebase ao seu site:** https://console.cloud.google.com/apis/credentials?project=vetcamp-1704e → abra a "Browser key" → **Restrições de aplicativos: Sites** → adicione `https://vetcamp.web.app/*`, `https://vetcamp-1704e.web.app/*` e `https://vetcamp-1704e.firebaseapp.com/*` → Salvar. Depois teste o login. Se algo parar, remova a restrição e me avise.
+- **Proteção de push do GitHub:** no repositório, **Settings › Code security** → ligue **Secret scanning** e **Push protection** (se aparecerem para o seu plano). Assim o próprio GitHub recusa um envio com senha.
+
 ## O que depende de você (gratuito, só configurar)
 1. **Alerta de orçamento no Google Cloud** (recomendado): https://console.cloud.google.com/billing → Orçamentos e alertas → crie um orçamento de, por exemplo, R$ 20 com alerta por e-mail. Se algo estranho gerar uso, você fica sabendo na hora.
 2. **Proteção contra enumeração de e-mail**: Firebase › Authentication › Configurações › marque *Proteção contra enumeração de e-mails*.
