@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-w5MVmaxwZAeB7KzQnvyZpLHfKo4ANqnUmwnz0IGlCVw=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-Bc1CPQ7469QAaoSXZFGUqzeG/0p8aFcyg1iXAFi10jA=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -60,6 +60,19 @@ a{color:inherit}
 .who{display:inline-flex;align-items:center;gap:8px;border:1px solid color-mix(in srgb,var(--barink) 35%,transparent);background:transparent;color:var(--barink);border-radius:99px;padding:4px 12px 4px 4px;min-height:40px;font-size:14px;font-weight:700}
 .who img{width:30px;height:30px;border-radius:50%;flex:none}
 .who .wn{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.perfis{display:grid;gap:12px;margin:12px 0}
+.perfil-op{display:grid;gap:6px;text-align:left;padding:18px;border:2px solid var(--line);border-radius:16px;background:var(--card);color:inherit;font:inherit;cursor:pointer}
+.perfil-op:hover,.perfil-op:focus-visible{border-color:var(--act)}.perfil-op.atual{border-color:var(--act);background:color-mix(in srgb,var(--act) 8%,var(--card))}
+.perfil-op .ic{font-size:34px;line-height:1}.perfil-op b{font-size:19px}.perfil-op span{color:var(--mute)}.perfil-op em{font-style:normal;font-weight:700;color:var(--act);font-size:13px}
+@media(min-width:700px){.perfis{grid-template-columns:1fr 1fr}}
+.alimb{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
+.mini4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.mini4>div{display:grid;gap:2px;background:var(--bg);border-radius:10px;padding:8px}.mini4 b{font-size:16px}.mini4 span{font-size:12px;color:var(--mute)}
+.item.alim.falta{border-color:var(--warn)}
+.count.ctxt b{font-size:17px;line-height:1.25}
+.barra{display:block;height:6px;border-radius:3px;margin-top:4px;background:linear-gradient(90deg,var(--act) var(--w),color-mix(in srgb,var(--act) 12%,transparent) var(--w))}
+.lnk2{border:0;background:none;padding:0;color:var(--act);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;text-align:left}
+.ag .lem{display:flex;gap:12px;align-items:center;flex:1;min-width:0}
+body.prop :is([data-vis=caixa],[data-vis=orc],[data-vis=precos],[data-vis=ferr],[data-vis=intern],.soadmin,.sopresc,[data-rapido],[data-orcpac],[data-protapl],[data-tab=fin],.fichafin,[data-gerdoc]){display:none!important}
 .who .espchip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--act,#2b6);color:#fff;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .espaco{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#ddd4)}.espaco.atual b{color:var(--act)}
 body.sem-fin :is(.fichafin,[data-tab=fin],[data-vis=caixa],[data-vis=relat],[data-pixpac],[data-despnova],[data-socios],[data-cortesia],[data-gerdoc=orcamento],[data-quick],[data-csv]){display:none!important}
@@ -770,9 +783,9 @@ function rodapeFin(p){
   ${r.ab?`<div class="btns" style="margin-top:10px">${waLink(p.tel,`Olá, ${p.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Resumo de ${p.nome}:\n${(p.fin||[]).filter(x=>saldo(x)>0).map(x=>`• ${br(x.data)} ${x.desc}: ${R$(saldo(x))}`).join('\n')}\nTotal em aberto: ${R$(r.ab)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`)}<button class="btn sm pri" data-pixpac>Cobrar com Pix</button><button class="btn sm" data-gerdoc="orcamento">Gerar cobrança</button><button class="btn sm" data-socios>${p.socios&&p.socios.length>1?'Editar divisão':'Dividir entre responsáveis'}</button></div>${rateioHtml(p,r.ab)}`:''}`
   :'<p class="meta" style="margin:0">Nenhum valor lançado ainda. Preencha o campo Valor em qualquer registro (consulta, medicação, vacina, casco, exame…) ou defina a aba Preços para o valor entrar sozinho.</p>'}</section>`;
 }
-const modVis=(m,p)=>spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
+const modVis=(m,p)=>(!m.modo||m.modo===MODO)&&spOk(m.sp,p)&&(!m.fem||p.sexo==='Fêmea')&&(!m.show||m.show(p)||(p[m.key]||[]).length);
 const VALORK=['valor','valorAplic','kmrod'];
-const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p)&&(!CLIN||pode('financeiro')||!(VALORK.includes(f.k)||f.sec==='Valor')));
+const campos=(fs,p)=>fs.filter(f=>spOk(f.sp,p)&&(!f.modo||f.modo===MODO)&&(!f.show||f.show(p||{}))&&!(PROP()&&!f.sempre&&(VALORK.includes(f.k)||f.sec==='Valor'))&&(!CLIN||pode('financeiro')||!(VALORK.includes(f.k)||f.sec==='Valor')));
 const saldo=x=>x.sit==='Orçamento'?0:Math.max(0,num(x.total)-num(x.pago));
 
 const note=(t,btn)=>{$('note').innerHTML=t?`<span>${esc(t)}</span>${btn||''}`:'';$('note').classList.toggle('on',!!t)};
@@ -863,7 +876,8 @@ const errMsg=e=>e&&['invalid_argument','permission-denied','invalid-argument'].i
 const COLS={pacientes:'pac',estoque:'est',clientes:'cli',orcamentos:'orc',despesas:'desp'};
 const colRef=c=>db.collection(BASE+'/'+c);
 const cfgRef=()=>db.doc(BASE+'/config/clinica');
-const lsKey=col=>col==='pacientes'?'prontuario-vet':'samvet-'+col;
+const lsKey=col=>PROP()?'vetcamp-fz-'+col:col==='pacientes'?'prontuario-vet':'samvet-'+col;
+const cfgLsKey=()=>PROP()?'vetcamp-fz-config':'samvet-config';
 const PERM=['invalid_argument','quota_exceeded','revoked','not_granted','permission_denied','permission-denied','invalid-argument','unauthenticated'];
 function pendentes(){return LS.get(PFX+'pendentes',[])}
 function enfileirar(op){semRede=true;const l=pendentes().filter(x=>!(x.col===op.col&&x.id===op.id));l.push(op);LS.set(PFX+'pendentes',l);avisoPend()}
@@ -911,7 +925,7 @@ function apagar(col,id){
 }
 const salvar=p=>gravar('pacientes',syncFin(vincCli(p)),S.pac);
 const salvarEst=it=>gravar('estoque',it,S.est);
-function salvarCfg(c,msg='Dados da clínica salvos',quiet){if(CLIN)return salvarCfgClin(c,msg,quiet);S.cfg=c;if(!db){LS.set('samvet-config',c);if(!quiet)render();toast(msg);return}LS.set(PFX+'cache-config',c);cfgRef().set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
+function salvarCfg(c,msg='Dados da clínica salvos',quiet){if(CLIN)return salvarCfgClin(c,msg,quiet);S.cfg=c;if(!db){LS.set(cfgLsKey(),c);if(!quiet)render();toast(msg);return}LS.set(PFX+'cache-config',c);cfgRef().set(c).then(()=>toast(msg)).catch(e=>toast(errMsg(e)));if(!quiet)render()}
 
 /* ---------- equipe / clínica (só no site próprio) ---------- */
 /* Espaço pessoal: data/users/<id>/samvet. Clínica: clinicas/<cid>/app/samvet, com papéis conferidos também nas regras do banco. */
@@ -933,7 +947,7 @@ function pode(a){
     orcamentos:p!=='estagiario',prescrever:vet,excluir:vet,clinico:p!=='financeiro',estoque:p!=='financeiro',estoqueCad:vet}[a];
   return !!r;
 }
-const visOk=k=>({caixa:pode('financeiro'),relat:pode('financeiro'),orc:pode('orcamentos'),precos:pode('admin'),estoque:pode('estoque')})[k]!==false;
+const visOk=k=>(PROP()?VIEWS_PROP:VIEWS).some(v=>v[0]===k)&&({caixa:pode('financeiro'),relat:pode('financeiro'),orc:pode('orcamentos'),precos:pode('admin'),estoque:pode('estoque')})[k]!==false;
 function pessoaisDe(eu){
   const o={};if(!eu)return o;
   for(const k of chavesPessoais())o[k]=eu[k]||'';
@@ -1128,7 +1142,7 @@ function renderNav(){
   const n={agenda:S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=0&&x.tab!=='fin').length,
     intern:S.pac.filter(p=>p.status==='internado').length,
     estoque:S.est.filter(estAlerta).length,conta:CONVITES.length};
-  $('nav').innerHTML=VIEWS.filter(([k])=>visOk(k)).map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
+  $('nav').innerHTML=(PROP()?VIEWS_PROP:VIEWS).filter(([k])=>visOk(k)).map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
 }
 let renderTimer=null;
 function renderLogo(){if(renderTimer)return;renderTimer=setTimeout(()=>{renderTimer=null;render()},60)}
@@ -1137,7 +1151,9 @@ function render(){
   renderNav();renderWho();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
   if(p)return renderFicha(p);
-  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,orc:renderOrcamentos,clientes:renderClientes,relat:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta})[S.vis]();
+  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,orc:renderOrcamentos,clientes:PROP()?renderPessoas:renderClientes,relat:PROP()?renderRelatProp:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta,trato:renderTrato,gastos:renderGastos})[S.vis]();
+  if(PROP()&&S.vis==='agenda'){const b=$('view').querySelector('.bar');if(b)b.insertAdjacentHTML('afterend',lembretesHtml())}
+  if(PROP()&&S.vis==='relat'&&$('rel_mes'))$('rel_mes').onchange=e=>{S.relMes=e.target.value||hoje().slice(0,7);render()};
 }
 const fotoOk=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
 const avatar=p=>fotoOk(p.foto)?`<span class="av"><img src="${p.foto}" alt="Foto de ${esc(p.nome)}"></span>`:`<span class="av">${esc((p.especie||'?').slice(0,2))}</span>`;
@@ -1158,7 +1174,7 @@ function renderLista(){
   if(list.length>(S.limPac||80))rows+=`<button class="btn" data-maispac style="width:100%;margin-top:4px">Mostrar mais ${Math.min(80,list.length-(S.limPac||80))} de ${list.length-(S.limPac||80)} restantes</button>`;
   const hj=new Date(),hr=hj.getHours(),nm=(S.cfg.apelido||me&&me.name||S.cfg.vet||'').split(' ')[0];
   const nAg=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').length,nInt=S.pac.filter(p=>p.status==='internado').length;
-  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>${CLIN?`Equipe · você entra como <b>${PAPEIS[CLIN.papel]}</b>`:'Prontuário veterinário · equinos, grandes e pequenos animais'}</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''} · ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${(()=>{const h=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').sort((a,b)=>String(a.h||'99').localeCompare(String(b.h||'99'))).slice(0,5);return h.length?`<div class="hojel">${h.map(x=>`<button class="hj" data-id="${esc(x.p.id)}" data-gotab="${esc(x.tab)}"><b>${esc(x.h||'—')}</b><span>${esc(x.p.nome)} · ${esc(x.txt)}</span></button>`).join('')}</div>`:''})()}<p><button class="btn pri sm" data-rapido>Atendimento rápido</button></p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
+  const capa=`<div class="capa"><span class="logo" role="img" aria-label="Logo VetCamp"></span><div><h2>${esc(S.cfg.clinica||'VetCamp')}</h2><p>${PROP()?'Gestão do haras · animais, alimentação, gastos e lembretes':CLIN?`Equipe · você entra como <b>${PAPEIS[CLIN.papel]}</b>`:'Prontuário veterinário · equinos, grandes e pequenos animais'}</p><p class="hoje">${fotoPerfil()?`<img class="mini" src="${fotoPerfil()}" alt="">`:''}${hr<12?'Bom dia':hr<18?'Boa tarde':'Boa noite'}${nm?', '+esc(nm):''} · ${hj.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})} · ${nAg} pendência(s) hoje · ${nInt} internado(s)</p>${(()=>{const h=S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)===0&&x.tab!=='fin').sort((a,b)=>String(a.h||'99').localeCompare(String(b.h||'99'))).slice(0,5);return h.length?`<div class="hojel">${h.map(x=>`<button class="hj" data-id="${esc(x.p.id)}" data-gotab="${esc(x.tab)}"><b>${esc(x.h||'—')}</b><span>${esc(x.p.nome)} · ${esc(x.txt)}</span></button>`).join('')}</div>`:''})()}<p><button class="btn pri sm" data-rapido>Atendimento rápido</button></p>${S.pac.length&&Date.now()-LS.get(PFX+'ultimo-backup',0)>14*864e5?`<p><button class="btn sm" data-vis="conta">Fazer backup</button> <span class="meta">faz mais de 14 dias sem backup</span></p>`:''}</div></div>`;
   $('view').innerHTML=capa+`<div class="counts">${[['todos','Ativos'],['grandes','Grandes animais'],...STATUS].map(([k,l])=>`<button class="count" data-f="${k}" aria-pressed="${S.filtro===k}" style="${STATUS.some(s=>s[0]===k)?'color:var(--s-'+k+')':''}"><b>${S.pac.filter(p=>inF(p,k)).length}</b><span>${l}</span></button>`).join('')}</div>
   <input class="search" id="q" type="search" placeholder="Buscar animal, tutor, haras, raça, registro, microchip ou treinador" aria-label="Buscar paciente" value="${esc(S.q)}">
   <div id="rows">${rows}</div>`;
@@ -1211,7 +1227,7 @@ function renderCaixa(){
   <div class="bar"><h3>Lançamentos</h3><div class="chips" style="margin:0">${[['pend','Em aberto'],['mes','Este mês'],['todos','Todos']].map(([k,l])=>`<button class="btn sm${S.finF===k?' pri':''}" data-finf="${k}">${l}</button>`).join('')}</div></div>
   ${ordL.length?`<div class="tw"><table><tr><th>Data</th><th>Paciente</th><th>Descrição</th><th class="n">Total</th><th class="n">Saldo</th><th></th></tr>${ordL.map(({f,p})=>`<tr><td>${br(f.data)}</td><td>${esc(p.nome)}<br><span class="meta">${esc(p.tutor||'')}</span></td><td>${esc(f.desc)}<br><span class="meta">${esc(f.sit)}${f.forma?' · '+esc(f.forma):''}</span></td><td class="n">${R$(f.total)}</td><td class="n ${saldo(f)?'late':'ok'}">${R$(saldo(f))}</td><td>${saldo(f)?`<button class="btn sm" data-quitar="${esc(f.id)}" data-pid="${esc(p.id)}">Receber</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="empty"><p>Nenhum lançamento aqui. Lance pela aba Financeiro da ficha do paciente ou informe o valor ao salvar uma consulta.</p></div>'}`;
 }
-const estAlerta=it=>(it.min!==undefined&&it.min!==''&&num(it.qtd)<=num(it.min))||(it.val&&dias(it.val)<=60);
+const estAlerta=it=>(it.min!==undefined&&it.min!==''&&num(it.qtd)<=num(it.min))||(it.val&&dias(it.val)<=60)||(PROP()&&ehAlim(it)&&diasRestam(it)!=null&&diasRestam(it)<7);
 const F_EST=[{k:'nome',l:'Produto',req:1},{k:'controlado',l:'Controlado (MAPA)',t:'select',o:['Não','Sim'],h:1,hint2:'entra no livro de controlados'},{k:'cat',l:'Categoria',t:'select',o:['Medicamento','Vacina','Vermífugo','Material','Ferradura / casco','Outro'],h:1},{k:'un',l:'Unidade',h:1,list:['frasco','ampola','mL','comprimido','dose','caixa','unidade','kg','bisnaga']},
  {k:'qtd',l:'Quantidade em estoque',t:'number',h:1},{k:'min',l:'Estoque mínimo',t:'number',h:1},{k:'lote',l:'Lote',h:1},{k:'val',l:'Validade',t:'date',h:1},
  {k:'conc',l:'Concentração (mg/mL)',t:'number',h:1},{k:'custo',l:'Custo unitário (R$)',t:'number',h:1},{k:'preco',l:'Preço de venda (R$)',t:'number',h:1},{k:'forn',l:'Fornecedor',h:1},{k:'obs',l:'Observações',t:'ta'}];
@@ -1332,7 +1348,8 @@ function renderConta(){
    <div class="grow"><h3>Seu perfil</h3><form id="perff" class="addrow"><input id="pf_apelido" placeholder="Como quer ser chamado(a)" aria-label="Nome de exibição" value="${esc(S.cfg.apelido||'')}"><button class="btn sm">Salvar nome</button></form>
    <div class="btns" style="margin-top:8px"><button class="btn sm" data-fotoperfil>${fotoPerfil()?'Trocar foto':'Adicionar foto'}</button>${fotoPerfil()?'<button class="btn sm ghost" data-fotoperfilrm>Remover foto</button>':''}</div>
    <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p></div></div>
-  ${equipeHtml()}
+  <div class="box"><div class="bar"><h3>Tipo de perfil</h3><button class="btn pri sm" data-trocarperfil>Alterar perfil</button></div><p style="margin:0">Você está usando o VetCamp como <b>${PROP()?'Proprietário de haras ou fazenda':'Veterinário(a)'}</b>. ${PROP()?'Seus animais, alimentação, gastos e lembretes.':'Prontuário, agenda, caixa e equipe da clínica.'} Os dados de cada perfil ficam separados.</p></div>
+  ${PROP()?'':equipeHtml()}
   ${tutorialInstalar()}
   ${db&&!STANDALONE?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
   <div class="cols">
@@ -1352,9 +1369,9 @@ function renderConta(){
   </div>
   ${CLIN&&ehVetPapel(CLIN.papel)?`<div class="box"><div class="bar"><h3>Seus dados profissionais</h3></div><p class="hint" style="margin:0 0 10px">Saem nas receitas, atestados e laudos que <b>você</b> emitir nesta clínica. Cada veterinário(a) da equipe tem os seus.</p>
    <form id="proff"><div class="f">${[['vet','Seu nome profissional'],['crmv','Seu CRMV (nº e UF)'],['cpfvet','Seu CPF']].map(([k,l])=>`<div class="fld h"><label for="pr_${k}">${l}</label><input id="pr_${k}" value="${esc(c[k]||'')}"></div>`).join('')}</div><div class="acts"><button class="btn pri">Salvar meus dados</button></div></form></div>`:''}
-  <div class="box"><div class="bar"><h3>Dados da clínica</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.${CLIN&&!pode('admin')?' <b>Só o dono da clínica altera.</b>':''}</p>
+  <div class="box"><div class="bar"><h3>${PROP()?'Dados do haras / fazenda':'Dados da clínica'}</h3></div><p class="hint" style="margin:0 0 10px">Aparecem no cabeçalho de receitas, atestados, termos e nas mensagens de WhatsApp.${CLIN&&!pode('admin')?' <b>Só o dono da clínica altera.</b>':''}</p>
    <form id="cfgf"><fieldset style="border:0;padding:0;margin:0"${CLIN&&!pode('admin')?' disabled':''}><div class="f">
-   ${[['clinica','Nome da clínica / serviço'],...(CLIN?[]:[['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ']]),['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['pixNome','Nome do recebedor do Pix (como no banco)'],['pixCidade','Cidade do recebedor do Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
+   ${[['clinica',PROP()?'Nome do haras / fazenda':'Nome da clínica / serviço'],...(CLIN||PROP()?[]:[['vet','Médico(a)-veterinário(a) responsável'],['crmv','CRMV (nº e UF)'],['cpfvet','CPF / CNPJ']]),['telc','Telefone'],['emailc','E-mail'],['endc','Endereço'],['cidade','Cidade / UF'],['pix','Chave Pix'],['pixNome','Nome do recebedor do Pix (como no banco)'],['pixCidade','Cidade do recebedor do Pix'],['kmval','Valor do km rodado (R$)']].map(([k,l])=>`<div class="fld h"><label for="cf_${k}">${l}</label><input id="cf_${k}" value="${esc(c[k]||'')}"></div>`).join('')}
    <div class="fld h"><label for="cf_pixTipo">Tipo da chave Pix</label><select id="cf_pixTipo">${['','CPF / CNPJ','Celular','E-mail','Aleatória'].map(x=>`<option${(c.pixTipo||'')===x?' selected':''}>${x}</option>`).join('')}</select></div>
    </div>${CLIN&&!pode('admin')?'':'<div class="acts"><button class="btn pri">Salvar dados da clínica</button></div>'}</fieldset></form></div>
   <div class="box soadmin"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
@@ -1925,6 +1942,198 @@ function despesasHtml(mes){
    ${l.length?`<div class="tw"><table><tr><th>Data</th><th>Descrição</th><th class="n">Valor</th><th></th></tr>${l.map(x=>`<tr><td>${br(x.data)}</td><td>${esc(x.desc)}<br><span class="meta">${esc(x.cat||'')}${x.sit==='A pagar'?` · <span class="late">a pagar${x.venc?' até '+br(x.venc):''}</span>`:''}</span></td><td class="n">${R$(x.valor)}</td><td><button class="btn sm" data-despedit="${esc(x.id)}">Editar</button></td></tr>`).join('')}</table></div>`:'<p class="meta">Nenhuma despesa lançada neste mês. Lance combustível, medicamentos, equipamentos e outros gastos para ver o resultado real.</p>'}</div>`;
 }
 
+
+/* ---------- modo Proprietário de haras / fazenda ---------- */
+/* Perfil escolhido ao entrar. Os dados do proprietário ficam num espaço separado (data/users/<id>/fazenda). */
+let MODO='vet',perfilSalvo=null,perfilPendente=false,dadosProntos=false;
+const PROP=()=>MODO==='prop';
+const VIEWS_PROP=[['pac','Animais'],['agenda','Lembretes'],['trato','Alimentação'],['gastos','Gastos'],['clientes','Pessoas'],['relat','Relatórios'],['conta','Conta']];
+const CAT_PROP=['Feno e capim','Ração e suplementos','Veterinário','Medicamentos e vacinas','Ferrador / casqueamento','Dentista','Exames (AIE, mormo, GTA)','Cama / maravalha','Funcionários / tratadores','Treinador / doma','Transporte','Provas e inscrições','Selaria e equipamentos','Manutenção e estrutura','Energia e água','Pastagem / arrendamento','Impostos e taxas','Outros'];
+const CAT_ALIM=['Feno','Pré-secado / silagem','Capim / pastagem','Ração','Suplemento','Sal mineral','Cama / maravalha'];
+const PAPEIS_CONT=['Veterinário(a)','Ferrador(a)','Dentista equino','Treinador(a)','Tratador(a)','Fornecedor de feno','Fornecedor de ração','Transportador','Outro'];
+const CAT_POR_MOD={consultas:'Veterinário',exames:'Veterinário',oficiais:'Exames (AIE, mormo, GTA)',vacinas:'Medicamentos e vacinas',meds:'Medicamentos e vacinas',casco:'Ferrador / casqueamento',odonto:'Dentista',repro:'Veterinário',treino:'Treinador / doma'};
+const TAB_PROP={consultas:'Visitas do veterinário',agend:'Lembretes',vacinas:'Vacinas e vermífugos',casco:'Casco e ferrador',meds:'Medicações',odonto:'Dentes'};
+const tabDe=m=>PROP()&&TAB_PROP[m.key]||m.tab;
+const tituloMod=m=>PROP()&&TAB_PROP[m.key]||m.titulo;
+const contatos=()=>Array.isArray(S.cfg.contatos)?S.cfg.contatos:[];
+const nomesContato=()=>contatos().map(c=>c.nome).filter(Boolean);
+const lembretesG=()=>Array.isArray(S.cfg.lembretes)?S.cfg.lembretes:[];
+const ehAlim=it=>CAT_ALIM.includes(it.cat);
+const unPl=(q,u)=>u&&['fardo','saco','rolo','frasco','unidade','tonelada'].includes(u)&&Math.abs(q)!==1?u+'s':(u||'');
+const diasRestam=it=>num(it.consumoDia)>0?num(it.qtd)/num(it.consumoDia):null;
+const catDeAlim=c=>['Feno','Pré-secado / silagem','Capim / pastagem'].includes(c)?'Feno e capim':c==='Cama / maravalha'?'Cama / maravalha':CAT_ALIM.includes(c)?'Ração e suplementos':'Medicamentos e vacinas';
+const CAT_GASTO_ALIM=['Feno e capim','Ração e suplementos','Cama / maravalha'];
+
+/* campos que só aparecem para o proprietário */
+F_PAC.splice(F_PAC.findIndex(f=>f.sec==='Saúde'),0,
+ {sec:'Manejo e alimentação',modo:'prop'},
+ {k:'fenoDia',l:'Feno por dia (kg)',t:'number',h:1,modo:'prop'},{k:'racaoDia',l:'Ração por dia (kg)',t:'number',h:1,modo:'prop'},
+ {k:'tratos',l:'Tratos por dia',t:'select',o:['','1','2','3','4','5'],h:1,modo:'prop'},{k:'pensao',l:'Pensão mensal do proprietário (R$)',t:'number',h:1,modo:'prop',hint2:'se o animal é de outra pessoa'},
+ {k:'dieta',l:'Dieta e instruções de trato (suplementos, horários, cuidados)',t:'ta',modo:'prop'});
+for(const f of F_EST)if(['controlado','conc','preco'].includes(f.k))f.modo='vet';
+{const fc=F_EST.find(f=>f.k==='cat'),o0=fc.o;fc.o=()=>PROP()?[...CAT_ALIM,'Medicamento','Vermífugo','Vacina','Material','Ferradura / casco','Outro']:o0;
+ const fu=F_EST.find(f=>f.k==='un'),l0=fu.list;fu.list=()=>PROP()?['fardo','kg','saco','rolo','tonelada',...l0]:l0;
+ F_EST.splice(F_EST.findIndex(f=>f.k==='min')+1,0,{k:'consumoDia',l:'Consumo por dia',t:'number',h:1,modo:'prop',hint2:'na mesma unidade'},{k:'pesoUn',l:'Peso de cada unidade (kg)',t:'number',h:1,modo:'prop',hint2:'ex.: fardo de 12 kg'});
+ F_EST.find(f=>f.k==='forn').list=()=>nomesContato()}
+{const fc=F_DESP.find(f=>f.k==='cat');fc.o=()=>PROP()?CAT_PROP:CAT_DESP;F_DESP.find(f=>f.k==='valor').sempre=1;
+ F_DESP.splice(F_DESP.findIndex(f=>f.k==='valor')+1,0,
+  {k:'animalId',l:'De qual animal?',t:'select',h:1,re:1,modo:'prop',o:()=>[['','Geral: dividir entre todos'],['varios','Dividir entre alguns animais'],...S.pac.filter(ativo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome))).map(p=>[p.id,p.nome])]},
+  {k:'animais',l:'Dividir entre',t:'checks',modo:'prop',show:p=>p.animalId==='varios',o:()=>S.pac.filter(ativo).map(p=>p.nome)},
+  {k:'forn',l:'Fornecedor / profissional',h:1,modo:'prop',list:()=>nomesContato()})}
+for(const m of MODS)if(['consultas','exames','oficiais','vacinas','meds','casco','odonto','repro'].includes(m.key)){
+  const i=Math.max(1,m.f.findIndex(f=>f.k===(m.dateK||'data'))+1);
+  m.f.splice(i,0,{k:'prof',l:m.key==='casco'?'Ferrador(a)':m.key==='odonto'?'Dentista':'Veterinário(a) / profissional',h:1,modo:'prop',list:()=>nomesContato()},
+    {k:'custo',l:'Quanto custou (R$)',t:'number',h:1,modo:'prop',hint2:'entra nos Gastos do animal'})}
+MODS.push({key:'treino',modo:'prop',tab:'Treinos e exercício',titulo:'Treinos e exercício',add:'Registrar treino',titleK:'tipo',dateK:'data',
+  hint:'Montaria, guia, redondel, caminhador, solto no piquete ou prova.',def:()=>({tipo:'Montaria',intens:'Moderado'}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'tipo',l:'Atividade',t:'select',o:['Montaria','Guia','Redondel','Caminhador','Solto no piquete','Prova / competição','Doma','Descanso'],h:1},
+   {k:'dur',l:'Duração (min)',t:'number',h:1},{k:'intens',l:'Intensidade',t:'select',o:['Leve','Moderado','Intenso'],h:1},{k:'quem',l:'Cavaleiro / responsável',h:1,list:()=>nomesContato()},{k:'obs',l:'Observações',t:'ta'}]});
+SEMVALOR.push('treino');
+
+/* registro com custo vira gasto do animal (e acompanha edição e exclusão) */
+function gastoDoRegistro(m,o,p,apagado){
+  if(!PROP()||!o)return;const ref='r_'+o.id,ex=S.desp.find(x=>x.ref===ref);
+  if(apagado||!num(o.custo)){if(ex)apagar('despesas',ex.id);return}
+  salvarDesp({...(ex||{id:uid(),sit:'Paga',forma:'Pix'}),ref,data:o[m.dateK||'data']||hoje(),cat:CAT_POR_MOD[m.key]||'Outros',desc:tabDe(m)+': '+tituloIt(m,o)+' · '+p.nome,valor:String(num(o.custo)),animalId:p.id,forn:o.prof||''});
+}
+/* custo de cada animal: gastos diretos + gastos gerais divididos */
+function custoPorAnimal(lista){
+  const at=S.pac.filter(ativo),r={};const add=(id,v)=>{r[id]=(r[id]||0)+v};
+  for(const x of lista){const v=num(x.valor);if(!v)continue;
+    if(x.animalId&&x.animalId!=='varios'){add(x.animalId,v);continue}
+    let alvo=x.animalId==='varios'?at.filter(p=>ARR(x.animais).includes(p.nome)):at;if(!alvo.length)alvo=at;
+    if(!alvo.length){add('',v);continue}for(const p of alvo)add(p.id,v/alvo.length)}
+  return r;
+}
+const consumoPlantel=()=>{const at=S.pac.filter(ativo);return{n:at.length,feno:at.reduce((s,p)=>s+num(p.fenoDia),0),racao:at.reduce((s,p)=>s+num(p.racaoDia),0)}};
+const gastoAlimMes=mes=>despMes(mes).filter(x=>CAT_GASTO_ALIM.includes(x.cat)).reduce((s,x)=>s+num(x.valor),0);
+
+function aplicarModo(){
+  document.body.classList.toggle('prop',PROP());
+  const nl=document.querySelector('#novo .nl');if(nl)nl.textContent=PROP()?'Animal':'Paciente';
+  if($('novo'))$('novo').setAttribute('aria-label',PROP()?'Novo animal':'Novo paciente');
+  const sub=document.querySelector('.brandrow h1 small');if(sub)sub.textContent=PROP()?'Gestão de haras e fazenda · cavalos, trato e gastos':'Prontuário veterinário · equinos, grandes e pequenos animais';
+}
+const perfilKey=()=>'vetcamp-perfil-'+(meId()||'local');
+const perfilRef=()=>db&&meId()?db.doc(`data/users/${meId()}/samvet/config/perfil`):null;
+function telaPerfil(primeira){
+  $('card').innerHTML=`<h2>${primeira?'Bem-vindo(a)! Como você vai usar o VetCamp?':'Alterar perfil'}</h2>
+  <p class="hint">${primeira?'Escolha o perfil. ':''}Dá para trocar quando quiser em Conta › Alterar perfil. Os dados de cada perfil ficam separados.</p>
+  <div class="perfis">
+   <button type="button" class="perfil-op${MODO==='vet'&&!primeira?' atual':''}" data-perfil="vet"><span class="ic" aria-hidden="true">🩺</span><b>Veterinário(a)</b><span>Prontuário dos pacientes, agenda de atendimentos, receitas e documentos, caixa, orçamentos e equipe da clínica.</span>${MODO==='vet'&&!primeira?'<em>Perfil atual</em>':''}</button>
+   <button type="button" class="perfil-op${MODO==='prop'&&!primeira?' atual':''}" data-perfil="prop"><span class="ic" aria-hidden="true">🐴</span><b>Proprietário de haras ou fazenda</b><span>Seus cavalos e animais, feno e ração, gastos por animal, proprietários e pensões, lembretes de vacina, casco e veterinário.</span>${MODO==='prop'&&!primeira?'<em>Perfil atual</em>':''}</button>
+  </div>${primeira?'':'<div class="acts"><button type="button" class="btn" id="cancel">Cancelar</button></div>'}`;
+  $('sheet').classList.add('on');$('card').scrollTop=0;if(!primeira)$('cancel').onclick=fechar;
+}
+async function escolherPerfilModo(m){
+  m=m==='prop'?'prop':'vet';LS.set(perfilKey(),m);perfilPendente=false;
+  const r=perfilRef();if(r)try{await Promise.race([r.set({perfil:m,em:Date.now()}),new Promise(ok=>setTimeout(ok,2500))])}catch(e){}
+  if(m===MODO){fechar();toast(m==='prop'?'Perfil: proprietário de haras ou fazenda':'Perfil: veterinário(a)');return}
+  location.reload();
+}
+/* conta nova (sem dados e sem perfil salvo): pergunta o perfil; conta antiga com dados: segue como veterinário */
+function checarPerfilNovo(){
+  if(!perfilPendente||!dadosProntos)return;perfilPendente=false;
+  const vazio=!S.pac.length&&!S.cli.length&&!Object.keys(S.cfg||{}).filter(k=>k!=='apelido'&&k!=='foto').length;
+  if(vazio)telaPerfil(true);else{LS.set(perfilKey(),MODO);const r=perfilRef();if(r)try{Promise.resolve(r.set({perfil:MODO,em:Date.now()})).catch(()=>{})}catch(e){}}
+}
+
+/* ---------- telas do proprietário ---------- */
+function renderTrato(){
+  const cp=consumoPlantel(),mes=hoje().slice(0,7);
+  const al=S.est.filter(ehAlim).sort((a,b)=>(diasRestam(a)??1e9)-(diasRestam(b)??1e9)),outros=S.est.filter(x=>!ehAlim(x)).sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
+  const card=it=>{const d=diasRestam(it),fim=d!=null?new Date(Date.now()+d*864e5):null,kg=num(it.pesoUn)?num(it.qtd)*num(it.pesoUn):0;
+    return `<article class="item alim${d!=null&&d<7?' falta':''}"><header><h3>${esc(it.nome)}</h3><span class="meta">${esc(it.cat||'')}</span></header>
+    <div class="mini4"><div><b>${fx(num(it.qtd),1)} ${esc(unPl(num(it.qtd),it.un))}</b><span>em estoque${kg?' · '+fx(kg,0)+' kg':''}</span></div>
+     <div><b>${num(it.consumoDia)?fx(num(it.consumoDia),1)+' '+esc(it.un||'')+'/dia':'—'}</b><span>consumo</span></div>
+     <div class="${d!=null&&d<7?'late':''}"><b>${d==null?'—':Math.floor(d)+(Math.floor(d)===1?' dia':' dias')}</b><span>${fim?'acaba por volta de '+fim.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'informe o consumo/dia'}</span></div>
+     <div><b>${num(it.custo)?R$(it.custo):'—'}</b><span>por ${esc(it.un||'unidade')}${num(it.custo)&&num(it.consumoDia)?' · '+R$(num(it.custo)*num(it.consumoDia)*30)+'/mês':''}</span></div></div>
+    <div class="btns"><button class="btn pri sm" data-compra="${esc(it.id)}">+ Compra</button><button class="btn sm" data-uso="${esc(it.id)}">Usar / dar baixa</button><button class="btn sm" data-estedit="${esc(it.id)}">Editar</button></div></article>`};
+  const ps=S.pac.filter(ativo).sort((a,b)=>String(a.lote||'').localeCompare(String(b.lote||''))||String(a.nome).localeCompare(String(b.nome)));
+  $('view').innerHTML=`<div class="bar"><h2>Alimentação e estoque</h2><div class="btns">${ps.length?'<button class="btn sm" data-quadrotrato>Quadro de trato (PDF)</button>':''}<button class="btn pri sm" data-alimnovo>+ Feno, ração ou insumo</button></div></div>
+  <div class="counts"><div class="count"><b>${cp.n}</b><span>animais ativos</span></div><div class="count"><b>${fx(cp.feno,1)} kg</b><span>feno por dia</span></div><div class="count"><b>${fx(cp.racao,1)} kg</b><span>ração por dia</span></div><div class="count"><b>${R$(gastoAlimMes(mes))}</b><span>alimentação no mês</span></div></div>
+  <p class="hint">O que cada animal come fica na ficha dele (aba Dados › Manejo e alimentação). Aqui você controla compras, uso e quantos dias o estoque ainda dura. Aviso quando faltar menos de 7 dias.</p>
+  ${al.length?`<div class="board alimb">${al.map(card).join('')}</div>`:'<div class="empty"><h2>Nenhum alimento cadastrado</h2><p>Cadastre o feno, a ração e os suplementos para saber quantos dias ainda duram e quanto custam por mês.</p><button class="btn pri" data-alimnovo>+ Cadastrar feno ou ração</button></div>'}
+  ${ps.length?`<div class="box"><div class="bar"><h3>Plano de trato</h3></div><div class="tw"><table><tr><th>Animal</th><th>Local</th><th class="n">Feno/dia</th><th class="n">Ração/dia</th><th>Tratos</th><th>Dieta e instruções</th></tr>${ps.map(p=>`<tr><td><button class="lnk2" data-id="${esc(p.id)}" data-gotab="dados">${esc(p.nome)}</button></td><td>${esc(p.lote||'—')}</td><td class="n">${p.fenoDia?fx(num(p.fenoDia),1)+' kg':'—'}</td><td class="n">${p.racaoDia?fx(num(p.racaoDia),1)+' kg':'—'}</td><td>${esc(p.tratos||'—')}</td><td>${esc(p.dieta||'')}</td></tr>`).join('')}</table></div></div>`:''}
+  <div class="box"><div class="bar"><h3>Medicamentos, vermífugos e materiais</h3><button class="btn sm" data-estnovo>+ Produto</button></div>
+  ${outros.length?`<div class="tw"><table><tr><th>Produto</th><th class="n">Qtd.</th><th>Validade</th><th></th></tr>${outros.map(it=>`<tr><td><b>${esc(it.nome)}</b><br><span class="meta">${esc(it.cat||'')}</span></td><td class="n ${estAlerta(it)?'late':''}">${fx(num(it.qtd),2)} ${esc(it.un||'')}</td><td class="${it.val&&dias(it.val)<=60?'late':''}">${br(it.val)}</td><td><div class="btns"><button class="btn sm" data-estmv="-1" data-eid="${esc(it.id)}" aria-label="Baixar 1">−1</button><button class="btn sm" data-estmv="1" data-eid="${esc(it.id)}" aria-label="Adicionar 1">+1</button><button class="btn sm" data-estedit="${esc(it.id)}">Editar</button></div></td></tr>`).join('')}</table></div>`:'<p class="meta">Nenhum produto. Cadastre vermífugos e medicamentos para dar baixa quando aplicar.</p>'}</div>`;
+}
+function textoQuadroTrato(){
+  const ps=S.pac.filter(ativo).sort((a,b)=>String(a.lote||'').localeCompare(String(b.lote||''))||String(a.nome).localeCompare(String(b.nome)));
+  return ps.map(p=>`${p.nome}${p.lote?' · '+p.lote:''}\n  Feno: ${p.fenoDia?fx(num(p.fenoDia),1)+' kg/dia':'—'} · Ração: ${p.racaoDia?fx(num(p.racaoDia),1)+' kg/dia':'—'}${p.tratos?' · '+p.tratos+' tratos':''}${p.dieta?'\n  '+p.dieta:''}`).join('\n\n');
+}
+function gastosLista(l){
+  return l.length?`<div class="tw"><table><tr><th>Data</th><th>Descrição</th><th class="n">Valor</th><th></th></tr>${l.map(x=>{const a=x.animalId&&x.animalId!=='varios'?S.pac.find(p=>p.id===x.animalId):null;
+    return `<tr><td>${br(x.data)}</td><td>${esc(x.desc)}<br><span class="meta">${esc(x.cat||'')}${a?' · '+esc(a.nome):x.animalId==='varios'?' · dividido entre '+ARR(x.animais).length:' · geral'}${x.forn?' · '+esc(x.forn):''}${x.sit==='A pagar'?` · <span class="late">a pagar${x.venc?' até '+br(x.venc):''}</span>`:''}</span></td><td class="n">${R$(x.valor)}</td><td><button class="btn sm" data-despedit="${esc(x.id)}">Editar</button></td></tr>`}).join('')}</table></div>`:'<p class="meta">Nenhum gasto lançado.</p>';
+}
+const barra=(v,max)=>`<span class="barra" style="--w:${max?Math.round(v/max*100):0}%"></span>`;
+function renderGastos(){
+  const mes=S.gMes||hoje().slice(0,7),l=[...despMes(mes)].sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  const tot=l.reduce((s,x)=>s+num(x.valor),0),at=S.pac.filter(ativo),apagar=S.desp.filter(x=>x.sit==='A pagar').reduce((s,x)=>s+num(x.valor),0);
+  const pc={};for(const x of l)pc[x.cat||'Outros']=(pc[x.cat||'Outros']||0)+num(x.valor);const cats=Object.entries(pc).sort((a,b)=>b[1]-a[1]);
+  const pa=custoPorAnimal(l),an=Object.entries(pa).filter(([k])=>k).map(([k,v])=>[S.pac.find(p=>p.id===k),v]).filter(x=>x[0]).sort((a,b)=>b[1]-a[1]);
+  const pf={};for(const x of l)if(x.forn)pf[x.forn]=(pf[x.forn]||0)+num(x.valor);const forns=Object.entries(pf).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  $('view').innerHTML=`<div class="bar"><h2>Gastos</h2><div class="btns"><label class="meta" for="g_mes">Mês</label><input id="g_mes" type="month" class="minp" value="${esc(mes)}">${dl?'<button class="btn sm" data-gcsv>Planilha (.csv)</button>':''}<button class="btn pri sm" data-despnova>+ Gasto</button></div></div>
+  <div class="counts"><div class="count"><b>${R$(tot)}</b><span>gasto no mês</span></div><div class="count"><b>${at.length?R$(tot/at.length):'—'}</b><span>média por animal</span></div><div class="count" style="color:var(--warn)"><b>${R$(apagar)}</b><span>contas a pagar</span></div><div class="count ctxt"><b>${cats.length?esc(cats[0][0]):'—'}</b><span>maior gasto${cats.length?' · '+R$(cats[0][1]):''}</span></div></div>
+  <p class="hint">Gasto ligado a um animal conta só para ele. Gasto geral (feno, tratador, energia…) é dividido entre todos os animais ativos ou entre os que você escolher.</p>
+  <div class="cols"><div class="box"><h3>Por categoria</h3>${cats.length?`<div class="tw"><table>${cats.map(([k,v])=>`<tr><td>${esc(k)}${barra(v,cats[0][1])}</td><td class="n">${R$(v)}</td></tr>`).join('')}</table></div>`:'<p class="meta">Sem gastos no mês.</p>'}</div>
+  <div class="box"><h3>Por animal</h3>${an.length?`<div class="tw"><table>${an.map(([p,v])=>`<tr><td><button class="lnk2" data-id="${esc(p.id)}" data-gotab="gastos">${esc(p.nome)}</button>${barra(v,an[0][1])}</td><td class="n">${R$(v)}</td></tr>`).join('')}</table></div>`:'<p class="meta">Cadastre os animais para ver o custo de cada um.</p>'}</div>
+  ${forns.length?`<div class="box"><h3>Por fornecedor / profissional</h3><div class="tw"><table>${forns.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="n">${R$(v)}</td></tr>`).join('')}</table></div></div>`:''}</div>
+  <div class="box"><h3>Lançamentos do mês</h3>${gastosLista(l)}</div>`;
+  $('g_mes').onchange=e=>{S.gMes=e.target.value||hoje().slice(0,7);render()};
+}
+function gastosAnimal(p){
+  const ano=hoje().slice(0,4),todos=S.desp.filter(x=>x.animalId===p.id||(x.animalId==='varios'&&ARR(x.animais).includes(p.nome))||(!x.animalId&&ativo(p)));
+  const meus=todos.filter(x=>String(x.data||'').startsWith(ano)),pa=custoPorAnimal(meus.filter(x=>x.animalId!==p.id)),diretos=meus.filter(x=>x.animalId===p.id);
+  const dir=diretos.reduce((s,x)=>s+num(x.valor),0),rat=pa[p.id]||0,mes=hoje().slice(0,7);
+  const doMes=(custoPorAnimal(despMes(mes))[p.id])||0;
+  return `<div class="bar"><h3>Gastos de ${esc(p.nome)}</h3><button class="btn pri sm" data-gastopac>+ Gasto deste animal</button></div>
+  <div class="counts"><div class="count"><b>${R$(doMes)}</b><span>no mês (com rateio)</span></div><div class="count"><b>${R$(dir+rat)}</b><span>em ${ano}</span></div><div class="count"><b>${R$(dir)}</b><span>só dele em ${ano}</span></div><div class="count"><b>${R$(rat)}</b><span>parte dos gastos gerais</span></div></div>
+  ${p.pensao?`<p class="info">Pensão cobrada do proprietário: <b>${R$(p.pensao)}</b>/mês · ${doMes>num(p.pensao)?`<span class="late">custou ${R$(doMes-num(p.pensao))} a mais que a pensão neste mês</span>`:'pensão cobre o custo do mês'}</p>`:''}
+  <h3 class="sec">Gastos diretos</h3>${gastosLista([...diretos].sort((a,b)=>String(b.data).localeCompare(String(a.data))))}`;
+}
+function lembretesHtml(){
+  const l=[...lembretesG()].sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+  return `<div class="box"><div class="bar"><h3>Lembretes gerais</h3><button class="btn pri sm" data-lemnovo>+ Lembrete</button></div>
+  <div class="chips"><span class="meta" style="align-self:center">Rápido:</span>${['Comprar feno','Comprar ração','Pagar tratador','Vermifugar o plantel','Renovar AIE e mormo','Ferrador','Cobrar pensões'].map(x=>`<button class="btn sm" data-lemrapido="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+  ${l.length?l.map(x=>`<div class="ag${dias(x.data)<0?' late':''}"><div class="lem"><span class="d">${br(x.data).slice(0,5)}<small>${quando(x.data)}</small></span><span><b>${esc(x.txt)}</b>${x.rep&&x.rep!=='Não repetir'?`<br><span class="meta">${esc(x.rep)}</span>`:''}</span></div><div class="btns"><button class="btn pri sm" data-lemfeito="${esc(x.id)}">Feito</button><button class="btn sm" data-lemedit="${esc(x.id)}">Editar</button></div></div>`).join(''):'<p class="meta">Nenhum lembrete geral. Vacinas, casco, dentes e visitas de cada animal aparecem abaixo sozinhos.</p>'}</div>`;
+}
+const F_LEM=[{k:'txt',l:'Lembrete',req:1},{k:'data',l:'Data',t:'date',h:1},{k:'rep',l:'Repetir',t:'select',o:['Não repetir','Toda semana','Todo mês','A cada 2 meses','A cada 3 meses','A cada 6 meses','Todo ano'],h:1}];
+const REP_DIAS={'Toda semana':7};const REP_MESES={'Todo mês':1,'A cada 2 meses':2,'A cada 3 meses':3,'A cada 6 meses':6,'Todo ano':12};
+function proxData(d,rep){const x=new Date((d||hoje())+'T12:00');if(REP_DIAS[rep])x.setDate(x.getDate()+REP_DIAS[rep]);else if(REP_MESES[rep])x.setMonth(x.getMonth()+REP_MESES[rep]);else return null;return x.toISOString().slice(0,10)}
+function salvarLembretes(l,msg){salvarCfg({...S.cfg,lembretes:l.slice(0,300)},msg,1);render()}
+function renderPessoas(){
+  const mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const props=S.cli.map(c=>{const ps=pacsDoCli(c);return{c,ps,pen:ps.reduce((s,p)=>s+num(p.pensao),0)}}).sort((a,b)=>b.pen-a.pen||String(a.c.nome).localeCompare(String(b.c.nome)));
+  const totPen=props.reduce((s,x)=>s+x.pen,0),cs=[...contatos()].sort((a,b)=>String(a.papel).localeCompare(String(b.papel))||String(a.nome).localeCompare(String(b.nome)));
+  $('view').innerHTML=`<div class="bar"><h2>Pessoas</h2><div class="btns"><button class="btn sm" data-contnovo>+ Contato</button><button class="btn pri sm" data-clinovo>+ Proprietário</button></div></div>
+  <div class="counts"><div class="count"><b>${S.cli.length}</b><span>proprietários</span></div><div class="count"><b>${R$(totPen)}</b><span>pensões por mês</span></div><div class="count"><b>${cs.length}</b><span>contatos</span></div></div>
+  <div class="box"><h3>Proprietários e pensões · ${esc(mes)}</h3><p class="hint" style="margin:0 0 8px">Donos dos animais que ficam no seu haras. A pensão de cada animal fica na ficha dele (Dados › Manejo e alimentação).</p>
+  ${props.length?`<div class="tw"><table><tr><th>Proprietário</th><th>Animais</th><th class="n">Pensão</th><th></th></tr>${props.map(({c,ps,pen})=>`<tr><td><b>${esc(c.nome)}</b>${c.tel?`<br><span class="meta">${esc(c.tel)}</span>`:''}</td><td>${esc(ps.map(p=>p.nome).join(', ')||'—')}</td><td class="n">${pen?R$(pen):'—'}</td>
+   <td><div class="btns">${pen?waLink(c.tel,`Olá, ${c.nome}! Aqui é do ${S.cfg.clinica||'haras'}. Segue a pensão de ${mes}: ${ps.filter(p=>num(p.pensao)).map(p=>p.nome+' '+R$(p.pensao)).join(', ')}. Total: ${R$(pen)}.${S.cfg.pix?' Chave Pix: '+S.cfg.pix:''}`)+`<button class="btn sm" data-pixpensao="${esc(c.id)}">Pix</button>`:''}<button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button></div></td></tr>`).join('')}</table></div>`:'<p class="meta">Nenhum proprietário cadastrado. Se todos os animais são seus, pode deixar em branco.</p>'}</div>
+  <div class="box"><h3>Veterinários, ferradores e prestadores</h3>
+  ${cs.length?`<div class="tw"><table>${cs.map(x=>`<tr><td><b>${esc(x.nome)}</b><br><span class="meta">${esc(x.papel||'')}${x.obs?' · '+esc(x.obs):''}</span></td><td>${x.tel?`<a class="btn sm" href="tel:${esc(String(x.tel).replace(/[^\d+]/g,''))}">Ligar</a> `+waLink(x.tel,'Olá, '+x.nome+'!'):''}</td><td><button class="btn sm" data-contedit="${esc(x.id)}">Editar</button></td></tr>`).join('')}</table></div>`:'<p class="meta">Cadastre seu veterinário, ferrador, dentista e fornecedores. Eles aparecem como sugestão nos registros e nos gastos.</p>'}</div>`;
+}
+const F_CONT=[{k:'nome',l:'Nome',req:1,h:1},{k:'papel',l:'Função',t:'select',o:PAPEIS_CONT,h:1},{k:'tel',l:'Telefone / WhatsApp',t:'tel',h:1},{k:'obs',l:'Observações (CRMV, região, valores)',h:1}];
+function renderRelatProp(){
+  const mes=S.relMes||hoje().slice(0,7),ms=mesesAte(mes,12),at=S.pac.filter(ativo);
+  const linhas=ms.map(m=>{const l=despMes(m),t=l.reduce((s,x)=>s+num(x.valor),0);return{m,t,al:l.filter(x=>CAT_GASTO_ALIM.includes(x.cat)).reduce((s,x)=>s+num(x.valor),0)}});
+  const max=Math.max(1,...linhas.map(x=>x.t)),pen=at.reduce((s,p)=>s+num(p.pensao),0),gm=linhas[linhas.length-1].t;
+  const ano=mes.slice(0,4),daAno=S.desp.filter(x=>String(x.data||'').startsWith(ano)),pa=custoPorAnimal(daAno);
+  const an=at.map(p=>[p,pa[p.id]||0]).sort((a,b)=>b[1]-a[1]);
+  const pend=S.pac.filter(ativo).flatMap(pendencias).filter(x=>dias(x.d)<0&&x.tab!=='fin').length;
+  $('view').innerHTML=`<div class="bar"><h2>Relatórios</h2><div class="btns"><label class="meta" for="rel_mes">Mês</label><input id="rel_mes" type="month" value="${esc(mes)}" class="minp">${dl?'<button class="btn sm" data-gcsv>Gastos (.csv)</button>':''}</div></div>
+  <div class="counts"><div class="count"><b>${R$(gm)}</b><span>gastos no mês</span></div><div class="count"><b>${at.length?R$(gm/at.length):'—'}</b><span>custo médio por animal</span></div><div class="count"><b>${R$(pen)}</b><span>pensões por mês</span></div><div class="count" style="color:${pen-gm>=0?'var(--okc)':'var(--warn)'}"><b>${R$(pen-gm)}</b><span>pensões − gastos</span></div><div class="count"><b>${at.length}</b><span>animais ativos</span></div><div class="count" style="color:${pend?'var(--warn)':'inherit'}"><b>${pend}</b><span>cuidados atrasados</span></div></div>
+  <div class="box"><h3>Gastos nos últimos 12 meses</h3><div class="tw"><table><tr><th>Mês</th><th class="n">Total</th><th class="n">Alimentação</th><th class="n">Por animal</th></tr>${[...linhas].reverse().map(x=>`<tr><td>${esc(x.m.slice(5)+'/'+x.m.slice(0,4))}${barra(x.t,max)}</td><td class="n">${R$(x.t)}</td><td class="n">${R$(x.al)}</td><td class="n">${at.length?R$(x.t/at.length):'—'}</td></tr>`).join('')}</table></div></div>
+  <div class="box"><h3>Custo de cada animal em ${esc(ano)}</h3>${an.length?`<div class="tw"><table><tr><th>Animal</th><th class="n">Custo no ano</th><th class="n">Pensão/mês</th></tr>${an.map(([p,v])=>`<tr><td><button class="lnk2" data-id="${esc(p.id)}" data-gotab="gastos">${esc(p.nome)}</button>${barra(v,an[0][1]||1)}</td><td class="n">${R$(v)}</td><td class="n">${p.pensao?R$(p.pensao):'—'}</td></tr>`).join('')}</table></div>`:'<p class="meta">Nenhum animal ativo.</p>'}</div>`;
+}
+function csvGastos(){
+  const q=v=>'"'+String(v??'').replace(/"/g,'""').replace(/^[=+\-@]/,"'$&")+'"';
+  const rows=[['Data','Categoria','Descrição','Animal','Fornecedor','Valor','Situação']];
+  for(const x of [...S.desp].sort((a,b)=>String(a.data).localeCompare(String(b.data)))){const a=S.pac.find(p=>p.id===x.animalId);rows.push([x.data,x.cat,x.desc,a?a.nome:x.animalId==='varios'?'Dividido: '+ARR(x.animais).join(', '):'Geral',x.forn||'',num(x.valor).toFixed(2).replace('.',','),x.sit])}
+  return '﻿'+rows.map(r=>r.map(q).join(';')).join('\r\n');
+}
+
 /* rota do dia */
 function rotaHoje(){
   const its=S.pac.flatMap(p=>(p.agend||[]).filter(a=>a.data===hoje()&&['Agendado','Confirmado'].includes(a.situacao)).map(a=>({a,p}))).sort((x,y)=>String(x.a.hora||'').localeCompare(String(y.a.hora||'')));
@@ -2016,14 +2225,14 @@ function esquecidasHtml(){const l=semCobranca();if(!l.length)return '';
 
 /* ---------- ficha ---------- */
 function renderFicha(p){
-  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,m.tab+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']].filter(([k])=>!(k==='fin'&&!pode('financeiro'))&&!(k==='docs'&&!pode('prescrever')));
+  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,tabDe(m)+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),...(PROP()?[['gastos','Gastos']]:[]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']].filter(([k])=>!(k==='fin'&&(!pode('financeiro')||PROP()))&&!(k==='docs'&&(!pode('prescrever')||PROP())));
   if(!tabs.some(t=>t[0]===S.tab))S.tab='resumo';
   $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Voltar</button>
   <div class="head"><button class="fotobtn" data-fotopac aria-label="${p.foto?'Trocar':'Adicionar'} foto de ${esc(p.nome)}">${avatar(p)}<span class="cam">${p.foto?'Trocar':'+ Foto'}</span></button><div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
   ${chipsAlerta(p)}
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
-  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${pode('financeiro')?rodapeFin(p):''}`;
+  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):S.tab==='gastos'?gastosAnimal(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${pode('financeiro')&&!PROP()?rodapeFin(p):''}`;
   const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
   const at=document.querySelector('.tab[aria-selected=true]');if(at&&at.scrollIntoView)at.scrollIntoView({block:'nearest',inline:'nearest'});
   hidratarNomes();
@@ -2062,7 +2271,7 @@ function modulo(m,p){
   if(m.key==='consultas'&&l.length)topo+=`<div class="btns" style="margin-bottom:10px"><button class="btn sm" data-repetir>Repetir última consulta</button></div>`;
   if(m.key==='vacinas'&&l.length)topo+=`<div class="btns" style="margin-bottom:10px"><button class="btn sm pri" data-carteira>Baixar carteira de sanidade (PDF)</button></div>`;
   if(m.key==='fin'){const t=l.reduce((s,x)=>s+(x.sit==='Orçamento'?0:num(x.total)),0),sd=l.reduce((s,x)=>s+saldo(x),0);topo=`${(S.cfg.servicos||[]).length?`<div class="chips"><span class="meta" style="align-self:center">Lançar rápido:</span>${S.cfg.servicos.map(x=>`<button class="btn sm" data-quick="${esc(x.id)}">${esc(x.nome)} · ${R$(x.valor)}</button>`).join('')}</div>`:`<p class="hint">Cadastre seus serviços em Preços para lançar com um toque.</p>`}<div class="counts"><div class="count"><b>${R$(t)}</b><span>Total lançado</span></div><div class="count" style="color:var(--warn)"><b>${R$(sd)}</b><span>Em aberto</span></div></div>`}
-  return `<div class="bar"><h3>${m.titulo}</h3><button class="btn pri sm" data-add="${m.key}">+ ${m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}${topo}`+
+  return `<div class="bar"><h3>${tituloMod(m)}</h3><button class="btn pri sm" data-add="${m.key}">+ ${PROP()&&m.key==='agend'?'Lembrete':m.add}</button></div>${m.hint?`<p class="hint">${m.hint}</p>`:''}${topo}`+
   (l.length?l.map(it=>{
     const curto=fs.filter(f=>f.t!=='ta'&&![dk,m.titleK,'valor','valorAplic','kmrod'].includes(f.k)&&!vazio(it[f.k])).map(f=>`${f.l.replace(/ \(.*\)$/,'').replace(/^[A-Z](\s\/\s[A-Z])? · /,'')}: ${f.k==='unit'||f.k==='desconto'||f.k==='pago'||f.k==='valor'?R$(it[f.k]):fmt(f,it[f.k])}`);
     const longo=fs.filter(f=>f.t==='ta'&&!vazio(it[f.k]));
@@ -2164,7 +2373,7 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
     if(f.t==='select')inp=`<select id="${id}">${(typeof f.o==='function'?f.o(p):f.o).map(o=>{const[k,l]=Array.isArray(o)?o:[o,o||'—'];return`<option value="${esc(k)}"${String(v)===k?' selected':''}>${esc(l)}</option>`}).join('')}</select>`;
     else if(f.t==='ta')inp=`<textarea id="${id}">${esc(v)}</textarea>`;
     else if(f.t==='regioes'||f.t==='triadan')inp=campoEspecial(f,v,id);
-    else if(f.t==='checks')inp=`<div class="ck" id="${id}">${f.o.map(o=>`<label><input type="checkbox" value="${esc(o)}"${(Array.isArray(v)?v:[]).includes(o)?' checked':''}>${esc(o)}</label>`).join('')}</div>`;
+    else if(f.t==='checks')inp=`<div class="ck" id="${id}">${(typeof f.o==='function'?f.o(p):f.o).map(o=>`<label><input type="checkbox" value="${esc(o)}"${(Array.isArray(v)?v:[]).includes(o)?' checked':''}>${esc(o)}</label>`).join('')}</div>`;
     else{const lst=f.listEst?S.est.map(x=>x.nome):typeof f.list==='function'?f.list(p):f.list;
       inp=`<input id="${id}" type="${f.t||'text'}" ${f.t==='number'?'step="any" min="0" inputmode="decimal"':''} value="${esc(v)}"${lst&&lst.length?` list="dl_${f.k}"`:''}>${lst&&lst.length?`<datalist id="dl_${f.k}">${lst.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:''}`}
     const hint=f.hint2||(f.hint?(f.hint.eq&&spOk('eq',p)?f.hint.eq:f.hint.rum&&spOk('rum',p)?f.hint.rum:''):'');
@@ -2200,8 +2409,9 @@ function editarItem(p,key,id,base){
     if(!o.por)o.por=meId();if(id)o.editPor=meId();
     if(!id&&key==='vacinas'&&num(o.consumo)&&moverEstoque(o.estId||o.nome,num(o.consumo),'Sanidade · '+p.nome))setTimeout(()=>toast('Salvo · baixa no estoque: '+((S.est.find(x=>x.id===o.estId)||{}).nome||o.nome)),50);
     if(m.save)m.save(o,p);
+    gastoDoRegistro(m,o,p);
     salvar({...p,[key]:id?lista.map(x=>x.id===id?o:x):[...lista,o]});if(valorItem(m,o)>0&&!id)toast('Salvo · '+R$(valorItem(m,o))+' lançado no Financeiro')},
-    id?()=>{const velho=lista.find(x=>x.id===id);salvar({...p,[key]:lista.filter(x=>x.id!==id)});desfazivel('Registro excluído.',()=>{const q=S.pac.find(x=>x.id===p.id)||p;salvar({...q,[key]:[...(q[key]||[]),velho]})})}:null);
+    id?()=>{const velho=lista.find(x=>x.id===id);gastoDoRegistro(m,velho,p,true);salvar({...p,[key]:lista.filter(x=>x.id!==id)});desfazivel('Registro excluído.',()=>{const q=S.pac.find(x=>x.id===p.id)||p;salvar({...q,[key]:[...(q[key]||[]),velho]})})}:null);
   if(key==='fin'&&$('f_desc'))$('f_desc').addEventListener('change',()=>{const x=(S.cfg.servicos||[]).find(y=>y.nome===$('f_desc').value.trim());if(x){if(x.valor)$('f_unit').value=x.valor;if(x.tipo&&$('f_tipo'))$('f_tipo').value=x.tipo}});
   const nf=key==='meds'?'f_med':key==='vacinas'?'f_nome':null;
   if(nf&&$(nf)&&$('f_estId')){
@@ -2223,7 +2433,7 @@ function textoFicha(p){
 function copiar(t,ok){navigator.clipboard.writeText(t).then(()=>toast(ok)).catch(()=>toast('Não foi possível copiar. Selecione o texto e copie manualmente.'))}
 function baixar(nome,data,tipo){if(!dl){toast('Download indisponível aqui.');return}dl.save({filename:nome,data:new Blob([data],{type:tipo})}).then(r=>{if(r&&r.status==='saved')toast('Arquivo salvo')}).catch(e=>{if(e&&e.code!=='cancelled'&&e.code!=='declined')toast('Não foi possível baixar.')})}
 function aplicar(q,mid){const m=(q.meds||[]).find(x=>x.id===mid);if(!m)return;salvar({...q,meds:q.meds.map(x=>x.id===mid?{...x,aplic:[...(x.aplic||[]),new Date().toISOString()],aplicPor:[...(x.aplicPor||[]),meId()]}:x)});const b=num(m.consumo)&&moverEstoque(m.estId||m.med,num(m.consumo),'Aplicação · '+q.nome);toast('Aplicação registrada'+(b?' · baixa no estoque':''))}
-const novoPaciente=(pre={})=>{const b={especie:'Equino',sexo:'Macho',castrado:'Não',status:'tratamento',...pre};abrirForm('Novo paciente',F_PAC,b,b,o=>{const dup=S.pac.find(x=>semAcento(x.nome)===semAcento(o.nome)&&semAcento(x.tutor)===semAcento(o.tutor));o.id=uid();o.criado=Date.now();salvar(o);S.sel=o.id;S.tab='resumo';if(dup)setTimeout(()=>desfazivel(`Atenção: já existia ${dup.nome} de ${dup.tutor||'mesmo tutor'}. Cadastrado mesmo assim.`,()=>apagar('pacientes',o.id)),60)})};
+const novoPaciente=(pre={})=>{const b={especie:'Equino',sexo:'Macho',castrado:'Não',status:PROP()?'acompanhamento':'tratamento',...(PROP()?{tutor:S.cfg.clinica||(me&&me.name)||'Próprio'}:{}),...pre};abrirForm(PROP()?'Novo animal':'Novo paciente',F_PAC,b,b,o=>{const dup=S.pac.find(x=>semAcento(x.nome)===semAcento(o.nome)&&semAcento(x.tutor)===semAcento(o.tutor));o.id=uid();o.criado=Date.now();salvar(o);S.sel=o.id;S.tab='resumo';if(dup)setTimeout(()=>desfazivel(`Atenção: já existia ${dup.nome} de ${dup.tutor||'mesmo tutor'}. Cadastrado mesmo assim.`,()=>apagar('pacientes',o.id)),60)})};
 function escolherPaciente(titulo,cb){
   const ps=S.pac.filter(ativo).sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
   $('card').innerHTML=`<h2>${titulo}</h2>${ps.length?`<input class="search" id="pq" placeholder="Buscar paciente" aria-label="Buscar paciente"><div id="pl">${ps.map(p=>`<button class="row" data-pick="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}</h3><span class="meta">${esc(p.tutor||'')}${p.prop?' · '+esc(p.prop):''}</span></span></button>`).join('')}</div>`:'<div class="empty"><p>Cadastre um paciente primeiro.</p></div>'}<div class="acts"><button class="btn" id="cancel">Cancelar</button></div>`;
@@ -2285,6 +2495,8 @@ $('fileimp').onchange=e=>{
 };
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t||t.closest('#card')&&t.dataset.pick)return;const d=t.dataset;let p=cur();
+  if(d.perfil){escolherPerfilModo(d.perfil);return}
+  if('trocarperfil' in d){telaPerfil(false);return}
   if(d.modelos){abrirModelos(d.modelos,t);return}
   if('usemod' in d&&d.alvo){usarModelo(d.usemod,d.alvo);return}
   if(d.dente){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
@@ -2315,7 +2527,24 @@ document.addEventListener('click',e=>{
   else if(d.tema){LS.set('vetcamp-aparencia',{...LS.get('vetcamp-aparencia',{}),tema:d.tema});aplicarAparencia();render()}
   else if('ics' in d){const c=icsAgenda();if(!c.n){toast('Nada na agenda dos próximos 90 dias.');return}baixar(`vetcamp-agenda-${hoje()}.ics`,c.txt,'text/calendar');toast(c.n+' compromisso(s) exportado(s). Abra o arquivo para adicionar ao calendário.')}
   else if(d.cortesia){const[pid,key,iid]=d.cortesia.split('|');const q=S.pac.find(x=>x.id===pid);if(q){salvar({...q,[key]:(q[key]||[]).map(x=>x.id===iid?{...x,semCobranca:true}:x)});toast('Marcado como sem cobrança')}}
-  else if('despnova' in d)abrirForm('Nova despesa',F_DESP,{id:uid(),data:hoje(),sit:'Paga',cat:CAT_DESP[0],forma:'Pix'},{},o=>salvarDesp(o));
+  else if('despnova' in d)abrirForm(PROP()?'Novo gasto':'Nova despesa',F_DESP,{id:uid(),data:hoje(),sit:'Paga',cat:(PROP()?CAT_PROP:CAT_DESP)[0],forma:'Pix',animalId:''},{},o=>salvarDesp(o));
+  else if('gastopac' in d&&p)abrirForm('Gasto · '+p.nome,F_DESP,{id:uid(),data:hoje(),sit:'Paga',cat:'Veterinário',forma:'Pix',animalId:p.id},{},o=>salvarDesp(o));
+  else if('gcsv' in d)baixar(`vetcamp-gastos-${hoje()}.csv`,csvGastos(),'text/csv');
+  else if('alimnovo' in d)abrirForm('Novo alimento ou insumo',F_EST,{id:uid(),un:'fardo',cat:'Feno'},{},o=>{if(num(o.qtd))o.mov=[{d:new Date().toISOString(),q:num(o.qtd),motivo:'Cadastro (saldo inicial)',por:meId()}];salvarEst(o)});
+  else if(d.compra){const it=S.est.find(x=>x.id===d.compra);if(it)abrirForm('Compra · '+it.nome,[{k:'data',l:'Data',t:'date',h:1},{k:'qtd',l:'Quantidade comprada ('+(it.un||'unidades')+')',t:'number',req:1,h:1},{k:'valor',l:'Valor total pago (R$)',t:'number',h:1,sempre:1},{k:'forn',l:'Fornecedor',h:1,list:()=>nomesContato()},{k:'sit',l:'Situação',t:'select',o:['Paga','A pagar'],h:1}],{data:hoje(),sit:'Paga',forn:it.forn||''},{},o=>{
+    const q=num(o.qtd);if(q<=0){toast('Informe a quantidade comprada');return}
+    const novo={...it,qtd:String(num(it.qtd)+q),mov:[...(it.mov||[]),{d:new Date().toISOString(),q,motivo:'Compra'+(o.forn?' · '+o.forn:''),por:meId()}].slice(-300)};
+    if(num(o.valor))novo.custo=(num(o.valor)/q).toFixed(2);if(o.forn)novo.forn=o.forn;salvarEst(novo);
+    if(num(o.valor))salvarDesp({id:uid(),data:o.data||hoje(),cat:catDeAlim(it.cat),desc:`Compra: ${fx(q,1)} ${unPl(q,it.un)} de ${it.nome}`,valor:String(num(o.valor)),sit:o.sit,forma:'Pix',forn:o.forn||'',animalId:'',ref:'c_'+uid()});
+    setTimeout(()=>toast('Compra registrada'+(num(o.valor)?' · '+R$(o.valor)+' nos Gastos':'')),50)})}
+  else if(d.uso){const it=S.est.find(x=>x.id===d.uso);if(it)abrirForm('Usar · '+it.nome,[{k:'qtd',l:'Quantidade usada ('+(it.un||'unidades')+')',t:'number',req:1,h:1},{k:'motivo',l:'Para quê',h:1,list:['Trato do dia','Trato da semana','Perda / estragou','Venda','Doação']}],{qtd:it.consumoDia||'1',motivo:'Trato do dia'},{},o=>{const q=num(o.qtd);if(q>0)moverEstoque(it.id,q,o.motivo||'Uso')})}
+  else if('quadrotrato' in d)baixarPdf('Quadro de trato.pdf',()=>pdfTexto('Quadro de trato · '+(S.cfg.clinica||'haras'),textoQuadroTrato(),{dir:['Atualizado em '+br(hoje())]}));
+  else if('lemnovo' in d||d.lemrapido)abrirForm('Novo lembrete',F_LEM,{id:uid(),txt:d.lemrapido||'',data:hoje(),rep:d.lemrapido==='Cobrar pensões'||d.lemrapido==='Pagar tratador'?'Todo mês':'Não repetir'},{},o=>salvarLembretes([...lembretesG(),o],'Lembrete salvo'));
+  else if(d.lemedit){const x=lembretesG().find(y=>y.id===d.lemedit);if(x)abrirForm('Editar lembrete',F_LEM,x,{},o=>salvarLembretes(lembretesG().map(y=>y.id===o.id?o:y),'Lembrete salvo'),()=>salvarLembretes(lembretesG().filter(y=>y.id!==x.id),'Lembrete apagado'))}
+  else if(d.lemfeito){const x=lembretesG().find(y=>y.id===d.lemfeito);if(x){const nx=proxData(x.data,x.rep);salvarLembretes(nx?lembretesG().map(y=>y.id===x.id?{...x,data:nx}:y):lembretesG().filter(y=>y.id!==x.id),nx?'Feito · próximo em '+br(nx):'Feito')}}
+  else if('contnovo' in d)abrirForm('Novo contato',F_CONT,{id:uid(),papel:PAPEIS_CONT[0]},{},o=>{salvarCfg({...S.cfg,contatos:[...contatos(),o].slice(0,300)},'Contato salvo',1);render()});
+  else if(d.contedit){const x=contatos().find(y=>y.id===d.contedit);if(x)abrirForm('Editar contato',F_CONT,x,{},o=>{salvarCfg({...S.cfg,contatos:contatos().map(y=>y.id===o.id?o:y)},'Contato salvo',1);render()},()=>{salvarCfg({...S.cfg,contatos:contatos().filter(y=>y.id!==x.id)},'Contato apagado',1);render()})}
+  else if(d.pixpensao){const c=S.cli.find(x=>x.id===d.pixpensao);if(c){const pen=pacsDoCli(c).reduce((s,q)=>s+num(q.pensao),0);cobrarPix(pen,{desc:'pensão '+new Date().toLocaleDateString('pt-BR',{month:'long'}),tel:c.tel,nome:c.nome,txid:'PEN'+c.id.slice(-8)})}}
   else if(d.despedit){const x=S.desp.find(y=>y.id===d.despedit);if(x)abrirForm('Editar despesa',F_DESP,x,{},o=>salvarDesp(o),()=>{apagar('despesas',x.id);desfazivel('Despesa excluída.',()=>salvarDesp(x))})}
   else if('livroctr' in d)livroControlados();
   else if('modnovo' in d)abrirForm('Novo modelo de texto',F_MOD,{id:uid()},{},o=>salvarCfg({...S.cfg,modelos:[...modelos(),o]},'Modelo salvo'));
@@ -2402,23 +2631,32 @@ render();
   if(user){try{me=await user.me()}catch(e){me=null}try{isDono=!!(await user.isOwner())}catch(e){isDono=false}}
   const uid=me&&me.id;
   if(db&&!uid){db=null;window.__semId=1}
-  if(db){BASE=`data/users/${uid}/samvet`;PFX='samvet-'+uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-';
+  perfilSalvo=LS.get('vetcamp-perfil-'+(uid||'local'),null);MODO=perfilSalvo==='prop'?'prop':'vet';aplicarModo();
+  if(db&&PROP()){BASE=`data/users/${uid}/fazenda`;PFX='samvet-fz'+uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-'}
+  else if(db){BASE=`data/users/${uid}/samvet`;PFX='samvet-'+uid.replace(/[^A-Za-z0-9]/g,'').slice(-10)+'-';
     const velho=LS.get('samvet-pendentes',null);if(velho&&velho.length){LS.set(PFX+'pendentes',[...LS.get(PFX+'pendentes',[]),...velho]);try{localStorage.removeItem('samvet-pendentes')}catch(e){}}
     if(STANDALONE)await entrarEspaco(uid)}
+  if(db)try{const r=perfilRef();let un=null,feito=false;
+    un=r.onSnapshot(sn=>{if(feito||(sn.metadata&&sn.metadata.fromCache))return;feito=true;try{un&&un()}catch(e){}
+      const dd=sn.exists?(sn.data()||{}):{},v=dd.perfil;
+      if(v==='vet'||v==='prop'){LS.set(perfilKey(),v);if(v!==MODO)location.reload()}
+      else if(perfilSalvo){try{Promise.resolve(r.set({perfil:perfilSalvo,em:Date.now()})).catch(()=>{})}catch(e){}}
+      else{perfilPendente=true;checarPerfilNovo()}},()=>{})}catch(e){}
   renderWho();
   if(dict){
     dict.onState(({state})=>{if(micBtn){micBtn.classList.toggle('on',state==='listening');micBtn.textContent=state==='listening'?'Parar':'Ditar';if(state==='idle')micBtn=null}});
     dict.onFinal(({text})=>{if(micTa&&text)micTa.value=(micTa.value?micTa.value.replace(/\s*$/,' '):'')+text});
   }
   if(!db){
-    S.pac=ARR(LS.get('prontuario-vet',[])).map(normPac);S.est=ARR(LS.get('samvet-estoque',[])).map(normEst);S.cli=LS.get('samvet-clientes',[]);S.orc=ARR(LS.get('samvet-orcamentos',[])).map(normOrc);S.desp=LS.get('samvet-despesas',[]);S.cfg=LS.get('samvet-config',{});
+    S.pac=ARR(LS.get(lsKey('pacientes'),[])).map(normPac);S.est=ARR(LS.get(lsKey('estoque'),[])).map(normEst);S.cli=LS.get(lsKey('clientes'),[]);S.orc=ARR(LS.get(lsKey('orcamentos'),[])).map(normOrc);S.desp=LS.get(lsKey('despesas'),[]);S.cfg=LS.get(cfgLsKey(),{});
+    aplicarModo();if(!LS.get(perfilKey(),null)&&!S.pac.length&&!Object.keys(S.cfg).length)setTimeout(()=>telaPerfil(true),300);
     note(window.__semId?'Não foi possível identificar sua conta neste link, então os dados ficam só neste aparelho. Peça a quem compartilhou para te convidar com acesso de edição.':'Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
   S.pac=ARR(LS.get(PFX+'cache-pacientes',[])).map(normPac);S.est=ARR(LS.get(PFX+'cache-estoque',[])).map(normEst);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=ARR(LS.get(PFX+'cache-orcamentos',[])).map(normOrc);S.desp=LS.get(PFX+'cache-despesas',[]);S.cfg=LS.get(PFX+'cache-config',{});if(CLIN)S.cfg={...S.cfg,...pessoaisDe(CLIN.eu)};render();
   note(S.pac.length?'Mostrando os dados salvos neste aparelho enquanto conecta…':'Carregando pacientes…');
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
   colRef('pacientes').onSnapshot(snap=>{
-    if(!snap.metadata.fromCache){clearTimeout(timer);note('')}
+    if(!snap.metadata.fromCache){clearTimeout(timer);note('');if(!dadosProntos){dadosProntos=true;setTimeout(checarPerfilNovo,400)}}
     S.pac=mesclarSnap('pacientes',snap.docs.map(d=>normPac({...d.data(),id:d.id})),S.pac);LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))renderLogo();

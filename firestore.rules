@@ -29,6 +29,11 @@ service cloud.firestore {
       allow read, delete: if dono(uid) && colecaoValida(col);
       allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk(doc);
     }
+    // espaço do proprietário de haras ou fazenda: separado do espaço do veterinário
+    match /data/users/{uid}/fazenda/{col}/{doc} {
+      allow read, delete: if dono(uid) && colecaoValida(col);
+      allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk(doc);
+    }
 
     // ---------- clínica ----------
     function membroPath(cid) { return /databases/$(database)/documents/clinicas/$(cid)/membros/$(request.auth.uid); }

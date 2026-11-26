@@ -64,6 +64,19 @@ Fotos de perfil e dos animais já funcionam. Para anexar PDF e raio-X:
 2. No site novo: crie a conta, vá em **Conta › Importar backup** e escolha o arquivo.
 Cada pessoa faz isso com a própria conta.
 
+## Dois perfis: Veterinário e Proprietário de haras ou fazenda
+Na primeira entrada de uma conta nova, o VetCamp pergunta como a pessoa vai usar. Dá para trocar quando quiser em **Conta › Alterar perfil**. Cada perfil tem os próprios dados, guardados separados: o veterinário em `data/users/<id>/samvet` e o proprietário em `data/users/<id>/fazenda`. A escolha fica salva na conta e vale em todos os aparelhos.
+
+**Veterinário(a)**: tudo o que já existia (prontuário, agenda, caixa, orçamentos, equipe da clínica…).
+
+**Proprietário de haras ou fazenda**:
+- **Animais**: ficha de cada cavalo com baia ou piquete, finalidade, proprietário, feno e ração por dia, tratos, dieta e instruções, pensão mensal. Abas: visitas do veterinário, vacinas e vermífugos, exames (AIE, mormo), casco e ferrador, dentes, medicações, reprodução, **treinos e exercício**, lembretes e **gastos do animal**. Cada registro pode ter "quanto custou", que vira gasto automaticamente.
+- **Lembretes**: tudo o que vence (vacina, vermífugo, AIE, casco, dentes, retorno) mais **lembretes gerais que se repetem** (comprar feno, pagar tratador, cobrar pensões). "Feito" agenda o próximo.
+- **Alimentação**: estoque de feno, ração e suplementos com **consumo por dia, quantos dias ainda dura e quando acaba**, compra (soma o estoque, calcula o preço por fardo e lança o gasto) e baixa do trato. **Plano de trato** do plantel e **quadro de trato em PDF** para pendurar na cocheira.
+- **Gastos**: por categoria (feno, ração, veterinário, ferrador, tratadores, transporte, provas…), por animal e por fornecedor. Gasto geral é **dividido entre todos os animais** ou entre os escolhidos. Planilha .csv.
+- **Pessoas**: proprietários dos animais com **pensão do mês**, cobrança por WhatsApp e Pix, e contatos (veterinário, ferrador, dentista, fornecedores) que aparecem como sugestão nos registros.
+- **Relatórios**: gastos dos últimos 12 meses, custo médio por animal, custo de cada animal no ano, pensões menos gastos e cuidados atrasados.
+
 ## Clínica com equipe (só no site próprio)
 Cada pessoa tem o **espaço pessoal** (só dela) e pode participar de uma ou mais **clínicas**. A troca é feita em **Conta › Equipe e clínica**.
 - **Criar clínica:** quem cria vira **Dono** e pode atender como veterinário(a). Pode copiar os dados pessoais para a clínica; os pessoais continuam guardados.
