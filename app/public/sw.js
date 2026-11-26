@@ -1,6 +1,6 @@
 /* VetCamp · guarda a página para o aplicativo abrir mesmo com sinal fraco.
    Os dados em si ficam no banco do Firebase, que já funciona sem internet. */
-const CACHE = 'samvet-d81658683c';
+const CACHE = 'samvet-02a097894f';
 const BASICO = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icons/icon-192.png'];
 
 self.addEventListener('install', e => {
@@ -22,7 +22,8 @@ self.addEventListener('fetch', e => {
   if (!proprio && !sdk && !libs) return;
   const guardar = resp => { if (resp && (resp.ok || resp.type === 'opaque')) { const copia = resp.clone(); caches.open(CACHE).then(c => c.put(r, copia)); } return resp; };
   // bibliotecas com versão no endereço nunca mudam: abre direto da cópia guardada (mais rápido)
-  if (sdk || (libs && u.hostname === 'cdn.jsdelivr.net')) {
+  const libProprio = proprio && u.pathname.startsWith('/lib/'); // muda de nome de cache a cada versão
+  if (sdk || libProprio || (libs && u.hostname === 'cdn.jsdelivr.net')) {
     e.respondWith(caches.match(r).then(m => m || fetch(r).then(guardar)));
     return;
   }

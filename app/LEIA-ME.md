@@ -121,6 +121,14 @@ Já ativo no site (gratuito):
 - **Cabeçalhos de segurança** (`firebase.json`): política de conteúdo (CSP) que bloqueia scripts de sites estranhos, proteção contra o site ser embutido em páginas falsas, HTTPS obrigatório (HSTS), `nosniff`, `Referrer-Policy` e `Permissions-Policy`.
 - **Banco (`firestore.rules`)**: cada conta só acessa os próprios dados, só nas coleções que o app usa, com limite de campos por registro; o resto fica fechado.
 - **Arquivos (`storage.rules`)**: só imagem ou PDF, até 20 MB, só na pasta da própria conta.
+- **Política de conteúdo com hash**: o site só executa os próprios arquivos e os blocos de código da página conferidos por impressão digital (SHA-256), gerada a cada publicação. Código injetado não roda.
+- **Bibliotecas no próprio site** (`app/public/lib/`): Firebase 10.12.2, jsPDF 2.5.1, autotable 3.8.2 e qrcode 1.4.4 servidos pelo VetCamp, sem depender de sites de terceiros. Dentro do Claude elas vêm do jsdelivr com **selo de integridade (SRI)**: arquivo alterado é recusado.
+- **Testado contra XSS**: código malicioso em todos os 139 tipos de campo, abrindo todas as telas, abas, formulários e documentos. Nada executa.
+- **Datas e endereços de anexos** passam por filtro antes de ir para a tela.
+- **Backup importado**: chaves perigosas removidas (`__proto__`), IDs conferidos, textos e quantidades limitados, listas corrigidas.
+- **Banco**: registro novo só com ID simples (letras, números, - e _); `nome` precisa ser texto de até 300 letras.
+- **Senha de conta nova**: pelo menos 8 caracteres e recusa de senhas óbvias (12345678, senha123…).
+- **Sem segredos no código**: nenhuma chave privada no repositório nem no histórico. As chaves ficam só nos segredos do GitHub.
 - **No app**: gravações seguidas do mesmo registro viram uma só, proteção contra clique duplo, tela redesenhada em lote, lista de pacientes em páginas de 80, pausa progressiva após 5 senhas erradas, limites de tamanho em anexos e backups.
 
 ## O que depende de você (gratuito, só configurar)
@@ -130,11 +138,13 @@ Já ativo no site (gratuito):
    - Crie a chave em https://www.google.com/recaptcha/admin (tipo reCAPTCHA v3, domínio `vetcamp.web.app`).
    - Firebase › App Check › registre o app da Web com essa chave.
    - Mande a **chave do site** (a pública) para o Claude colocar em `appCheckKey`. Depois de 1 a 2 dias sem erros, ligue a **aplicação obrigatória** para Firestore e Storage no App Check.
-4. **Monitor de disponibilidade** (avisa se o site cair): UptimeRobot (https://uptimerobot.com) ou Better Stack têm plano gratuito. Cadastre `https://vetcamp.web.app`. Confira nos termos se o plano gratuito permite uso comercial.
+4. **Política de senha no Firebase** (reforça a do app): Authentication › Configurações › Política de senha → mínimo 8 caracteres, exigir letras e números.
+5. **Monitor de disponibilidade** (avisa se o site cair): UptimeRobot (https://uptimerobot.com) ou Better Stack têm plano gratuito. Cadastre `https://vetcamp.web.app`. Confira nos termos se o plano gratuito permite uso comercial.
 
 ## O que é pago (para você decidir)
 - **Plano Blaze do Firebase** (paga só o que passar do gratuito; pede cartão): necessário para anexos de PDF e raio-X no Storage.
 - **Domínio próprio** (ex.: `vetcamp.com.br`, cerca de R$ 40/ano no registro.br).
+- **Backup automático do banco** (diário, guardado pelo Google por até 14 dias): precisa do plano Blaze. Hoje o backup é manual (Conta › Baixar backup).
 - **WhatsApp automático** (lembretes enviados sozinhos): exige a API oficial do WhatsApp Business, cobrada por conversa.
 - **Monitor de erros** como o Sentry: tem plano gratuito limitado; os pagos começam por volta de US$ 26/mês.
 - **Lojas**: Google Play (taxa única de US$ 25) e App Store (US$ 99/ano).

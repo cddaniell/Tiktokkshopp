@@ -7,6 +7,7 @@ e-mail, banco e arquivos) pela ponte app/src/shim.js.
 
 Uso:  python3 scripts/build_app.py
 """
+import base64
 import hashlib
 import pathlib
 import re
@@ -22,6 +23,7 @@ PAGINA = """<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+__CSP__
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -48,7 +50,7 @@ location.replace('https://vetcamp.web.app'+location.pathname+location.search+loc
 def main() -> None:
     fonte = FONTE.read_text(encoding="utf-8")
     scripts = "".join(
-        f'<script src="https://www.gstatic.com/firebasejs/{FIREBASE_VERSAO}/firebase-{m}-compat.js"></script>\n'
+        f'<script src="lib/firebase-{m}-compat.js"></script>\n'
         for m in SDK
     )
     scripts += '<script src="firebase-config.js"></script>\n<script>\n' + SHIM.read_text(encoding="utf-8") + "\n</script>\n"
@@ -59,6 +61,16 @@ def main() -> None:
     conteudo = partes[0] + scripts + "<script>" + partes[1]
     conteudo = conteudo.replace('<meta name="claude:viewport-fit-sides" content="cover">\n', "")
     html = PAGINA.format(conteudo=conteudo)
+    # bibliotecas servidas pelo próprio site (mesmas versões, sem depender de sites de terceiros)
+    for m in SDK:
+        if not (SAIDA / "lib" / f"firebase-{m}-compat.js").exists():
+            raise SystemExit(f"Falta app/public/lib/firebase-{m}-compat.js (Firebase {FIREBASE_VERSAO})")
+    # política de conteúdo: só roda script do próprio site ou os blocos desta página, conferidos por hash
+    blocos = re.findall(r"<script>(.*?)</script>", html, flags=re.S)
+    hashes = " ".join("'sha256-" + base64.b64encode(hashlib.sha256(b.encode()).digest()).decode() + "'" for b in blocos)
+    csp = ("script-src 'self' " + hashes + " https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; "
+           "object-src 'none'; base-uri 'self'")
+    html = html.replace("__CSP__", f'<meta http-equiv="Content-Security-Policy" content="{csp}">', 1)
     SAIDA.mkdir(parents=True, exist_ok=True)
     (SAIDA / "index.html").write_text(html, encoding="utf-8")
 

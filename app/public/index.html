@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-TZmk4w8Y40EIFd3yQFoCDIHZoUFja32Fm+Y+SGh9+4U=' 'sha256-y261ey8LPEttnkQK9HK/Nbc0Kd42S72XwUB6h7C92fQ=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -297,11 +298,11 @@ html.letra-maior body{zoom:1.12}
 <input type="file" id="fileimp" hidden accept="application/json,.json">
 <input type="file" id="fotoup" hidden accept="image/*">
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="lib/firebase-app-compat.js"></script>
+<script src="lib/firebase-app-check-compat.js"></script>
+<script src="lib/firebase-auth-compat.js"></script>
+<script src="lib/firebase-firestore-compat.js"></script>
+<script src="lib/firebase-storage-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 /* VetCamp · versão site próprio.
@@ -358,7 +359,7 @@ html.letra-maior body{zoom:1.12}
    <form id="a_form" novalidate>
     <label id="l_nome" hidden>Seu nome<input id="a_nome" autocomplete="name" placeholder="Como quer ser chamado(a)"></label>
     <label>E-mail<input id="a_email" type="email" autocomplete="email" inputmode="email" required></label>
-    <label id="l_senha">Senha<input id="a_senha" type="password" autocomplete="current-password" required minlength="6"></label>
+    <label id="l_senha">Senha<input id="a_senha" type="password" autocomplete="current-password" required minlength="6" maxlength="128"></label>
     <label id="l_senha2" hidden>Repita a senha<input id="a_senha2" type="password" autocomplete="new-password"></label>
     <button class="ok2" id="a_ok">Entrar</button>
     <button type="button" class="lnk" id="a_esq">Esqueci minha senha</button>
@@ -473,6 +474,8 @@ html.letra-maior body{zoom:1.12}
         const nome=$('a_nome').value.trim();
         if(!nome){msg('Digite seu nome.');return}
         if(senha!==$('a_senha2').value){msg('As senhas não são iguais.');return}
+        const fraca=/^(.)\1+$/.test(senha)||/^(?:0?123456789?0?|12345678|87654321|senha\d*|password\d*|qwerty\d*|abc12345|vetcamp\d*)$/i.test(senha)||senha.toLowerCase()===email.toLowerCase().split('@')[0];
+        if(senha.length<8||fraca){msg(senha.length<8?'Use uma senha com pelo menos 8 caracteres.':'Essa senha é fácil de adivinhar. Misture letras e números.');return}
         const r=await auth.createUserWithEmailAndPassword(email,senha);
         await r.user.updateProfile({displayName:nome});
         lembrar(r.user);
@@ -558,7 +561,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const hoje=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 const agoraH=()=>new Date().toTimeString().slice(0,5);
-const br=d=>d?String(d).slice(0,10).split('-').reverse().join('/'):'—';
+const br=d=>d?String(d).slice(0,10).replace(/[^0-9A-Za-z\/:. -]/g,'').split('-').reverse().join('/'):'—'; // só caracteres de data (nunca HTML)
 const addD=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};
 const dias=d=>Math.round((new Date(String(d).slice(0,10)+'T12:00:00')-new Date(hoje()+'T12:00:00'))/864e5);
 const quando=d=>{const n=dias(d);return n<0?`vencido há ${-n} d`:n===0?'hoje':n===1?'amanhã':`em ${n} d`};
@@ -791,6 +794,17 @@ function moverEstoque(ref,q,motivo){const it=S.est.find(x=>x.id===ref)||estPorNo
 const meId=()=>me&&me.id||'';
 function vincCli(p){const c=cliDe(p);if(!c)return p;const o={...p,tutor:c.nome};if(!o.tel)o.tel=c.tel||'';if(!o.cpf)o.cpf=c.doc||'';if(!o.email)o.email=c.email||'';if(!o.prop&&c.tipo&&c.tipo!=='Pessoa física')o.prop=c.nome;return o}
 const salvarCli=c=>gravar('clientes',c,S.cli);
+/* dados vindos do banco, do aparelho ou de backup: listas sempre como listas (dado adulterado não trava a tela) */
+const ARR=v=>Array.isArray(v)?v:(v==null||v===''?[]:[v]);
+function normPac(p){
+  if(!p||typeof p!=='object')return p;const o={...p};
+  for(const k of ['socios','anexos','docs',...MODS.map(m=>m.key)])if(k in o)o[k]=ARR(o[k]).filter(x=>x&&typeof x==='object');
+  if('alertas' in o)o.alertas=ARR(o.alertas).map(String);
+  for(const m of MODS)if(o[m.key])o[m.key]=o[m.key].map(it=>{const x={...it};for(const a of ['achados','regioes','dentes','aplic'])if(a in x)x[a]=ARR(x[a]);return x});
+  return o;
+}
+const normOrc=o=>o&&typeof o==='object'?{...o,itens:ARR(o.itens).filter(x=>x&&typeof x==='object')}:o;
+const normEst=o=>o&&typeof o==='object'&&'mov' in o?{...o,mov:ARR(o.mov).filter(x=>x&&typeof x==='object')}:o;
 const nomesCache={};
 async function hidratarNomes(){
   const els=[...document.querySelectorAll('[data-uid]')];if(!els.length||!user)return;
@@ -1693,7 +1707,9 @@ function csvOrc(){
 }
 /* PDF */
 const PDF_LIBS=['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
-const carregarScript=src=>new Promise((ok,erro)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>erro(new Error('falha ao carregar '+src));document.head.appendChild(s)});
+/* bibliotecas externas: selo de integridade (o navegador recusa arquivo alterado); no site próprio vêm do próprio endereço */
+const SRI={'jspdf.umd.min.js':'sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk','jspdf.plugin.autotable.min.js':'sha384-fCAW/rDWORTbQXSiB7mOg0QtQ5c+r0f544y6XoKjuVva0nMBlCpNUjiFeG5iMdS3','qrcode.js':'sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k'};
+const carregarScript=src=>new Promise((ok,erro)=>{const arq=src.split('/').pop(),s=document.createElement('script');s.src=STANDALONE?'lib/'+arq:src;if(SRI[arq]){s.integrity=SRI[arq];s.crossOrigin='anonymous'}s.onload=ok;s.onerror=()=>erro(new Error('falha ao carregar '+arq));document.head.appendChild(s)});
 async function pdfLib(){if(!(window.jspdf&&window.jspdf.jsPDF))await carregarScript(PDF_LIBS[0]);if(!window.jspdf.jsPDF.API.autoTable)await carregarScript(PDF_LIBS[1]);return window.jspdf.jsPDF}
 function logoTingido(cor){try{const el=document.querySelector('.top .logo'),m=(getComputedStyle(el).webkitMaskImage||getComputedStyle(el).maskImage||'').match(/url\("?(data:image\/png;base64,[^")]+)"?\)/);if(!m)return Promise.resolve(null);
   return new Promise(ok=>{const im=new Image();im.onload=()=>{const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const cx=cv.getContext('2d');cx.drawImage(im,0,0);cx.globalCompositeOperation='source-in';cx.fillStyle=cor;cx.fillRect(0,0,cv.width,cv.height);ok(cv.toDataURL('image/png'))};im.onerror=()=>ok(null);im.src=m[1]})}catch(e){return Promise.resolve(null)}}
@@ -2113,7 +2129,7 @@ function abrirDoc(p,titulo,texto,docId,opt={}){
 }
 function anexos(p){
   const l=ord(p.anexos),imgs=l.filter(a=>/^image\//.test(a.tipo));
-  const u=a=>blobSrc(a.assetId);
+  const u=a=>esc(blobSrc(a.assetId));
   const A=imgs.find(a=>a.id===S.cmpA)||imgs[imgs.length-1],B=imgs.find(a=>a.id===S.cmpB)||imgs[0];
   return `<div class="bar"><h3>Fotos, laudos e exames</h3>${assets?'<button class="btn pri sm" data-upload>+ Anexar arquivo</button>':''}</div>
   <p class="hint">${assets?'Fotos de feridas, radiografias, laudos em PDF. Ficam guardados junto da ficha.':db?'Só quem tem acesso de edição ao VetCamp pode anexar arquivos.':'Anexos precisam do login: abra o VetCamp pelo link do Claude.'}</p>
@@ -2238,16 +2254,29 @@ $('fotoup').onchange=async e=>{
     else{const u=await reduzirFoto(f,220);const q=S.pac.find(x=>x.id===alvo.id);if(q){salvar({...q,foto:u});toast('Foto de '+q.nome+' salva')}}
   }catch(err){toast('Não foi possível ler essa imagem. Tente outra foto.')}
 };
+/* backup importado: tira chaves perigosas, limita tamanho de textos e profundidade */
+function limparImport(v,nivel=0){
+  if(nivel>8)return null;
+  if(typeof v==='string')return v.length>200000?v.slice(0,200000):v;
+  if(typeof v==='number')return isFinite(v)?v:0;
+  if(typeof v==='boolean'||v===null)return v;
+  if(Array.isArray(v))return v.slice(0,20000).map(x=>limparImport(x,nivel+1));
+  if(typeof v==='object'){const o={};for(const k of Object.keys(v).slice(0,400)){if(k==='__proto__'||k==='constructor'||k==='prototype'||k.length>100)continue;o[k]=limparImport(v[k],nivel+1)}return o}
+  return null;
+}
 $('fileimp').onchange=e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
   if(f.size>60*1024*1024){toast('Arquivo grande demais para ser um backup do VetCamp.');return}
-  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);const ps=Array.isArray(d)?d:d.pacientes||[];let n=0;
-    for(const p of ps){if(!p||!p.nome)continue;const o={...p,id:p.id||uid()};S.pac=S.pac.filter(x=>x.id!==o.id);salvar(o);n++}
+  const r=new FileReader();r.onload=()=>{try{const d=limparImport(JSON.parse(r.result));if(!d||typeof d!=='object')throw 0;const lista=v=>Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).slice(0,20000):[];
+    const idOk=x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(x)?x:uid();
+    for(const k of ['pacientes','clientes','despesas','orcamentos','estoque'])if(!Array.isArray(d))d[k]=lista(d[k]).map(x=>({...x,id:idOk(x.id)}));
+    const ps=Array.isArray(d)?lista(d).map(x=>({...x,id:idOk(x.id)})):d.pacientes;let n=0;
+    for(const p of ps){if(!p.nome||typeof p.nome!=='string')continue;const o=normPac({...p});S.pac=S.pac.filter(x=>x.id!==o.id);salvar(o);n++}
     for(const c of (d.clientes||[])){if(c&&c.nome)salvarCli({...c,id:c.id||uid()})}
     for(const x of (d.despesas||[])){if(x&&x.desc)salvarDesp({...x,id:x.id||uid()})}
     for(const o of (d.orcamentos||[])){if(o&&o.numero)salvarOrc({...o,id:o.id||uid()})}
     for(const it of (d.estoque||[])){if(it&&it.nome)salvarEst({...it,id:it.id||uid()})}
-    if(d.config&&typeof d.config==='object')salvarCfg({...S.cfg,...d.config});
+    if(d.config&&typeof d.config==='object'&&!Array.isArray(d.config))salvarCfg({...S.cfg,...d.config});
     toast(n+' paciente(s) importado(s)')}catch(err){toast('Arquivo inválido. Use um backup .json do VetCamp.')}};r.readAsText(f);
 };
 document.addEventListener('click',e=>{
@@ -2378,22 +2407,22 @@ render();
     dict.onFinal(({text})=>{if(micTa&&text)micTa.value=(micTa.value?micTa.value.replace(/\s*$/,' '):'')+text});
   }
   if(!db){
-    S.pac=LS.get('prontuario-vet',[]);S.est=LS.get('samvet-estoque',[]);S.cli=LS.get('samvet-clientes',[]);S.orc=LS.get('samvet-orcamentos',[]);S.desp=LS.get('samvet-despesas',[]);S.cfg=LS.get('samvet-config',{});
+    S.pac=ARR(LS.get('prontuario-vet',[])).map(normPac);S.est=ARR(LS.get('samvet-estoque',[])).map(normEst);S.cli=LS.get('samvet-clientes',[]);S.orc=ARR(LS.get('samvet-orcamentos',[])).map(normOrc);S.desp=LS.get('samvet-despesas',[]);S.cfg=LS.get('samvet-config',{});
     note(window.__semId?'Não foi possível identificar sua conta neste link, então os dados ficam só neste aparelho. Peça a quem compartilhou para te convidar com acesso de edição.':'Modo local: os dados ficam só neste navegador. Entre na sua conta Claude para acessar de qualquer aparelho.','<button class="btn sm" data-vis="conta">Como entrar</button>');render();return}
-  S.pac=LS.get(PFX+'cache-pacientes',[]);S.est=LS.get(PFX+'cache-estoque',[]);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=LS.get(PFX+'cache-orcamentos',[]);S.desp=LS.get(PFX+'cache-despesas',[]);S.cfg=LS.get(PFX+'cache-config',{});if(CLIN)S.cfg={...S.cfg,...pessoaisDe(CLIN.eu)};render();
+  S.pac=ARR(LS.get(PFX+'cache-pacientes',[])).map(normPac);S.est=ARR(LS.get(PFX+'cache-estoque',[])).map(normEst);S.cli=LS.get(PFX+'cache-clientes',[]);S.orc=ARR(LS.get(PFX+'cache-orcamentos',[])).map(normOrc);S.desp=LS.get(PFX+'cache-despesas',[]);S.cfg=LS.get(PFX+'cache-config',{});if(CLIN)S.cfg={...S.cfg,...pessoaisDe(CLIN.eu)};render();
   note(S.pac.length?'Mostrando os dados salvos neste aparelho enquanto conecta…':'Carregando pacientes…');
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
   colRef('pacientes').onSnapshot(snap=>{
     if(!snap.metadata.fromCache){clearTimeout(timer);note('')}
-    S.pac=mesclarSnap('pacientes',snap.docs.map(d=>({...d.data(),id:d.id})),S.pac);LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
+    S.pac=mesclarSnap('pacientes',snap.docs.map(d=>normPac({...d.data(),id:d.id})),S.pac);LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))renderLogo();
   },e=>{clearTimeout(timer);note('Erro ao carregar os dados ('+e.code+').')});
   colRef('despesas').onSnapshot(snap=>{S.desp=mesclarSnap('despesas',snap.docs.map(d=>({...d.data(),id:d.id})),S.desp);LS.set(PFX+'cache-despesas',S.desp);if(idle()&&['caixa','relat'].includes(S.vis)&&!S.sel)renderLogo()},()=>{});
-  colRef('orcamentos').onSnapshot(snap=>{S.orc=mesclarSnap('orcamentos',snap.docs.map(d=>({...d.data(),id:d.id})),S.orc);LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))renderLogo()},()=>{});
+  colRef('orcamentos').onSnapshot(snap=>{S.orc=mesclarSnap('orcamentos',snap.docs.map(d=>normOrc({...d.data(),id:d.id})),S.orc);LS.set(PFX+'cache-orcamentos',S.orc);if(idle()&&S.vis==='orc'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qo'))renderLogo()},()=>{});
   colRef('clientes').onSnapshot(snap=>{S.cli=mesclarSnap('clientes',snap.docs.map(d=>({...d.data(),id:d.id})),S.cli);LS.set(PFX+'cache-clientes',S.cli);if(idle()&&S.vis==='clientes'&&!S.sel&&!(document.activeElement&&document.activeElement.id==='qc'))renderLogo()},()=>{});
-  colRef('estoque').onSnapshot(snap=>{S.est=mesclarSnap('estoque',snap.docs.map(d=>({...d.data(),id:d.id})),S.est);LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)renderLogo();else renderNav()},()=>{});
+  colRef('estoque').onSnapshot(snap=>{S.est=mesclarSnap('estoque',snap.docs.map(d=>normEst({...d.data(),id:d.id})),S.est);LS.set(PFX+'cache-estoque',S.est);if(idle()&&S.vis==='estoque'&&!S.sel)renderLogo();else renderNav()},()=>{});
   cfgRef().onSnapshot(s=>{S.cfg=cfgFinal(s.exists?(s.data()||{}):{});LS.set(PFX+'cache-config',S.cfg);if(idle()&&['conta','precos'].includes(S.vis)&&!S.sel&&!(document.activeElement&&document.activeElement.closest('#cfgf,#precosv')))renderLogo()},()=>{});
   setInterval(()=>{if(idle()&&['pac','agenda','intern'].includes(S.vis)||S.sel&&idle())render();if(pendentes().length&&navigator.onLine)reenviar()},60000);
   addEventListener('online',()=>{avisoPend();reenviar()});addEventListener('offline',avisoPend);

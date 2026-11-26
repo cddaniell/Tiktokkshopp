@@ -12,7 +12,14 @@ service cloud.firestore {
     function colecaoValida(col) {
       return col in ['pacientes', 'clientes', 'estoque', 'orcamentos', 'despesas', 'config'];
     }
-    function tamanhoOk() { return request.resource.data.size() <= 400; }
+    // registro novo: id só com letras, números, - e _; campos principais com tipo e tamanho conferidos
+    function tamanhoOk(doc) {
+      let d = request.resource.data;
+      return d.size() <= 400
+        && (resource != null || doc.matches('^[A-Za-z0-9_-]{1,64}$'))
+        && (!('nome' in d) || (d.nome is string && d.nome.size() <= 300))
+        && (!('atualizado' in d) || d.atualizado is number);
+    }
     function meuEmail() { return request.auth.token.email.lower(); }
     function emailConfirmado() { return request.auth.token.email_verified == true; }
     function texto(v, max) { return v is string && v.size() <= max; }
@@ -20,7 +27,7 @@ service cloud.firestore {
     // ---------- espaço pessoal ----------
     match /data/users/{uid}/samvet/{col}/{doc} {
       allow read, delete: if dono(uid) && colecaoValida(col);
-      allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk();
+      allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk(doc);
     }
 
     // ---------- clínica ----------
@@ -81,25 +88,25 @@ service cloud.firestore {
       match /app/samvet/{col}/{doc} {
         allow read: if membro(cid) && colecaoValida(col);
 
-        allow write: if col == 'config' && ehDono(cid) && (request.resource == null || tamanhoOk());
+        allow write: if col == 'config' && ehDono(cid) && (request.resource == null || tamanhoOk(doc));
 
-        allow write: if col == 'despesas' && veFin(cid) && (request.resource == null || tamanhoOk());
+        allow write: if col == 'despesas' && veFin(cid) && (request.resource == null || tamanhoOk(doc));
 
         allow write: if col == 'orcamentos' && membro(cid) && papel(cid) in ['dono', 'veterinario', 'financeiro']
-          && (request.resource == null || tamanhoOk());
+          && (request.resource == null || tamanhoOk(doc));
 
-        allow create, update: if col == 'clientes' && membro(cid) && tamanhoOk();
+        allow create, update: if col == 'clientes' && membro(cid) && tamanhoOk(doc);
         allow delete: if col == 'clientes' && ehVet(cid);
 
-        allow update: if col == 'estoque' && membro(cid) && papel(cid) in ['dono', 'veterinario', 'estagiario'] && tamanhoOk();
-        allow create, delete: if col == 'estoque' && ehVet(cid) && (request.resource == null || tamanhoOk());
+        allow update: if col == 'estoque' && membro(cid) && papel(cid) in ['dono', 'veterinario', 'estagiario'] && tamanhoOk(doc);
+        allow create, delete: if col == 'estoque' && ehVet(cid) && (request.resource == null || tamanhoOk(doc));
 
-        allow create: if col == 'pacientes' && membro(cid) && tamanhoOk() && (
+        allow create: if col == 'pacientes' && membro(cid) && tamanhoOk(doc) && (
           ehVet(cid)
           || (papel(cid) == 'estagiario'
             && request.resource.data.get('meds', []).size() == 0
             && request.resource.data.get('docs', []).size() == 0));
-        allow update: if col == 'pacientes' && membro(cid) && tamanhoOk() && (
+        allow update: if col == 'pacientes' && membro(cid) && tamanhoOk(doc) && (
           ehVet(cid)
           // estagiário: registra evolução, aplica doses e cadastra, mas não prescreve,
           // não emite documentos e não apaga lançamentos financeiros

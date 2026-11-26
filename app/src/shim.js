@@ -52,7 +52,7 @@
    <form id="a_form" novalidate>
     <label id="l_nome" hidden>Seu nome<input id="a_nome" autocomplete="name" placeholder="Como quer ser chamado(a)"></label>
     <label>E-mail<input id="a_email" type="email" autocomplete="email" inputmode="email" required></label>
-    <label id="l_senha">Senha<input id="a_senha" type="password" autocomplete="current-password" required minlength="6"></label>
+    <label id="l_senha">Senha<input id="a_senha" type="password" autocomplete="current-password" required minlength="6" maxlength="128"></label>
     <label id="l_senha2" hidden>Repita a senha<input id="a_senha2" type="password" autocomplete="new-password"></label>
     <button class="ok2" id="a_ok">Entrar</button>
     <button type="button" class="lnk" id="a_esq">Esqueci minha senha</button>
@@ -167,6 +167,8 @@
         const nome=$('a_nome').value.trim();
         if(!nome){msg('Digite seu nome.');return}
         if(senha!==$('a_senha2').value){msg('As senhas não são iguais.');return}
+        const fraca=/^(.)\1+$/.test(senha)||/^(?:0?123456789?0?|12345678|87654321|senha\d*|password\d*|qwerty\d*|abc12345|vetcamp\d*)$/i.test(senha)||senha.toLowerCase()===email.toLowerCase().split('@')[0];
+        if(senha.length<8||fraca){msg(senha.length<8?'Use uma senha com pelo menos 8 caracteres.':'Essa senha é fácil de adivinhar. Misture letras e números.');return}
         const r=await auth.createUserWithEmailAndPassword(email,senha);
         await r.user.updateProfile({displayName:nome});
         lembrar(r.user);
