@@ -166,6 +166,7 @@
       else if(modo==='criar'){
         const nome=$('a_nome').value.trim();
         if(!nome){msg('Digite seu nome.');return}
+        if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){msg('E-mail inválido. Confira se digitou certo.');return}
         if(senha!==$('a_senha2').value){msg('As senhas não são iguais.');return}
         const fraca=/^(.)\1+$/.test(senha)||/^(?:0?123456789?0?|12345678|87654321|senha\d*|password\d*|qwerty\d*|abc12345|vetcamp\d*)$/i.test(senha)||senha.toLowerCase()===email.toLowerCase().split('@')[0];
         if(senha.length<8||fraca){msg(senha.length<8?'Use uma senha com pelo menos 8 caracteres.':'Essa senha é fácil de adivinhar. Misture letras e números.');return}
