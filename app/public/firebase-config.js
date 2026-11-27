@@ -18,5 +18,5 @@ window.SAMVET_FIREBASE = {
   appCheckKey: "",
   // Notificações com o app fechado (celular e computador): cole a "chave pública" (par de chaves)
   // de Firebase › Configurações do projeto › Cloud Messaging › Certificados push da Web. Vazio = desligado.
-  vapidKey: ""
+  vapidKey: "BAgjsWmWGyBuOhQiTZe8eOyoZwlZjCK-yH-_jzWGazCakBpLYXHTebJckxM8vH8scY7SjesMORHEl94QzQCY_Dg"
 };
