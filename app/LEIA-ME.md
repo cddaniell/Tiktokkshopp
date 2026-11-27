@@ -77,6 +77,28 @@ Na primeira entrada de uma conta nova, o VetCamp pergunta como a pessoa vai usar
 - **Pessoas**: proprietários dos animais com **pensão do mês**, cobrança por WhatsApp e Pix, e contatos (veterinário, ferrador, dentista, fornecedores) que aparecem como sugestão nos registros.
 - **Relatórios**: gastos dos últimos 12 meses, custo médio por animal, custo de cada animal no ano, pensões menos gastos e cuidados atrasados.
 
+## Funções essenciais (pesquisa nos principais sistemas)
+**Veterinário**
+- **Carência separada**: leite e carne/abate/competição. Aviso na ficha e na agenda ("Leite liberado", "Liberado para abate").
+- **Atendimento em lote** (Ferramentas): vacina, vermífugo, OPG, **casqueamento**, **coleta de exame** e **diagnóstico de gestação** com Prenhe/Vazia por fêmea e taxa de prenhez.
+- **Exame andrológico** (touro, garanhão, carneiro, bode) e **pesagens com escore corporal**.
+- **Parto registra o potro/bezerro** com pai e mãe. **Genealogia** com avós na aba Dados.
+- **Laudo para seguradora**.
+- **GPS do cliente**: "Usar minha localização" no cadastro; botões Mapa e Waze; a rota do dia usa o ponto exato.
+- **Link para o cliente** (site): página só de leitura com vacinas, exames oficiais, carência e próximos cuidados, sem login, válida por 90 dias e que pode ser desativada. Fica em `portal/<código>` no banco: ninguém lista os links e só o dono altera.
+
+**Proprietário**
+- Menu: **Manejo** (Alimentação, Baias e piquetes, Tarefas do tratador, Ferramentas) e **Financeiro** (Gastos, Faturas, Relatórios).
+- **Faturas dos proprietários**: pensão mais gastos marcados como "Cobrar do proprietário", com WhatsApp, Pix e "recebida".
+- **Tarefas do tratador**: checklist do dia com horário e responsável; aparece também em Lembretes.
+- **Baias e piquetes**: ocupação, vagas e piquete em descanso.
+- **Compra e venda**, valor do plantel, **provas** (a inscrição vira gasto), **pesagens com ganho de peso (GMD)**, **indicadores** (taxa de prenhez, nascimentos, óbitos) e **categorias de gasto próprias**.
+
+## Notificações
+Em **Conta › Notificações**: ligar neste aparelho, horário do aviso, lembretes do dia e "dica dia sim, dia não" quando não há nada marcado (ex.: "Prepare-se para o próximo atendimento").
+- Aparecem quando o VetCamp é aberto ou fica aberto no horário. No Android e no computador, com o app instalado, o navegador também pode avisar em segundo plano (sincronização periódica).
+- **Aviso com o app totalmente fechado no iPhone e garantido em qualquer aparelho** precisa de notificações push pelo servidor (Firebase Cloud Messaging + Cloud Functions): **plano Blaze**.
+
 ## Clínica com equipe (só no site próprio)
 Cada pessoa tem o **espaço pessoal** (só dela) e pode participar de uma ou mais **clínicas**. A troca é feita em **Conta › Equipe e clínica**.
 - **Criar clínica:** quem cria vira **Dono** e pode atender como veterinário(a). Pode copiar os dados pessoais para a clínica; os pessoais continuam guardados.

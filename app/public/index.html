@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-Nm14q1B+kHjpITy31auPDZ3atHOLKyrQc1GBNaEVKZE=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-ACPFCNC0eD+w173VVpgOB7wlr3gQVwwxGMAV4NRWL0E=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -68,6 +68,13 @@ a{color:inherit}
 .alimb{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
 .mini4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.mini4>div{display:grid;gap:2px;background:var(--bg);border-radius:10px;padding:8px}.mini4 b{font-size:16px}.mini4 span{font-size:12px;color:var(--mute)}
 .item.alim.falta{border-color:var(--warn)}
+.arvore{display:grid;gap:8px}.arvore>div{display:grid;gap:8px}.arvore .g2{grid-template-columns:1fr 1fr}.arvore .g3{grid-template-columns:repeat(2,1fr)}
+@media(min-width:700px){.arvore{grid-template-columns:1fr 1fr 2fr;align-items:center}.arvore .g2{grid-template-columns:1fr}.arvore .g3{grid-template-columns:1fr 1fr}}
+.gn{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}.gn span{display:block;font-size:12px;color:var(--mute)}
+.tarefas{display:grid;gap:6px}.tarefa{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.tarefa>span{flex:1}.tarefa input{width:24px;height:24px;flex:none}.tarefa.feita b{text-decoration:line-through;opacity:.6}
+.item.local.cheio{border-color:var(--warn)}
+#lt_anim label{display:flex;align-items:center;gap:8px}#lt_anim select.ltres{margin-left:auto;min-height:34px}
 .sec{border:1px solid var(--line);border-radius:14px;background:var(--card);margin:0 0 10px}
 .sec>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;min-height:52px}
 .sec>summary::-webkit-details-marker{display:none}
@@ -82,7 +89,7 @@ a{color:inherit}
 .barra{display:block;height:6px;border-radius:3px;margin-top:4px;background:linear-gradient(90deg,var(--act) var(--w),color-mix(in srgb,var(--act) 12%,transparent) var(--w))}
 .lnk2{border:0;background:none;padding:0;color:var(--act);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;text-align:left}
 .ag .lem{display:flex;gap:12px;align-items:center;flex:1;min-width:0}
-body.prop :is([data-vis=caixa],[data-vis=orc],[data-vis=precos],[data-vis=ferr],[data-vis=intern],.soadmin,.sopresc,[data-rapido],[data-orcpac],[data-protapl],[data-tab=fin],.fichafin,[data-gerdoc]){display:none!important}
+body.prop :is([data-vis=caixa],[data-vis=orc],[data-vis=precos],[data-vis=intern],.soadmin,.sopresc,[data-rapido],[data-orcpac],[data-protapl],[data-tab=fin],.fichafin,[data-gerdoc]){display:none!important}
 .who .espchip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--act,#2b6);color:#fff;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .espaco{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#ddd4)}.espaco.atual b{color:var(--act)}
 body.sem-fin :is(.fichafin,[data-tab=fin],[data-vis=caixa],[data-vis=relat],[data-pixpac],[data-despnova],[data-socios],[data-cortesia],[data-gerdoc=orcamento],[data-quick],[data-csv]){display:none!important}
@@ -882,6 +889,7 @@ function pendencias(p){
   for(const k of ['locomotor','odonto','casco']){const m=MODS.find(x=>x.key===k);if(!modVis(m,p))continue;const x=ord(p[k])[0];if(x&&x.prox)add(x.prox,{locomotor:'Reavaliação locomotora',odonto:'Revisão odontológica',casco:'Casco / ferrageamento'}[k],k)}
   if(spOk('gr',p))for(const x of ultPor(p.oficiais,'tipo'))if(x.resultado==='Negativo'&&x.data&&+x.val)add(addD(x.data,+x.val),x.tipo.split(' (')[0]+' vence','oficiais',10);
   const g=gestacao(p);if(g)add(g.parto,'Parto previsto','repro',15);
+  for(const c of carencias(p))add(c.ate,(c.tipo==='leite'?'Leite liberado':'Liberado para abate / competição')+' · '+c.med,'meds',2);
   for(const f of (p.fin||[]))if(f.venc&&saldo(f)>0)add(f.venc,'Cobrança: '+f.desc+' · '+R$(saldo(f)),'fin');
   return out;
 }
@@ -1174,7 +1182,7 @@ function renderNav(){
 }
 /* menu agrupado: itens parecidos ficam juntos e abrem ao tocar; o grupo da tela atual mostra onde você está */
 const GRUPOS_VET=[['pac'],['agenda'],['intern'],['clientes'],['g:fin','Financeiro',['caixa','orc','relat','precos']],['g:mais','Mais',['estoque','ferr']],['conta']];
-const GRUPOS_PROP=[['pac'],['agenda'],['trato'],['g:fin','Financeiro',['gastos','relat']],['clientes'],['conta']];
+const GRUPOS_PROP=[['pac'],['agenda'],['g:man','Manejo',['trato','locais','tarefas','ferr']],['g:fin','Financeiro',['gastos','faturas','relat']],['clientes'],['conta']];
 let navAberto='';
 function posicionarMenu(){const g=$('nav').querySelector('.navg.aberto');if(!g)return;const r=g.querySelector('.navgb').getBoundingClientRect(),m=g.querySelector('.navmenu');m.style.top=Math.round(r.bottom+4)+'px';m.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8)))+'px'}
 function fecharMenu(){if(navAberto){navAberto='';renderNav()}}
@@ -1188,8 +1196,9 @@ function render(){
   renderNav();renderWho();
   const p=cur();$('view').hidden=!!p;$('ficha').hidden=!p;
   if(p)return renderFicha(p);
-  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,orc:renderOrcamentos,clientes:PROP()?renderPessoas:renderClientes,relat:PROP()?renderRelatProp:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta,trato:renderTrato,gastos:renderGastos})[S.vis]();
-  if(PROP()&&S.vis==='agenda'){const b=$('view').querySelector('.bar');if(b)b.insertAdjacentHTML('afterend',lembretesHtml())}
+  ({pac:renderLista,agenda:renderAgenda,intern:renderIntern,caixa:renderCaixa,orc:renderOrcamentos,clientes:PROP()?renderPessoas:renderClientes,relat:PROP()?renderRelatProp:renderRelat,precos:renderPrecos,estoque:renderEstoque,ferr:renderFerr,conta:renderConta,trato:renderTrato,gastos:renderGastos,locais:renderLocais,tarefas:renderTarefas,faturas:renderFaturas})[S.vis]();
+  if(PROP()&&S.vis==='agenda'){const b=$('view').querySelector('.bar');if(b)b.insertAdjacentHTML('afterend',tarefasHtml()+lembretesHtml())}
+  if(PROP()&&S.vis==='relat')$('view').insertAdjacentHTML('beforeend',indicadoresHtml());
   if(PROP()&&S.vis==='relat'&&$('rel_mes'))$('rel_mes').onchange=e=>{S.relMes=e.target.value||hoje().slice(0,7);render()};
 }
 const fotoOk=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
@@ -1305,10 +1314,10 @@ function renderFerr(){
   <div class="box"><div class="bar"><h3>Modelos de texto</h3><button class="btn pri sm" data-modnovo>+ Modelo</button></div><p class="hint" style="margin:0 0 10px">Frases prontas para consultas, orientações e laudos. Nos campos de texto, toque em <b>Modelos</b> para inserir.</p>${modelos().map(m=>`<div class="prow2"><span><b>${esc(m.nome)}</b><br><span class="meta">${esc(m.texto.slice(0,90))}${m.texto.length>90?'…':''}</span></span><button class="btn sm" data-modedit="${esc(m.id)}">Editar</button></div>`).join('')}</div>
   <div class="box"><div class="bar"><h3>Protocolos</h3><button class="btn pri sm" data-protnovo>+ Protocolo</button></div><p class="hint" style="margin:0 0 10px">Pacotes prontos de medicação, vacinas, exames e serviços, com valores. Aplique pelo botão "Aplicar protocolo" no Resumo do animal.</p>${protocolos().map(x=>`<div class="prow2"><span><b>${esc(x.nome)}</b><br><span class="meta">${esc(x.itens.map(i=>i.nome).join(' · '))}</span></span><button class="btn sm" data-protedit="${esc(x.id)}">Editar</button></div>`).join('')}</div>
   <div class="box"><h3>Tabela de doses · equinos adultos</h3><p class="hint" style="margin:0 0 10px">Referências usuais de literatura. Confira sempre a bula, a concentração do frasco e o estado do paciente. "Usar" leva a dose para a calculadora.</p><div class="tw"><table><tr><th>Fármaco</th><th>Dose</th><th>Via</th><th>Intervalo</th><th></th></tr>${DOSES_BASE.map((d,i)=>`<tr><td><b>${esc(d[0])}</b>${d[5]?`<br><span class="meta">frasco comum ${d[5]} mg/mL</span>`:''}</td><td>${esc(d[1])}</td><td>${esc(d[2])}</td><td>${esc(d[3])}</td><td><button class="btn sm" data-dose="${i}">Usar</button></td></tr>`).join('')}</table></div></div>
-  <div class="box"><h3>Atendimento em lote</h3><p class="hint" style="margin:0 0 10px">Vacina, vermífugo ou OPG para vários animais de uma propriedade numa visita só. Cada animal recebe o registro na aba Sanidade.</p>
+  <div class="box"><h3>Atendimento em lote</h3><p class="hint" style="margin:0 0 10px">Vacina, vermífugo, OPG, casqueamento, coleta de exame ou diagnóstico de gestação para vários animais numa visita só. Cada animal recebe o registro na ficha.</p>
    <div class="f">
     <div class="fld h"><label for="lt_prop">Propriedade</label><select id="lt_prop"><option value="">Todas</option>${[...new Set(S.pac.map(p=>p.prop).filter(Boolean))].sort().map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
-    <div class="fld h"><label for="lt_tipo">Tipo</label><select id="lt_tipo"><option>Vacina</option><option>Vermífugo</option><option>Exame de fezes (OPG)</option></select></div>
+    <div class="fld h"><label for="lt_tipo">Tipo</label><select id="lt_tipo"><option>Vacina</option><option>Vermífugo</option><option>Exame de fezes (OPG)</option><option>Casqueamento</option><option>Exame / coleta</option><option>Diagnóstico de gestação</option></select></div>
     <div class="fld h"><label for="lt_nome">Produto</label><input id="lt_nome" list="dl_lt"><datalist id="dl_lt">${[...VAC_EQ,...VAC_BOV].map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div>
     <div class="fld h"><label for="lt_est">Produto do estoque (baixa de 1 dose por animal)</label><select id="lt_est">${estOpts().map(([k,l])=>`<option value="${esc(k)}">${esc(l)}</option>`).join('')}</select></div>
     <div class="fld h"><label for="lt_lote">Lote / fabricante</label><input id="lt_lote"></div>
@@ -1317,11 +1326,11 @@ function renderFerr(){
     <div class="fld"><label>Animais</label><div class="ck" id="lt_anim"></div></div>
     <div class="fld h"><label for="lt_valor">Valor por animal (R$)</label><input id="lt_valor" type="number" step="any" inputmode="decimal" value="${preco('vacinas','Vacina')||''}"></div>
    </div><div class="acts"><button class="btn pri" data-lote>Registrar em lote</button></div></div>`;
-  const anim=()=>{const pr=$('lt_prop').value;$('lt_anim').innerHTML=S.pac.filter(p=>ativo(p)&&(!pr||p.prop===pr)).map(p=>`<label><input type="checkbox" value="${esc(p.id)}" checked>${esc(p.nome)}</label>`).join('')||'<span class="meta">Nenhum animal ativo nessa propriedade.</span>'};
+  const anim=()=>{const pr=$('lt_prop').value;$('lt_anim').innerHTML=S.pac.filter(p=>ativo(p)&&(!pr||p.prop===pr)).map(p=>`<label><input type="checkbox" value="${esc(p.id)}" checked>${esc(p.nome)}${p.sexo==='Fêmea'?`<select class="ltres" data-id="${esc(p.id)}" aria-label="Resultado de ${esc(p.nome)}" hidden><option value="">—</option><option>Prenhe</option><option>Vazia</option></select>`:''}</label>`).join('')||'<span class="meta">Nenhum animal ativo nessa propriedade.</span>';linhaGestLote()};
   $('lt_prop').onchange=anim;anim();
   $('lt_est').onchange=()=>{const it=S.est.find(x=>x.id===$('lt_est').value);if(it){if(!$('lt_nome').value.trim())$('lt_nome').value=it.nome;if(!$('lt_lote').value.trim()&&it.lote)$('lt_lote').value=it.lote}};
   $('lt_nome').addEventListener('change',()=>{const it=estPorNome($('lt_nome').value);if(it&&!$('lt_est').value)$('lt_est').value=it.id});
-  $('lt_tipo').onchange=()=>{const v=preco('vacinas',$('lt_tipo').value);if(v)$('lt_valor').value=v};
+  $('lt_tipo').onchange=()=>{const v=preco('vacinas',$('lt_tipo').value);if(v)$('lt_valor').value=v;if($('lt_tipo').value===LOTE_GEST)document.querySelectorAll('#lt_anim label').forEach(l=>{const c=l.querySelector('input');if(c&&!l.querySelector('select.ltres'))c.checked=false});linhaGestLote()};
   const calc=()=>{
     const pe=num($('c_peso').value),mg=pe*num($('c_dose').value),c=num($('c_conc').value);
     $('r_dose').innerHTML=`${fx(mg,1)} mg${c?` = ${fx(mg/c,2)} mL`:''}<small>${fx(pe,1)} kg × ${esc($('c_dose').value)} mg/kg${c?' ÷ '+esc($('c_conc').value)+' mg/mL':''}</small>`;
@@ -1389,6 +1398,7 @@ const CONTA_RESUMO={
   'Backup':()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último: '+new Date(t).toLocaleDateString('pt-BR'):'Baixar ou importar'},
   'Sobre o VetCamp':()=>'Versão '+VERSAO,
   'Aparência':()=>'Tema e tamanho da letra',
+  'Notificações':()=>notifCfg().on&&'Notification' in window&&Notification.permission==='granted'?'Ligadas · '+String(notifCfg().hora).padStart(2,'0')+':00':'Desligadas',
   'Como entrar de outro aparelho':()=>'Celular, tablet, computador',
   'Conectado':()=>me&&me.email||'Sua conta',
   'Você está no modo local':()=>'Dados só neste navegador'};
@@ -1443,6 +1453,7 @@ function renderConta(){
    </div>${CLIN&&!pode('admin')?'':'<div class="acts"><button class="btn pri">Salvar dados da clínica</button></div>'}</fieldset></form></div>
   <div class="box soadmin"><div class="bar"><h3>Tabela de preços</h3><button class="btn pri sm" data-vis="precos">Abrir tabela de preços</button></div><p class="hint" style="margin:0">Os valores que você cobra normalmente ficam na aba Preços.</p></div>
   <div class="box sopresc"><h3>Sua assinatura</h3><p class="hint" style="margin:0 0 10px">Sai nas receitas, atestados, termos e laudos baixados.</p>${S.cfg.assinVet?`<div class="assinimg"><img src="${esc(srcAssin(S.cfg.assinVet))}" alt="Sua assinatura"></div><div class="btns"><button class="btn sm" data-assinvetrm>Apagar e assinar de novo</button></div>`:`<div id="padV"></div><div class="acts"><button class="btn pri sm" data-assinvet>Salvar assinatura</button></div>`}</div>
+  ${notifHtml()}
   ${aparenciaHtml()}
   <div class="box"><h3>Backup</h3><p class="hint" style="margin:0 0 10px">Baixe uma cópia de todos os pacientes, clientes, estoque e dados da clínica, ou importe um backup${db?' para a nuvem':''}. ${(()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último backup baixado neste aparelho: '+new Date(t).toLocaleDateString('pt-BR')+'.':'Nenhum backup baixado ainda neste aparelho.'})()}</p>
    <div class="btns"><button class="btn sm" data-backup>Baixar backup (.json)</button><button class="btn sm" data-importar>Importar backup</button>${dl?'<button class="btn sm" data-csvpac>Lista de animais (.csv)</button>':''}</div></div>
@@ -1453,7 +1464,7 @@ function renderConta(){
   if($('meName'))$('meName').textContent=S.cfg.apelido||nome||(STANDALONE?'Sua conta':'Conta Claude');
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input,select'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
   if($('proff'))$('proff').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('proff').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o,'Seus dados profissionais foram salvos')};
-  ligarEquipe();
+  ligarEquipe();ligarNotif();
   compactarConta();
 }
 
@@ -1481,7 +1492,7 @@ function renderCliente(c){
   const its=itensFatura(c,mes,ant),tot=its.reduce((s,x)=>s+num(x.f.total),0),ab=its.reduce((s,x)=>s+saldo(x.f),0);
   $('view').innerHTML=`<button class="btn ghost sm" data-clivolta>← Clientes</button>
   <div class="head"><span class="av">${esc(String(c.nome).slice(0,2).toUpperCase())}</span><div class="grow"><h2>${esc(c.nome)}</h2><div class="meta">${esc([c.tipo,c.doc,c.tel,c.email,c.cidade].filter(Boolean).join(' · '))}${c.contato?'<br>Contato: '+esc(c.contato):''}</div></div>
-  <div class="btns"><button class="btn sm" data-orccli="${esc(c.id)}">Novo orçamento</button><button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button>${waLink(c.tel,`Olá, ${c.contato||c.nome}! Aqui é da ${S.cfg.clinica||'VetCamp'}.`)}</div></div>
+  <div class="btns"><button class="btn sm" data-orccli="${esc(c.id)}">Novo orçamento</button><button class="btn sm" data-cliedit="${esc(c.id)}">Editar</button>${waLink(c.tel,`Olá, ${c.contato||c.nome}! Aqui é da ${S.cfg.clinica||'VetCamp'}.`)}${geoLinks(c.geo)}</div></div>
   <div class="box"><div class="bar"><h3>Animais (${ps.length})</h3><button class="btn sm" data-clipac="${esc(c.id)}">+ Animal deste cliente</button></div>
   ${ps.length?ps.map(p=>`<button class="row" data-id="${esc(p.id)}">${avatar(p)}<span><h3>${esc(p.nome)}</h3><span class="meta">${esc([p.especie,p.raca,p.lote].filter(Boolean).join(' · '))}</span></span><span class="end"><span class="pill" style="--c:var(--s-${esc(p.status||'tratamento')})">${stLabel(p.status)}</span></span></button>`).join(''):'<p class="meta">Nenhum animal vinculado.</p>'}</div>
   ${(()=>{const os=S.orc.filter(o=>o.clienteId===c.id).sort((a,b)=>String(b.numero).localeCompare(String(a.numero)));return os.length?`<div class="box"><h3>Orçamentos (${os.length})</h3>${os.map(o=>`<button class="row" data-orc="${esc(o.id)}"><span class="av">Or</span><span><h3>${esc(o.numero)}</h3><span class="meta">${br(o.data)}${o.animal?' · '+esc(o.animal):''}</span></span><span class="end"><b class="tnum">${R$(orcTotais(o).total)}</b><br><span class="pill" style="--c:var(--s-${ORC_COR[orcStatus(o)]})">${orcStatus(o)}</span></span></button>`).join('')}</div>`:''})()}
@@ -2000,7 +2011,7 @@ const F_MOD=[{k:'nome',l:'Nome do modelo',req:1},{k:'texto',l:'Texto',t:'ta',req
 /* despesas */
 const CAT_DESP=['Combustível / deslocamento','Medicamentos e insumos','Equipamentos','Manutenção do veículo','Aluguel / estrutura','Funcionários / ajudantes','Impostos e taxas','Cursos e congressos','Marketing','Outros'];
 const F_DESP=[{k:'data',l:'Data',t:'date',h:1},{k:'cat',l:'Categoria',t:'select',o:CAT_DESP,h:1},{k:'desc',l:'Descrição',req:1},{k:'valor',l:'Valor (R$)',t:'number',req:1,h:1},{k:'sit',l:'Situação',t:'select',o:['Paga','A pagar'],h:1},{k:'venc',l:'Vencimento',t:'date',h:1},{k:'forma',l:'Forma de pagamento',t:'select',o:FORMAS,h:1},{k:'obs',l:'Observações',t:'ta'}];
-const salvarDesp=o=>gravar('despesas',o,S.desp);
+const salvarDesp=o=>{const base=PROP()?CAT_PROP:CAT_DESP;if(o.cat&&!base.includes(o.cat)&&!(S.cfg.catsExtra||[]).includes(o.cat))salvarCfg({...S.cfg,catsExtra:[...(S.cfg.catsExtra||[]),String(o.cat).slice(0,60)].slice(-50)},'Nova categoria criada',1);return gravar('despesas',o,S.desp)};
 const despMes=mes=>S.desp.filter(x=>String(x.data||'').startsWith(mes));
 function despesasHtml(mes){
   const l=[...despMes(mes)].sort((a,b)=>String(b.data).localeCompare(String(a.data))),pagas=l.filter(x=>x.sit!=='A pagar').reduce((s,x)=>s+num(x.valor),0),apagar=S.desp.filter(x=>x.sit==='A pagar').reduce((s,x)=>s+num(x.valor),0);
@@ -2015,7 +2026,7 @@ function despesasHtml(mes){
 /* Perfil escolhido ao entrar. Os dados do proprietário ficam num espaço separado (data/users/<id>/fazenda). */
 let MODO='vet',perfilSalvo=null,perfilPendente=false,dadosProntos=false;
 const PROP=()=>MODO==='prop';
-const VIEWS_PROP=[['pac','Animais'],['agenda','Lembretes'],['trato','Alimentação'],['gastos','Gastos'],['clientes','Pessoas'],['relat','Relatórios'],['conta','Conta']];
+const VIEWS_PROP=[['pac','Animais'],['agenda','Lembretes'],['trato','Alimentação'],['locais','Baias e piquetes'],['tarefas','Tarefas do tratador'],['ferr','Ferramentas'],['gastos','Gastos'],['faturas','Faturas'],['clientes','Pessoas'],['relat','Relatórios'],['conta','Conta']];
 const CAT_PROP=['Feno e capim','Ração e suplementos','Veterinário','Medicamentos e vacinas','Ferrador / casqueamento','Dentista','Exames (AIE, mormo, GTA)','Cama / maravalha','Funcionários / tratadores','Treinador / doma','Transporte','Provas e inscrições','Selaria e equipamentos','Manutenção e estrutura','Energia e água','Pastagem / arrendamento','Impostos e taxas','Outros'];
 const CAT_ALIM=['Feno','Pré-secado / silagem','Capim / pastagem','Ração','Suplemento','Sal mineral','Cama / maravalha'];
 const PAPEIS_CONT=['Veterinário(a)','Ferrador(a)','Dentista equino','Treinador(a)','Tratador(a)','Fornecedor de feno','Fornecedor de ração','Transportador','Outro'];
@@ -2061,8 +2072,9 @@ SEMVALOR.push('treino');
 /* registro com custo vira gasto do animal (e acompanha edição e exclusão) */
 function gastoDoRegistro(m,o,p,apagado){
   if(!PROP()||!o)return;const ref='r_'+o.id,ex=S.desp.find(x=>x.ref===ref);
-  if(apagado||!num(o.custo)){if(ex)apagar('despesas',ex.id);return}
-  salvarDesp({...(ex||{id:uid(),sit:'Paga',forma:'Pix'}),ref,data:o[m.dateK||'data']||hoje(),cat:CAT_POR_MOD[m.key]||'Outros',desc:tabDe(m)+': '+tituloIt(m,o)+' · '+p.nome,valor:String(num(o.custo)),animalId:p.id,forn:o.prof||''});
+  const vr=num(o.custo)||(m.key==='provas'?num(o.inscricao):0);
+  if(apagado||!vr){if(ex)apagar('despesas',ex.id);return}
+  salvarDesp({...(ex||{id:uid(),sit:'Paga',forma:'Pix'}),ref,data:o[m.dateK||'data']||hoje(),cat:CAT_POR_MOD[m.key]||'Outros',desc:tabDe(m)+': '+tituloIt(m,o)+' · '+p.nome,valor:String(vr),animalId:p.id,forn:o.prof||''});
 }
 /* custo de cada animal: gastos diretos + gastos gerais divididos */
 function custoPorAnimal(lista){
@@ -2205,7 +2217,7 @@ function csvGastos(){
 /* rota do dia */
 function rotaHoje(){
   const its=S.pac.flatMap(p=>(p.agend||[]).filter(a=>a.data===hoje()&&['Agendado','Confirmado'].includes(a.situacao)).map(a=>({a,p}))).sort((x,y)=>String(x.a.hora||'').localeCompare(String(y.a.hora||'')));
-  const ends=[];for(const {a,p} of its){const c=cliDe(p);const e=a.local||[p.end,p.prop].filter(Boolean).join(', ')||(c?[c.end,c.cidade].filter(Boolean).join(', '):'');if(e&&!ends.includes(e))ends.push(e)}
+  const ends=[];for(const {a,p} of its){const c=cliDe(p);const e=a.local||(c&&geoOk(c.geo)?String(c.geo).replace(/\s/g,''):'')||[p.end,p.prop].filter(Boolean).join(', ')||(c?[c.end,c.cidade].filter(Boolean).join(', '):'');if(e&&!ends.includes(e))ends.push(e)}
   return ends;
 }
 function rotaUrl(ends){if(!ends.length)return '';const dest=ends[ends.length-1],way=ends.slice(0,-1).slice(0,9);return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(dest)+(way.length?'&waypoints='+encodeURIComponent(way.join('|')):'')}
@@ -2313,14 +2325,14 @@ function resumo(p){
   const g=gestacao(p),meds=(p.meds||[]).filter(medAtiva),pend=pendencias(p).sort((a,b)=>a.d.localeCompare(b.d)).slice(0,6);
   const ofi={};for(const x of ord(p.oficiais))if(!ofi[x.tipo])ofi[x.tipo]=x;
   const deb=(p.fin||[]).reduce((s,x)=>s+saldo(x),0);
-  const car=(p.meds||[]).filter(m=>+m.carencia&&(m.fim||m.inicio)).map(m=>({m,ate:addD(m.fim||m.inicio,+m.carencia)})).filter(x=>dias(x.ate)>=0);
+  const car=carencias(p);
   return `${p.alergias?`<div class="alert"><b>Alergias:</b> ${esc(p.alergias)}</div>`:''}
   ${alertas(p).map(a=>`<div class="alert"><b>${esc(a)}</b></div>`).join('')}
-  ${car.map(x=>`<div class="alert">Em carência de <b>${esc(x.m.med)}</b> até ${br(x.ate)}</div>`).join('')}
+  ${car.map(x=>`<div class="alert">${x.tipo==='leite'?'Leite em carência':'Em carência (abate / competição)'} de <b>${esc(x.med)}</b> até ${br(x.ate)}${x.tipo==='leite'?' · não usar o leite':''}</div>`).join('')}
   ${g?`<div class="info"><b>Prenhe</b> · parto previsto ${br(g.parto)} (${quando(g.parto)})</div>`:''}
   ${deb?`<div class="info">Saldo em aberto: <b>${R$(deb)}</b> <button class="btn sm" data-tab="fin">Ver financeiro</button></div>`:''}
   ${spOk('gr',p)&&Object.keys(ofi).length?`<div class="chips">${Object.values(ofi).map(x=>{const v=x.resultado==='Negativo'&&x.data&&+x.val?addD(x.data,+x.val):null;const c=x.resultado==='Positivo'?'internado':!v?'obito':dias(v)<0?'internado':dias(v)<=10?'tratamento':'alta';return`<span class="pill" style="--c:var(--s-${c})">${esc(x.tipo.split(' (')[0])}: ${esc(x.resultado)}${v?' · até '+br(v):''}</span>`}).join('')}</div>`:''}
-  <div class="bar"><h3>Último exame${u.data?' · '+br(u.data):''}</h3><div class="btns"><button class="btn sm" data-orcpac>Orçamento</button><button class="btn sm" data-protapl>Aplicar protocolo</button><button class="btn sm" data-add="agend">Agendar</button><button class="btn pri sm" data-add="consultas">+ Nova consulta</button></div></div>
+  <div class="bar"><h3>Último exame${u.data?' · '+br(u.data):''}</h3><div class="btns">${STANDALONE&&db?'<button class="btn sm" data-linkcli>Link para o cliente</button>':''}<button class="btn sm" data-orcpac>Orçamento</button><button class="btn sm" data-protapl>Aplicar protocolo</button><button class="btn sm" data-add="agend">Agendar</button><button class="btn pri sm" data-add="consultas">+ Nova consulta</button></div></div>
   ${u.data?`<div class="grid">${vit.map(([l,v,un,k])=>`<div class="vit${out(k,v)?' out':''}"><span>${l}</span><b>${v?esc(v)+(un?' '+un:''):'—'}</b>${k&&R[k]?`<small>ref. ${R[k][0]}–${R[k][1]}</small>`:''}</div>`).join('')}</div>`:'<div class="empty"><p>Nenhuma consulta registrada.</p></div>'}
   ${u.diag?`<div class="box"><span class="lbl">Diagnóstico atual</span><p>${esc(u.diag)}</p>${u.trat?`<span class="lbl">Tratamento</span><p>${esc(u.trat)}</p>`:''}</div>`:''}
   ${meds.length?`<div class="box"><h3>Medicação em curso</h3>${meds.map(m=>{const n=proxMed(m);return`<p>${esc(m.med)} ${esc(m.dose||'')} ${esc(m.via||'')} a cada ${esc(m.freq||'?')} h · <span class="${n&&n<new Date()?'late':''}">${n?'próxima '+hora(n.toISOString()):'sem aplicação registrada'}</span></p>`}).join('')}</div>`:''}
@@ -2357,7 +2369,7 @@ function modulo(m,p){
     ${longo.map(f=>`<span class="lbl">${f.l}</span><p>${esc(it[f.k])}</p>`).join('')}${extra}</article>`}).join(''):'<div class="empty"><p>Nada registrado ainda.</p></div>');
 }
 function dados(p){
-  return `<div class="bar"><h3>Identificação e tutor</h3><div class="btns"><button class="btn sm" data-fotopac>${p.foto?'Trocar foto':'Adicionar foto'}</button>${p.foto?'<button class="btn sm ghost" data-fotopacrm>Remover foto</button>':''}<button class="btn sm" data-editp>Editar dados</button></div></div><div class="tw"><table>${campos(F_PAC,p).filter(f=>f.k&&f.k!=='status').map(f=>`<tr><td><b>${f.l}</b></td><td style="white-space:pre-wrap">${vazio(p[f.k])?'—':esc(fmt(f,p[f.k]))}</td></tr>`).join('')}</table></div>`;
+  return arvoreHtml(p)+`<div class="bar"><h3>Identificação e tutor</h3><div class="btns"><button class="btn sm" data-fotopac>${p.foto?'Trocar foto':'Adicionar foto'}</button>${p.foto?'<button class="btn sm ghost" data-fotopacrm>Remover foto</button>':''}<button class="btn sm" data-editp>Editar dados</button></div></div><div class="tw"><table>${campos(F_PAC,p).filter(f=>f.k&&f.k!=='status').map(f=>`<tr><td><b>${f.l}</b></td><td style="white-space:pre-wrap">${vazio(p[f.k])?'—':esc(fmt(f,p[f.k]))}</td></tr>`).join('')}</table></div>`;
 }
 /* ---------- documentos ---------- */
 const DOCS=[['receita','Receituário'],['precompra','Laudo de exame pré-compra'],['atestado','Atestado de saúde'],['termo_cir','Termo de consentimento (cirurgia / anestesia)'],['termo_int','Termo de internação'],['termo_euta','Termo de autorização para eutanásia'],['obito','Declaração de óbito'],['encam','Encaminhamento'],['orcamento','Orçamento'],['recibo','Recibo']];
@@ -2365,6 +2377,233 @@ function cabec(){const c=S.cfg;return [c.clinica||'VetCamp',[c.vet,c.crmv?'CRMV 
 function identA(p){return `Animal: ${p.nome} · ${[p.especie,p.raca,p.sexo,p.pelagem,idade(p.nasc)].filter(Boolean).join(' · ')}${p.chip?'\nIdentificação: '+p.chip:''}${p.registro?' · Registro: '+p.registro:''}\nTutor: ${p.tutor||''}${p.cpf?' · CPF/CNPJ '+p.cpf:''}${p.tel?' · '+p.tel:''}${p.prop?'\nPropriedade: '+p.prop:''}${p.end?' · '+p.end:''}`}
 function assin(){const c=S.cfg;return `\n\n${c.cidade||'________________'}, ${new Date().toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}.\n\n\n_______________________________\n${c.vet||'Médico(a)-veterinário(a)'}${c.crmv?'\nCRMV '+c.crmv:''}`}
 const assTutor=p=>`\n\n_______________________________\n${p.tutor||'Tutor / responsável'}${p.cpf?'\nCPF/CNPJ '+p.cpf:''}`;
+
+/* ---------- pacote de funções essenciais (pesquisa nos principais apps) ---------- */
+/* carência separada para leite e para carne/abate */
+{const m=MODS.find(x=>x.key==='meds'),i=m.f.findIndex(f=>f.k==='carencia');m.f[i]={k:'carencia',l:'Carência carne / abate / competição (dias)',t:'number',h:1};m.f.splice(i+1,0,{k:'carLeite',l:'Carência do leite (dias)',t:'number',h:1,sp:'rum'})}
+const fimCarencia=m=>{const base=m.fim||m.inicio;if(!base)return{};const ult=(m.aplic||[]).map(a=>String(a.d||a).slice(0,10)).sort().pop();const b=ult&&ult>base?ult:base;
+  return{carne:+m.carencia?addD(b,+m.carencia):'',leite:+m.carLeite?addD(b,+m.carLeite):''}};
+function carencias(p){const out=[];for(const m of (p.meds||[])){const c=fimCarencia(m);if(c.carne&&dias(c.carne)>=0)out.push({tipo:'carne',ate:c.carne,med:m.med});if(c.leite&&dias(c.leite)>=0)out.push({tipo:'leite',ate:c.leite,med:m.med})}return out}
+
+/* andrológico (machos) */
+MODS.push({key:'androl',tab:'Andrológico',titulo:'Exame andrológico',add:'Novo exame andrológico',titleK:'resultado',dateK:'data',show:p=>p.sexo==='Macho'&&p.castrado!=='Sim',
+  hint:'Touro, garanhão, carneiro ou bode. O resultado entra na ficha e no PDF.',def:()=>({resultado:'Apto'}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'ce',l:'Circunferência escrotal (cm)',t:'number',h:1,sp:'rum'},{k:'motil',l:'Motilidade progressiva (%)',t:'number',h:1},{k:'vigor',l:'Vigor (0–5)',t:'select',o:['','0','1','2','3','4','5'],h:1},
+   {k:'conc',l:'Concentração (milhões/mL)',t:'number',h:1},{k:'vol',l:'Volume (mL)',t:'number',h:1},{k:'defMaiores',l:'Defeitos maiores (%)',t:'number',h:1},{k:'defMenores',l:'Defeitos menores (%)',t:'number',h:1},
+   {k:'libido',l:'Libido / comportamento',t:'select',o:['','Boa','Regular','Ruim','Não avaliada'],h:1},{k:'resultado',l:'Resultado',t:'select',o:['Apto','Apto com restrição','Inapto temporário','Inapto'],h:1},{k:'obs',l:'Observações',t:'ta'}]});
+/* pesagem e escore corporal (ganho de peso) e provas */
+MODS.push({key:'pesagem',tab:'Pesagens',titulo:'Pesagens e escore corporal',add:'Nova pesagem',titleK:'peso',dateK:'data',
+  hint:'Pese pelo menos uma vez por mês para acompanhar o ganho de peso (GMD).',def:()=>({}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'peso',l:'Peso (kg)',t:'number',req:1,h:1},{k:'ecc',l:'Escore corporal',t:'select',o:['','1','2','3','4','5','6','7','8','9'],h:1,hint2:'1 a 9 (Henneke) ou 1 a 5'},{k:'metodo',l:'Como pesou',t:'select',o:['Balança','Fita de pesagem','Estimado'],h:1},{k:'obs',l:'Observações',t:'ta'}]});
+MODS.push({key:'provas',modo:'prop',tab:'Provas',titulo:'Provas e competições',add:'Registrar prova',titleK:'evento',dateK:'data',hint:'Inscrições, resultados e prêmios.',def:()=>({}),
+  f:[{k:'data',l:'Data',t:'date',h:1},{k:'evento',l:'Prova / evento',req:1,h:1},{k:'local',l:'Local',h:1},{k:'modal',l:'Modalidade',h:1,list:['Vaquejada','Tambor','Baliza','Laço','Rédeas','Apartação','Hipismo','Adestramento','CCE','Enduro','Corrida','Marcha','Morfologia']},
+   {k:'cavaleiro',l:'Cavaleiro / amazona',h:1,list:()=>nomesContato()},{k:'coloc',l:'Colocação',h:1},{k:'premio',l:'Prêmio (R$)',t:'number',h:1,sempre:1},{k:'inscricao',l:'Inscrição (R$)',t:'number',h:1,sempre:1,hint2:'entra nos Gastos'},{k:'obs',l:'Observações',t:'ta'}]});
+SEMVALOR.push('androl','pesagem','provas');
+CAT_POR_MOD.provas='Provas e inscrições';
+const gmd=p=>{const l=ord(p.pesagem).filter(x=>num(x.peso));if(l.length<2)return null;const a=l[0],b=l[l.length-1],d=Math.round((new Date(a.data)-new Date(b.data))/864e5);return d>0?(num(a.peso)-num(b.peso))/d:null};
+
+/* reprodução: registrar o potro no parto */
+{const m=MODS.find(x=>x.key==='repro'),i=m.f.findIndex(f=>f.k==='resultado');
+ m.f.splice(i,0,{k:'potro',l:'Nome do potro / bezerro (no parto)',h:1,show:p=>p.evento==='Parto'},{k:'sexoCria',l:'Sexo da cria',t:'select',o:['','Macho','Fêmea'],h:1,show:p=>p.evento==='Parto'});
+ const ev=m.f.find(f=>f.k==='evento');ev.re=1;
+ const s0=m.save;m.save=(o,p)=>{if(s0)s0(o,p);if(o.evento==='Parto'&&o.potro&&!o.criaId){const c=(p.repro||[]).filter(r=>COB.includes(r.evento)&&r.data<=o.data).sort((a,b)=>b.data.localeCompare(a.data))[0];
+   const cria={id:uid(),nome:o.potro,especie:p.especie,raca:p.raca||'',sexo:o.sexoCria||'Macho',nasc:o.data,mae:p.nome,pai:(c&&c.reprodutor)||o.reprodutor||'',tutor:p.tutor||'',clienteId:p.clienteId||'',tel:p.tel||'',prop:p.prop||'',lote:p.lote||'',status:PROP()?'acompanhamento':'tratamento',criado:Date.now(),categoria:p.especie==='Equino'?'Potro(a)':'Bezerro(a)'};
+   o.criaId=cria.id;setTimeout(()=>{salvar(cria);toast(cria.nome+' cadastrado(a) com pai e mãe')},80)}}}
+
+/* genealogia: avós */
+F_PAC.splice(F_PAC.findIndex(f=>f.k==='mae')+1,0,{k:'paiPai',l:'Avô paterno',h:1,sp:'gr'},{k:'paiMae',l:'Avó paterna',h:1,sp:'gr'},{k:'maePai',l:'Avô materno',h:1,sp:'gr'},{k:'maeMae',l:'Avó materna',h:1,sp:'gr'});
+function arvoreHtml(p){if(!p.pai&&!p.mae)return '';const c=(t,v)=>`<div class="gn"><span>${t}</span><b>${esc(v||'—')}</b></div>`;
+  return `<div class="box"><h3>Genealogia</h3><div class="arvore"><div class="g1">${c('Animal',p.nome)}</div><div class="g2">${c('Pai',p.pai)}${c('Mãe',p.mae)}</div><div class="g3">${c('Avô paterno',p.paiPai)}${c('Avó paterna',p.paiMae)}${c('Avô materno',p.maePai)}${c('Avó materna',p.maeMae)}</div></div></div>`}
+
+/* compra, venda e valor do animal (proprietário) */
+F_PAC.splice(F_PAC.findIndex(f=>f.sec==='Manejo e alimentação'),0,{sec:'Compra e venda',modo:'prop'},
+  {k:'dataCompra',l:'Data da compra',t:'date',h:1,modo:'prop'},{k:'valorCompra',l:'Valor pago (R$)',t:'number',h:1,modo:'prop'},
+  {k:'valorAtual',l:'Valor estimado hoje (R$)',t:'number',h:1,modo:'prop'},{k:'aVenda',l:'À venda',t:'select',o:['Não','Sim'],h:1,modo:'prop'},
+  {k:'dataVenda',l:'Data da venda',t:'date',h:1,modo:'prop'},{k:'valorVenda',l:'Valor da venda (R$)',t:'number',h:1,modo:'prop'},{k:'comprador',l:'Comprador',h:1,modo:'prop'});
+
+/* GPS do cliente / propriedade */
+F_CLI.push({k:'geo',l:'Localização GPS (latitude, longitude)',h:1,hint2:'toque em "Usar minha localização" quando estiver lá'});
+const geoOk=g=>/^-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/.test(String(g||'').trim());
+const geoLinks=g=>geoOk(g)?`<a class="btn sm" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(String(g).replace(/\s/g,''))}" target="_blank" rel="noopener">Mapa</a><a class="btn sm" href="https://waze.com/ul?ll=${encodeURIComponent(String(g).replace(/\s/g,''))}&navigate=yes" target="_blank" rel="noopener">Waze</a>`:'';
+function ligarGeo(){const el=$('f_geo');if(!el||el.dataset.geo)return;el.dataset.geo=1;if(!navigator.geolocation)return;
+  const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent='Usar minha localização';b.style.marginTop='6px';
+  b.onclick=()=>{b.textContent='Buscando…';navigator.geolocation.getCurrentPosition(pos=>{el.value=pos.coords.latitude.toFixed(6)+', '+pos.coords.longitude.toFixed(6);el.dispatchEvent(new Event('input',{bubbles:true}));b.textContent='Localização preenchida'},()=>{b.textContent='Não foi possível pegar a localização';toast('Permita o acesso à localização no navegador')},{enableHighAccuracy:true,timeout:15000})};
+  el.after(b)}
+
+/* laudo para seguradora */
+DOCS.splice(DOCS.findIndex(d=>d[0]==='obito')+1,0,['seguro','Laudo para seguradora']);
+
+/* ---------- atendimento em lote ampliado: casqueamento, exame e diagnóstico de gestação ---------- */
+const LOTE_GEST='Diagnóstico de gestação';
+function linhaGestLote(){const t=$('lt_tipo');const g=t&&t.value===LOTE_GEST;document.querySelectorAll('#lt_anim label').forEach(l=>{const s=l.querySelector('select.ltres');if(s)s.hidden=!g});
+  for(const id of ['lt_nome','lt_lote','lt_prox','lt_est'])if($(id))$(id).closest('.fld').hidden=g&&id!=='lt_prox'?true:false;
+  const lb=document.querySelector('label[for=lt_nome]');if(lb)lb.textContent=t&&t.value==='Casqueamento'?'Procedimento':t&&t.value==='Exame / coleta'?'Exame':'Produto'}
+function salvarLoteEspecial(tipo,ids){
+  // lê tudo antes de gravar: cada gravação redesenha a tela
+  const data=$('lt_data').value||hoje(),val=num($('lt_valor').value),prox=$('lt_prox').value,nome=$('lt_nome').value.trim();
+  const res={};for(const id of ids)res[id]=(document.querySelector(`#lt_anim select.ltres[data-id="${id}"]`)||{}).value||'';
+  if(tipo===LOTE_GEST){let pr=0,vz=0;for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;const r=res[id];
+      if(!r)continue;r==='Prenhe'?pr++:vz++;salvar({...q,repro:[...(q.repro||[]),{id:uid(),data,evento:'Diagnóstico de gestação',resultado:r,obs:'Diagnóstico em lote',por:meId(),valor:val?String(val):''}]})}
+    const n=pr+vz;if(!n){toast('Marque Prenhe ou Vazia em cada animal');return false}
+    toast(`Prenhez: ${pr} de ${n} (${Math.round(pr/n*100)}%)`);return true}
+  if(!nome){toast('Preencha o '+(tipo==='Casqueamento'?'procedimento':'exame'));$('lt_nome').focus();return false}
+  for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;
+    if(tipo==='Casqueamento')salvar({...q,casco:[...(q.casco||[]),{id:uid(),data,tipo:nome,prox,obs:'Atendimento em lote',por:meId(),valor:val?String(val):''}]});
+    else salvar({...q,exames:[...(q.exames||[]),{id:uid(),data,nome,obs:'Coleta em lote',por:meId(),valor:val?String(val):''}]})}
+  toast(`Registrado em ${ids.length} animal(is)`);return true;
+}
+
+/* ---------- link para o cliente (página só de leitura, com validade) ---------- */
+const tokenNovo=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return [...a].map(x=>'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[x%62]).join('')+Date.now().toString(36)};
+function resumoPortal(p){
+  const g=gestacao(p),pend=pendencias(p).filter(x=>x.tab!=='fin'&&dias(x.d)>=-30&&dias(x.d)<=120).sort((a,b)=>a.d.localeCompare(b.d)).slice(0,20);
+  const vac=ord(p.vacinas).slice(0,30).map(v=>({t:v.tipo||'',n:v.nome||'',d:v.data||'',prox:v.prox||'',lote:v.lote||''}));
+  const ofi=ord(p.oficiais).slice(0,10).map(x=>({t:(x.tipo||'').split(' (')[0],d:x.data||'',r:x.resultado||'',val:x.val&&x.data?addD(x.data,+x.val):''}));
+  const ult=ult0(p);
+  return {nome:p.nome,especie:p.especie||'',raca:p.raca||'',sexo:p.sexo||'',nasc:p.nasc||'',pelagem:p.pelagem||'',chip:p.chip||'',registro:p.registro||'',foto:fotoOk(p.foto)&&String(p.foto).length<120000?p.foto:'',
+    tutor:p.tutor||'',local:[p.prop,p.lote].filter(Boolean).join(' · '),clinica:S.cfg.clinica||'',tel:S.cfg.telc||'',vet:PROP()?'':(S.cfg.vet||''),crmv:PROP()?'':(S.cfg.crmv||''),
+    gest:g?{parto:g.parto}:null,carencia:carencias(p).map(c=>({t:c.tipo,ate:c.ate,m:c.med})),vacinas:vac,oficiais:ofi,
+    proximos:pend.map(x=>({d:x.d,t:x.txt,h:x.h||''})),ultimo:ult?{d:ult.data||'',diag:ult.diag||'',orient:ult.orient||''}:null,gerado:Date.now()};
+}
+const ult0=p=>ord(p.consultas)[0]||null;
+async function gerarLinkCliente(p){
+  if(!STANDALONE||!db){toast('O link para o cliente funciona no site '+SITE_OFICIAL.replace('https://',''));return}
+  const tok=(p.portal&&p.portal.token)||tokenNovo(),ate=Date.now()+90*864e5;
+  try{await db.doc('portal/'+tok).set({dono:meId(),ate,tipo:'animal',titulo:p.nome,dados:JSON.stringify(resumoPortal(p)),criado:Date.now()})}
+  catch(e){toast(errMsg(e));return}
+  if(!p.portal||p.portal.token!==tok)salvar({...p,portal:{token:tok}});
+  const url=location.origin+'/portal?t='+tok,msg=`Olá${p.tutor?', '+p.tutor:''}! Acompanhe ${p.nome} pelo link (vacinas, exames e próximos cuidados): ${url}`;
+  $('card').innerHTML=`<h2>Link para o cliente · ${esc(p.nome)}</h2><p class="hint">Página só de leitura com carteira de vacinas, exames oficiais, carência e próximos cuidados. Vale por 90 dias; toque de novo em "Link para o cliente" para atualizar.</p>
+   <p class="link">${esc(url)}</p><div class="acts"><button type="button" class="btn" id="cancel">Fechar</button><button type="button" class="btn" id="lkcopy">Copiar link</button>${waLink(p.tel,msg)}<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Abrir</a><button type="button" class="btn ghost" id="lkdel">Desativar link</button></div>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;$('lkcopy').onclick=()=>copiar(url,'Link copiado');
+  $('lkdel').onclick=async()=>{try{await db.doc('portal/'+tok).delete();const q={...cur()};delete q.portal;salvar(q);fechar();toast('Link desativado')}catch(e){toast(errMsg(e))}};
+}
+
+/* ---------- proprietário: faturas, tarefas, baias e piquetes ---------- */
+const faturasPagas=()=>S.cfg.faturas&&typeof S.cfg.faturas==='object'?S.cfg.faturas:{};
+function faturaDe(c,mes){const ps=pacsDoCli(c),ids=new Set(ps.map(p=>p.id));
+  const pen=ps.filter(p=>p.status!=='obito').map(p=>({desc:'Pensão · '+p.nome,v:num(p.pensao)})).filter(x=>x.v);
+  const ext=despMes(mes).filter(x=>x.repassar==='Sim'&&ids.has(x.animalId)).map(x=>({desc:x.desc+' · '+(S.pac.find(p=>p.id===x.animalId)||{}).nome,v:num(x.valor)}));
+  const itens=[...pen,...ext];return{itens,total:itens.reduce((s,x)=>s+x.v,0),pago:!!faturasPagas()[c.id+'_'+mes]}}
+function renderFaturas(){
+  const mes=S.fMes||hoje().slice(0,7),nm=new Date(mes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const l=S.cli.map(c=>({c,f:faturaDe(c,mes)})).filter(x=>x.f.total>0).sort((a,b)=>b.f.total-a.f.total);
+  const tot=l.reduce((s,x)=>s+x.f.total,0),rec=l.filter(x=>x.f.pago).reduce((s,x)=>s+x.f.total,0);
+  $('view').innerHTML=`<div class="bar"><h2>Faturas dos proprietários</h2><div class="btns"><label class="meta" for="f_mesf">Mês</label><input id="f_mesf" type="month" class="minp" value="${esc(mes)}"></div></div>
+  <div class="counts"><div class="count"><b>${R$(tot)}</b><span>a cobrar em ${esc(nm)}</span></div><div class="count" style="color:var(--okc)"><b>${R$(rec)}</b><span>recebido</span></div><div class="count" style="color:var(--warn)"><b>${R$(tot-rec)}</b><span>em aberto</span></div></div>
+  <p class="hint">Pensão de cada animal (ficha › Dados) mais os gastos marcados como "Cobrar do proprietário". Mande pelo WhatsApp com Pix e marque como recebida.</p>
+  ${l.length?l.map(({c,f})=>{const txt=`Olá, ${c.nome}! Segue a fatura de ${nm} (${S.cfg.clinica||'haras'}):\n${f.itens.map(i=>`• ${i.desc}: ${R$(i.v)}`).join('\n')}\nTotal: ${R$(f.total)}${S.cfg.pix?'\nChave Pix: '+S.cfg.pix:''}`;
+    return `<article class="item"><header><h3>${esc(c.nome)}</h3><span class="pill" style="--c:var(--${f.pago?'okc':'warn'})">${f.pago?'Recebida':'Em aberto'}</span></header>
+    <div class="tw"><table>${f.itens.map(i=>`<tr><td>${esc(i.desc)}</td><td class="n">${R$(i.v)}</td></tr>`).join('')}<tr class="totrow"><td><b>Total</b></td><td class="n"><b>${R$(f.total)}</b></td></tr></table></div>
+    <div class="btns">${waLink(c.tel,txt)}<button class="btn sm" data-pixfat="${esc(c.id)}">Pix</button><button class="btn sm ${f.pago?'':'pri'}" data-fatpago="${esc(c.id)}">${f.pago?'Desmarcar recebida':'Marcar como recebida'}</button></div></article>`}).join(''):'<div class="empty"><p>Nenhuma fatura no mês. Coloque a pensão na ficha de cada animal (Dados › Manejo e alimentação) ou marque gastos como "Cobrar do proprietário".</p></div>'}`;
+  $('f_mesf').onchange=e=>{S.fMes=e.target.value||hoje().slice(0,7);render()};
+}
+F_DESP.splice(F_DESP.findIndex(f=>f.k==='forn')+1,0,{k:'repassar',l:'Cobrar do proprietário do animal?',t:'select',o:['Não','Sim'],h:1,modo:'prop',show:p=>p.animalId&&p.animalId!=='varios'});
+{const fc=F_DESP.find(f=>f.k==='cat');delete fc.t;fc.list=()=>[...new Set([...(PROP()?CAT_PROP:CAT_DESP),...(S.cfg.catsExtra||[])])];fc.hint2='escolha ou digite uma nova'}
+
+const tarefas=()=>Array.isArray(S.cfg.tarefas)?S.cfg.tarefas:[];
+const feitasHoje=()=>((S.cfg.feitas||{})[hoje()])||[];
+const DIAS_SEM=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const tarefaHoje=t=>!t.dias||!t.dias.length||t.dias.includes(DIAS_SEM[new Date().getDay()]);
+const F_TAR=[{k:'txt',l:'Tarefa',req:1,list:['Trato da manhã','Trato da tarde','Limpar baias','Trocar cama','Soltar no piquete','Recolher do piquete','Escovar e conferir cascos','Dar medicação','Encher bebedouros','Conferir cercas']},{k:'hora',l:'Horário',t:'time',h:1},{k:'quem',l:'Responsável',h:1,list:()=>nomesContato()},{k:'dias',l:'Dias da semana (vazio = todo dia)',t:'checks',o:DIAS_SEM}];
+function tarefasHtml(){
+  const l=[...tarefas()].filter(tarefaHoje).sort((a,b)=>String(a.hora||'99').localeCompare(String(b.hora||'99'))),f=feitasHoje(),n=l.filter(t=>f.includes(t.id)).length;
+  return `<div class="box"><div class="bar"><h3>Tarefas de hoje · ${n}/${l.length}</h3><button class="btn pri sm" data-tarnova>+ Tarefa</button></div>
+  ${l.length?`<div class="tarefas">${l.map(t=>`<label class="tarefa${f.includes(t.id)?' feita':''}"><input type="checkbox" data-tarck="${esc(t.id)}"${f.includes(t.id)?' checked':''}><span><b>${esc(t.txt)}</b><br><span class="meta">${esc([t.hora,t.quem].filter(Boolean).join(' · ')||'sem horário')}</span></span><button type="button" class="btn sm ghost" data-taredit="${esc(t.id)}">Editar</button></label>`).join('')}</div>`:'<p class="meta">Monte o checklist do tratador: trato, baias, piquete, medicação. Ele marca no celular o que já fez.</p>'}</div>`;
+}
+function marcarTarefa(id,feito){const fs={...(S.cfg.feitas||{})},d=hoje();const l=new Set(fs[d]||[]);feito?l.add(id):l.delete(id);fs[d]=[...l];
+  for(const k of Object.keys(fs).sort().slice(0,-30))delete fs[k];salvarCfg({...S.cfg,feitas:fs},feito?'Tarefa feita':'Tarefa desmarcada',1);render()}
+function renderTarefas(){
+  const hist=Object.entries(S.cfg.feitas||{}).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7),tot=tarefas().length;
+  $('view').innerHTML=`<div class="bar"><h2>Tarefas do tratador</h2></div>${tarefasHtml()}
+  <div class="box"><h3>Últimos dias</h3>${hist.length?`<div class="tw"><table>${hist.map(([d,l])=>`<tr><td>${br(d)}</td><td class="n">${l.length} feita(s)</td></tr>`).join('')}</table></div>`:'<p class="meta">Ainda sem histórico.</p>'}</div>
+  ${tot?'':'<p class="hint">Dica: cadastre o contato do tratador em Pessoas para escolher o responsável.</p>'}`;
+}
+const locais=()=>Array.isArray(S.cfg.locais)?S.cfg.locais:[];
+const F_LOC=[{k:'nome',l:'Nome (ex.: Baia 3, Piquete Norte)',req:1,h:1},{k:'tipo',l:'Tipo',t:'select',o:['Baia','Piquete','Pasto','Redondel','Quarentena','Maternidade'],h:1},{k:'cap',l:'Capacidade (animais)',t:'number',h:1},{k:'desc',l:'Descanso até (piquete)',t:'date',h:1},{k:'obs',l:'Observações',h:1}];
+function renderLocais(){
+  const at=S.pac.filter(ativo),porLocal={};for(const p of at){const k=(p.lote||'').trim()||'Sem local';(porLocal[k]=porLocal[k]||[]).push(p)}
+  const ls=[...locais()],nomes=new Set(ls.map(l=>l.nome));for(const k of Object.keys(porLocal))if(k!=='Sem local'&&!nomes.has(k))ls.push({id:'',nome:k,tipo:'',cap:''});
+  ls.sort((a,b)=>String(a.tipo).localeCompare(String(b.tipo))||String(a.nome).localeCompare(String(b.nome),'pt',{numeric:true}));
+  const livres=ls.filter(l=>num(l.cap)&&(porLocal[l.nome]||[]).length<num(l.cap)).length;
+  $('view').innerHTML=`<div class="bar"><h2>Baias e piquetes</h2><button class="btn pri sm" data-locnovo>+ Baia ou piquete</button></div>
+  <div class="counts"><div class="count"><b>${ls.length}</b><span>locais</span></div><div class="count"><b>${at.length}</b><span>animais</span></div><div class="count" style="color:var(--okc)"><b>${livres}</b><span>com vaga</span></div><div class="count" style="color:var(--warn)"><b>${(porLocal['Sem local']||[]).length}</b><span>sem local</span></div></div>
+  <p class="hint">O local de cada animal fica na ficha (Baia / piquete / lote). Toque em um animal para abrir a ficha.</p>
+  <div class="board">${ls.map(l=>{const ps=porLocal[l.nome]||[],cheio=num(l.cap)&&ps.length>=num(l.cap),desc=l.desc&&dias(l.desc)>=0;
+    return `<article class="item local${cheio?' cheio':''}"><header><h3>${esc(l.nome)}</h3><span class="meta">${esc(l.tipo||'')}${num(l.cap)?` · ${ps.length}/${num(l.cap)}`:''}</span></header>
+    ${desc?`<p class="late" style="margin:4px 0">Em descanso até ${br(l.desc)}</p>`:''}${ps.length?`<div class="chips">${ps.map(p=>`<button class="btn sm" data-id="${esc(p.id)}">${esc(p.nome)}</button>`).join('')}</div>`:'<p class="meta">Vazio</p>'}
+    ${l.id?`<div class="btns" style="margin-top:6px"><button class="btn sm ghost" data-locedit="${esc(l.id)}">Editar</button></div>`:''}</article>`}).join('')}
+  ${(porLocal['Sem local']||[]).length?`<article class="item"><header><h3>Sem local definido</h3></header><div class="chips">${porLocal['Sem local'].map(p=>`<button class="btn sm" data-id="${esc(p.id)}" data-gotab="dados">${esc(p.nome)}</button>`).join('')}</div></article>`:''}</div>`;
+}
+
+/* ---------- indicadores do rebanho (relatório do proprietário) ---------- */
+function indicadoresHtml(){
+  const ano=hoje().slice(0,4),diag=S.pac.flatMap(p=>(p.repro||[]).filter(r=>String(r.data||'').startsWith(ano)&&r.resultado));
+  const pr=diag.filter(r=>r.resultado==='Prenhe').length,nasc=S.pac.filter(p=>String(p.nasc||'').startsWith(ano)).length,mort=S.pac.filter(p=>p.status==='obito'&&String(p.atualizado?new Date(p.atualizado).toISOString():'').startsWith(ano)).length;
+  const vend=S.pac.filter(p=>String(p.dataVenda||'').startsWith(ano)),compr=S.pac.filter(p=>String(p.dataCompra||'').startsWith(ano));
+  const patr=S.pac.filter(ativo).reduce((s,p)=>s+num(p.valorAtual||p.valorCompra),0),lucro=vend.reduce((s,p)=>s+num(p.valorVenda)-num(p.valorCompra),0);
+  const g=S.pac.filter(ativo).map(p=>({p,g:gmd(p)})).filter(x=>x.g!=null).sort((a,b)=>a.g-b.g);
+  return `<div class="box"><h3>Indicadores de ${esc(ano)}</h3><div class="counts" style="margin:0"><div class="count"><b>${diag.length?Math.round(pr/diag.length*100)+'%':'—'}</b><span>taxa de prenhez (${pr}/${diag.length})</span></div><div class="count"><b>${nasc}</b><span>nascimentos</span></div><div class="count"><b>${mort}</b><span>óbitos</span></div><div class="count"><b>${R$(patr)}</b><span>valor do plantel</span></div><div class="count"><b>${vend.length}</b><span>vendidos · ${R$(lucro)} de resultado</span></div><div class="count"><b>${compr.length}</b><span>comprados</span></div></div>
+  ${g.length?`<h3 class="sec">Ganho de peso (GMD)</h3><div class="tw"><table>${g.map(({p,g})=>`<tr><td><button class="lnk2" data-id="${esc(p.id)}" data-gotab="pesagem">${esc(p.nome)}</button></td><td class="n ${g<0?'late':''}">${fx(g*1000,0)} g/dia</td></tr>`).join('')}</table></div>`:''}</div>`;
+}
+
+/* ---------- notificações no celular e no computador ---------- */
+const NOTIF_K='vetcamp-notif';
+const notifCfg=()=>({on:false,hora:7,dia:true,motiv:true,...LS.get(NOTIF_K,{})});
+const MSG_VET=['Prepare-se para o próximo atendimento: confira vacinas, vermífugos e o kit de campo.','Que tal revisar as fichas dos animais internados e as medicações do turno?','Dica: mande o resumo do atendimento ao tutor pelo WhatsApp. O cliente adora.','Revise os retornos da semana e confirme os horários com os clientes.','Lance os valores dos atendimentos de ontem para o caixa ficar em dia.','Tem AIE ou mormo vencendo? Confira a Agenda antes da próxima visita.','Faça um backup do VetCamp: Conta › Backup.','Confira o estoque: nada pior que faltar medicamento no campo.'];
+const MSG_PROP=['Hora de conferir o feno e a ração: quantos dias ainda duram?','Prepare-se: confira as vacinas e os vermífugos do plantel.','Que tal pesar os animais e acompanhar o ganho de peso?','Revise as tarefas do tratador para hoje.','Confira se as faturas e pensões do mês já foram cobradas.','Tire uma foto atualizada dos seus cavalos para a ficha.','Vai viajar com algum animal? Confira a validade do AIE e do mormo.'];
+function itensDoDia(d){
+  const its=[];for(const p of S.pac.filter(x=>x.status!=='obito'))for(const x of pendencias(p))if(x.tab!=='fin'&&x.d<=d&&dias(x.d)>=-30)its.push((x.h?x.h+' ':'')+p.nome+': '+x.txt);
+  if(PROP()){for(const l of lembretesG())if(l.data<=d)its.push(l.txt);const n=tarefas().filter(tarefaHoje).length-feitasHoje().length;if(d===hoje()&&n>0)its.push(n+' tarefa(s) do tratador')}
+  const est=S.est.filter(estAlerta).length;if(est)its.push(est+' item(ns) do estoque acabando ou vencendo');return its;
+}
+async function mostrarNotif(titulo,corpo,tag){
+  try{if(!('Notification' in window)||Notification.permission!=='granted')return false;
+    const r=navigator.serviceWorker&&await Promise.race([navigator.serviceWorker.ready,new Promise(ok=>setTimeout(()=>ok(null),1500))]);
+    const op={body:corpo,tag,icon:'icons/icon-192.png',badge:'icons/icon-192.png',data:{url:'/'}};
+    if(r&&r.showNotification){await r.showNotification(titulo,op);return true}new Notification(titulo,op);return true}catch(e){return false}}
+function proximaMotiv(){const l=PROP()?MSG_PROP:MSG_VET,i=LS.get('vetcamp-notif-i',0)%l.length;LS.set('vetcamp-notif-i',i+1);return l[i]}
+async function checarNotif(forcar){
+  const c=notifCfg(),d=hoje(),agora=new Date();if(!c.on&&!forcar)return;
+  if(!forcar&&agora.getHours()<num(c.hora))return;
+  const st=LS.get('vetcamp-notif-st',{});if(!forcar&&st.dia===d)return;
+  const its=c.dia?itensDoDia(d):[];let ok=false;
+  if(its.length){ok=await mostrarNotif(`VetCamp · ${its.length} para hoje`,its.slice(0,4).join('\n')+(its.length>4?`\n+ ${its.length-4}`:''),'vetcamp-dia');if(!forcar)toast(`Hoje: ${its.length} lembrete(s). Veja a ${PROP()?'Lembretes':'Agenda'}.`)}
+  else if(c.motiv||forcar){const ontem=addD(d,-1);if(forcar||(st.motiv!==ontem&&st.motiv!==d)){ok=await mostrarNotif('VetCamp',proximaMotiv(),'vetcamp-motiv');st.motiv=d}}
+  st.dia=d;LS.set('vetcamp-notif-st',st);salvarAgendaNotif();return ok;
+}
+/* deixa a agenda dos próximos dias guardada para o aviso em segundo plano (celular Android e computador com o app instalado) */
+async function salvarAgendaNotif(){
+  try{if(!('caches' in window))return;const c=notifCfg(),porDia={};for(let i=0;i<14;i++){const d=addD(hoje(),i);const its=itensDoDia(d).filter(t=>i===0||true);if(its.length)porDia[d]=its.slice(0,6)}
+    const st=LS.get('vetcamp-notif-st',{});const cache=await caches.open('vetcamp-notif');
+    await cache.put('/__notif.json',new Response(JSON.stringify({cfg:c,porDia,msgs:PROP()?MSG_PROP:MSG_VET,st}),{headers:{'content-type':'application/json'}}))}catch(e){}
+}
+async function ativarNotif(){
+  if(!('Notification' in window)){toast('Este navegador não mostra notificações. No iPhone, instale o VetCamp na tela de início (iOS 16.4 ou mais novo).');return}
+  let p=Notification.permission;if(p!=='granted')p=await Notification.requestPermission();
+  if(p!=='granted'){toast('Notificações bloqueadas. Libere nas configurações do navegador para o site do VetCamp.');render();return}
+  LS.set(NOTIF_K,{...notifCfg(),on:true});
+  try{const r=navigator.serviceWorker&&await Promise.race([navigator.serviceWorker.ready,new Promise(ok=>setTimeout(()=>ok(null),1500))]);if(r&&r.periodicSync){const ps=await navigator.permissions.query({name:'periodic-background-sync'}).catch(()=>({state:'denied'}));if(ps.state==='granted')await r.periodicSync.register('vetcamp-lembretes',{minInterval:12*3600*1000})}}catch(e){}
+  await salvarAgendaNotif();await mostrarNotif('VetCamp','Notificações ligadas! Você vai receber os lembretes do dia e uma dica dia sim, dia não.','vetcamp-teste');render();
+}
+function notifHtml(){
+  const c=notifCfg(),sup='Notification' in window,perm=sup?Notification.permission:'indisponível';
+  return `<div class="box"><h3>Notificações</h3><p class="hint" style="margin:0 0 10px">Avisos no celular e no computador: compromissos, vacinas e vencimentos do dia${PROP()?', tarefas e lembretes':''}. Quando não houver nada, uma dica dia sim, dia não (ex.: "Prepare-se para o próximo atendimento").</p>
+   ${!sup?'<p class="late">Este navegador não mostra notificações. No iPhone, instale o VetCamp na tela de início (iOS 16.4 ou mais novo) e ative aqui.</p>':perm==='denied'?'<p class="late">As notificações estão bloqueadas no navegador. Libere nas configurações do site e toque em Ativar.</p>':''}
+   <div class="f"><div class="fld h"><label><input type="checkbox" id="nt_on"${c.on&&perm==='granted'?' checked':''}> Notificações ligadas neste aparelho</label></div>
+   <div class="fld h"><label for="nt_hora">Horário do aviso</label><select id="nt_hora">${[5,6,7,8,9,10,12,18,20].map(h=>`<option value="${h}"${num(c.hora)===h?' selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('')}</select></div>
+   <div class="fld h"><label><input type="checkbox" id="nt_dia"${c.dia?' checked':''}> Lembretes do dia</label></div><div class="fld h"><label><input type="checkbox" id="nt_motiv"${c.motiv?' checked':''}> Dica dia sim, dia não quando não houver lembrete</label></div></div>
+   <div class="btns"><button class="btn sm" data-notifteste>Enviar um teste agora</button></div>
+   <p class="meta" style="margin:8px 0 0">O aviso aparece quando o VetCamp é aberto ou fica aberto no horário escolhido. No Android e no computador, com o app instalado, o navegador também pode avisar em segundo plano.</p></div>`;
+}
+function ligarNotif(){
+  const on=$('nt_on');if(!on)return;
+  on.onchange=()=>{if(on.checked)ativarNotif();else{LS.set(NOTIF_K,{...notifCfg(),on:false});toast('Notificações desligadas neste aparelho')}};
+  $('nt_hora').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),hora:+e.target.value});salvarAgendaNotif();toast('Horário salvo')};
+  $('nt_dia').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),dia:e.target.checked});salvarAgendaNotif()};
+  $('nt_motiv').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),motiv:e.target.checked});salvarAgendaNotif()};
+}
+
 function gerarDoc(t,p){
   const u=ult(p)[0]||{},pe=pesoAtual(p),H=cabec()+'\n'+'─'.repeat(24)+'\n\n';
   switch(t){
@@ -2373,6 +2612,7 @@ function gerarDoc(t,p){
   case 'termo_cir':return H+'TERMO DE CONSENTIMENTO PARA CIRURGIA E ANESTESIA\n\n'+identA(p)+`\n\nProcedimento: ${u.diag?'tratamento de '+u.diag:'________________________________'}\n\nEu, ${p.tutor||'________________'}, responsável pelo animal acima, autorizo a realização do procedimento cirúrgico e da anestesia/sedação necessárias. Declaro que fui informado(a) sobre o diagnóstico, as alternativas de tratamento, os riscos anestésicos e cirúrgicos (incluindo complicações e óbito), os cuidados pós-operatórios e a estimativa de custos, e que tive oportunidade de esclarecer minhas dúvidas.\n\nAutorizo também procedimentos adicionais que se façam necessários durante a cirurgia, em benefício do animal.\n\nValor estimado: R$ ____________`+assTutor(p)+assin();
   case 'termo_int':return H+'TERMO DE INTERNAÇÃO\n\n'+identA(p)+`\n\nMotivo da internação: ${u.diag||u.queixa||'________________'}\n\nAutorizo a internação do animal acima e os exames, medicações e procedimentos necessários ao tratamento, ciente de que serão cobrados diárias, materiais e medicamentos utilizados. Fui informado(a) do estado clínico e do prognóstico, e de que receberei atualizações pelo telefone ${p.tel||'________'}.\n\nPertences deixados com o animal: ________________________________`+assTutor(p)+assin();
   case 'termo_euta':return H+'TERMO DE AUTORIZAÇÃO PARA EUTANÁSIA\n\n'+identA(p)+`\n\nEu, ${p.tutor||'________________'}, responsável pelo animal acima, declaro ter sido informado(a) de seu estado clínico${u.diag?' ('+u.diag+')':''} e do prognóstico, e autorizo a realização da eutanásia, a ser executada conforme as normas do Conselho Federal de Medicina Veterinária, com métodos que garantam ausência de dor e sofrimento.\n\nDestino do corpo: (  ) cremação  (  ) sepultamento em propriedade  (  ) recolhimento pela clínica  (  ) outro: __________`+assTutor(p)+assin();
+  case 'seguro':{const ult=ord(p.consultas)[0]||{};return H+'LAUDO VETERINÁRIO PARA SEGURADORA\n\n'+identA(p)+(p.seguro?`\nSeguradora / apólice: ${p.seguro}`:'')+`\n\nHistórico clínico: ${ult.anam||'________________'}\nExame clínico (${br(ult.data)}): ${ult.exame||'________________'}\nDiagnóstico: ${ult.diag||'________________'}\nTratamento realizado: ${ult.trat||'________________'}\nPrognóstico: (  ) favorável  (  ) reservado  (  ) desfavorável\nValor estimado do animal: R$ ________\n\nDeclaro que as informações acima são verdadeiras e baseadas em exame clínico.`+assin()}
   case 'obito':return H+'DECLARAÇÃO DE ÓBITO\n\n'+identA(p)+`\n\nDeclaro que o animal acima identificado veio a óbito em ____/____/______, às ____h____.\nCausa provável: ${u.diag||'________________'}\nCircunstância: (  ) natural  (  ) eutanásia  (  ) outra: __________`+assin();
   case 'encam':return H+'ENCAMINHAMENTO\n\n'+identA(p)+(pe?`\nPeso: ${pe} kg`:'')+`\n\nEncaminho o paciente para: ________________________________\n\nHistórico: ${u.queixa||''}\nAchados: ${u.exame||''}\nSuspeita diagnóstica: ${u.diag||''}\nTratamento realizado: ${u.trat||''}\nMedicações em curso: ${(p.meds||[]).filter(medAtiva).map(m=>m.med+' '+(m.dose||'')).join('; ')||'nenhuma'}\nAlergias: ${p.alergias||'nenhuma conhecida'}`+assin();
   case 'precompra':{const lc=ord(p.locomotor)[0]||{},od=ord(p.odonto)[0]||{},ex=ord(p.exames).slice(0,8);return H+'LAUDO DE EXAME PRÉ-COMPRA\n\n'+identA(p)+(p.altura?`\nAltura: ${p.altura} cm`:'')+(pe?` · Peso: ${pe} kg`:'')+`\n\nComprador / solicitante: ________________________________\nUso pretendido: ${p.modalidade||p.finalidade||'________'}\n\n1. HISTÓRICO INFORMADO PELO VENDEDOR\n${u.queixa||'________________'}\n\n2. EXAME CLÍNICO GERAL\nTemperatura: ${u.temp||'—'} °C · FC: ${u.fc||'—'} bpm · FR: ${u.fr||'—'} mpm · TPC: ${u.tpc||'—'} s · Mucosas: ${u.mucosas||'—'}\nEscore corporal: ${u.ecc||'—'}\nAchados: ${u.exame||'________________'}\n\n3. SISTEMA LOCOMOTOR\nClaudicação (AAEP): ${lc.grau||'—'}\nTeste de flexão: ${lc.flexao||'—'} · Pinça de casco: ${lc.pinca||'—'}\nImagem: ${lc.imagem||'—'}\nObservações: ${lc.diag||'________________'}\n\n4. ODONTOLÓGICO\n${od.achados&&od.achados.length?od.achados.join(', '):'________________'}\n\n5. EXAMES COMPLEMENTARES\n${ex.length?ex.map(x=>`• ${x.nome} (${br(x.data)}): ${x.res||'—'}`).join('\n'):'________________'}\n\n6. CONCLUSÃO\nNa data do exame, o animal (  ) não apresentou  (  ) apresentou achados clínicos que possam comprometer o uso pretendido.\n________________________________\n\nEste laudo descreve as condições do animal na data do exame e não garante a saúde futura.`+assin()}
@@ -2434,7 +2674,7 @@ function desenhaPeso(s,p){
 
 /* ---------- formulários ---------- */
 function abrirForm(titulo,todos,val,p,onSave,onDel){
-  const fs=campos(todos,p);
+  const fs=campos(todos,{...p,...val});
   const fld=f=>{
     if(f.sec)return `<h3 class="sec">${f.sec}</h3>`;
     const v=val[f.k]??'',id='f_'+f.k;let inp;
@@ -2447,7 +2687,7 @@ function abrirForm(titulo,todos,val,p,onSave,onDel){
     const hint=f.hint2||(f.hint?(f.hint.eq&&spOk('eq',p)?f.hint.eq:f.hint.rum&&spOk('rum',p)?f.hint.rum:''):'');
     return `<div class="fld${f.h?' h':''}"><label for="${id}">${f.l}${f.req?' *':''}${hint?` <span class="meta">${hint}</span>`:''}${f.t==='ta'?`<span class="lbtns"><button type="button" class="mic" data-modelos="${id}">Modelos</button>${dict?`<button type="button" class="mic" data-mic="${id}">Ditar</button>`:''}</span>`:''}</label>${inp}</div>`};
   $('card').innerHTML=`<h2>${esc(titulo)}</h2><form id="frm" novalidate><div class="f">${fs.map(fld).join('')}</div><div class="acts">${onDel?'<button type="button" class="btn ghost del" id="del">Excluir</button>':''}<button type="button" class="btn" id="cancel">Cancelar</button><button class="btn pri">Salvar</button></div></form>`;
-  $('sheet').classList.add('on');$('card').scrollTop=0;
+  $('sheet').classList.add('on');$('card').scrollTop=0;ligarGeo();
   const ler=()=>{const o={...val};for(const f of fs){if(!f.k)continue;const el=$('f_'+f.k);o[f.k]=f.t==='checks'||f.t==='regioes'?[...el.querySelectorAll('input:checked')].map(c=>c.value):f.t==='triadan'?[...el.querySelectorAll('[aria-pressed=true]')].map(b=>b.dataset.dente):el.value.trim()}return o};
   for(const f of fs.filter(f=>f.re))$('f_'+f.k).onchange=()=>{const o=ler();abrirForm(titulo,todos,o,{...p,...o},onSave,onDel)};
   formSujo=false;$('frm').addEventListener('input',()=>{formSujo=true});$('frm').addEventListener('change',()=>{formSujo=true});
@@ -2565,6 +2805,14 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t||t.closest('#card')&&t.dataset.pick)return;const d=t.dataset;let p=cur();
   if(d.perfil){escolherPerfilModo(d.perfil);return}
   if('trocarperfil' in d){telaPerfil(false);return}
+  if('linkcli' in d&&p){gerarLinkCliente(p);return}
+  if('notifteste' in d){checarNotif(true).then(ok=>toast(ok?'Notificação enviada':'Ative as notificações primeiro (e libere no navegador)'));return}
+  if(d.fatpago){const k=d.fatpago+'_'+(S.fMes||hoje().slice(0,7)),f={...faturasPagas()};if(f[k])delete f[k];else f[k]=Date.now();salvarCfg({...S.cfg,faturas:f},f[k]?'Fatura marcada como recebida':'Fatura em aberto',1);render();return}
+  if(d.pixfat){const c=S.cli.find(x=>x.id===d.pixfat);if(c){const f=faturaDe(c,S.fMes||hoje().slice(0,7));cobrarPix(f.total,{desc:'fatura '+(S.fMes||hoje().slice(0,7)),tel:c.tel,nome:c.nome,txid:'FAT'+c.id.slice(-8)})}return}
+  if('tarnova' in d){abrirForm('Nova tarefa',F_TAR,{id:uid(),dias:[]},{},o=>{salvarCfg({...S.cfg,tarefas:[...tarefas(),o].slice(0,100)},'Tarefa salva',1);render()});return}
+  if(d.taredit){const x=tarefas().find(y=>y.id===d.taredit);if(x)abrirForm('Editar tarefa',F_TAR,x,{},o=>{salvarCfg({...S.cfg,tarefas:tarefas().map(y=>y.id===o.id?o:y)},'Tarefa salva',1);render()},()=>{salvarCfg({...S.cfg,tarefas:tarefas().filter(y=>y.id!==x.id)},'Tarefa apagada',1);render()});return}
+  if('locnovo' in d){abrirForm('Nova baia ou piquete',F_LOC,{id:uid(),tipo:'Baia'},{},o=>{salvarCfg({...S.cfg,locais:[...locais(),o].slice(0,300)},'Local salvo',1);render()});return}
+  if(d.locedit){const x=locais().find(y=>y.id===d.locedit);if(x)abrirForm('Editar local',F_LOC,x,{},o=>{salvarCfg({...S.cfg,locais:locais().map(y=>y.id===o.id?o:y)},'Local salvo',1);render()},()=>{salvarCfg({...S.cfg,locais:locais().filter(y=>y.id!==x.id)},'Local apagado',1);render()});return}
   if(d.modelos){abrirModelos(d.modelos,t);return}
   if('usemod' in d&&d.alvo){usarModelo(d.usemod,d.alvo);return}
   if(d.dente){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
@@ -2640,6 +2888,7 @@ document.addEventListener('click',e=>{
   else if('estnovo' in d)abrirForm('Novo produto',F_EST,{id:uid(),un:'frasco',cat:'Medicamento',controlado:'Não'},{},o=>{if(num(o.qtd))o.mov=[{d:new Date().toISOString(),q:num(o.qtd),motivo:'Cadastro (saldo inicial)',por:meId()}];salvarEst(o)});
   else if(d.estedit){const it=S.est.find(x=>x.id===d.estedit);if(it)abrirForm('Editar produto',F_EST,it,{},o=>{if(num(o.qtd)!==num(it.qtd))o.mov=[...(it.mov||[]),{d:new Date().toISOString(),q:num(o.qtd)-num(it.qtd),motivo:'Ajuste no cadastro',por:meId()}].slice(-300);salvarEst(o)},()=>apagar('estoque',it.id))}
   else if(d.estmv){const it=S.est.find(x=>x.id===d.eid);if(it)moverEstoque(it.id,-(+d.estmv),+d.estmv>0?'Entrada manual':'Saída manual')}
+  else if('lote' in d&&['Casqueamento','Exame / coleta',LOTE_GEST].includes($('lt_tipo').value)){const ids=[...document.querySelectorAll('#lt_anim input:checked')].map(i=>i.value);if(!ids.length){toast('Marque ao menos um animal');return}salvarLoteEspecial($('lt_tipo').value,ids)}
   else if('lote' in d){const ids=[...document.querySelectorAll('#lt_anim input:checked')].map(i=>i.value),nome=$('lt_nome').value.trim();
     if(!nome){toast('Preencha o produto');$('lt_nome').focus();return}if(!ids.length){toast('Marque ao menos um animal');return}
     const val=num($('lt_valor').value),reg={tipo:$('lt_tipo').value,nome,lote:$('lt_lote').value.trim(),data:$('lt_data').value||hoje(),prox:$('lt_prox').value,obs:'Atendimento em lote',valor:val?String(val):''};
@@ -2694,6 +2943,8 @@ function renderWho(){
 
 aplicarAparencia();
 render();
+setInterval(()=>checarNotif(),600000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)checarNotif()});
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.tarck)marcarTarefa(t.dataset.tarck,t.checked)});
 (async()=>{
   const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
   [db,dict,user,assets,dl]=await Promise.all([use('db'),use('dictation'),use('user'),use('assets'),use('downloads')]);
@@ -2725,7 +2976,7 @@ render();
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
   colRef('pacientes').onSnapshot(snap=>{
-    if(!snap.metadata.fromCache){clearTimeout(timer);note('');if(!dadosProntos){dadosProntos=true;setTimeout(checarPerfilNovo,400)}}
+    if(!snap.metadata.fromCache){clearTimeout(timer);note('');if(!dadosProntos){dadosProntos=true;setTimeout(checarPerfilNovo,400);setTimeout(()=>checarNotif(),3000)}}
     S.pac=mesclarSnap('pacientes',snap.docs.map(d=>normPac({...d.data(),id:d.id})),S.pac);LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))renderLogo();

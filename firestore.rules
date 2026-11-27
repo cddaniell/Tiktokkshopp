@@ -144,6 +144,23 @@ service cloud.firestore {
       allow create, update: if dono(uid) && request.resource.data.keys().hasOnly(['nome', 'papel', 'desde']);
     }
 
+    // link para o cliente: página só de leitura de um animal, com validade de até 100 dias.
+    // Quem tem o link lê aquele resumo; ninguém consegue listar os links nem gravar no de outra pessoa.
+    function portalOk(tok) {
+      let d = request.resource.data;
+      return tok.matches('^[A-Za-z0-9]{24,40}$')
+        && d.keys().hasOnly(['dono', 'ate', 'tipo', 'titulo', 'dados', 'criado'])
+        && d.dono == request.auth.uid && d.ate is int && d.ate <= request.time.toMillis() + 8640000000
+        && d.dados is string && d.dados.size() <= 300000 && texto(d.titulo, 120);
+    }
+    match /portal/{tok} {
+      allow get: if resource.data.ate > request.time.toMillis();
+      allow list: if false;
+      allow create: if logado() && portalOk(tok);
+      allow update: if logado() && resource.data.dono == request.auth.uid && portalOk(tok);
+      allow delete: if logado() && resource.data.dono == request.auth.uid;
+    }
+
     // plano e assinatura de cada conta: a pessoa só lê. Quem grava é o servidor, depois que a
     // empresa de pagamento confirma o pagamento (Pix falso, preço trocado ou cupom repetido não liberam nada)
     match /planos/{uid} {

@@ -1,6 +1,6 @@
 /* VetCamp · guarda a página para o aplicativo abrir mesmo com sinal fraco.
    Os dados em si ficam no banco do Firebase, que já funciona sem internet. */
-const CACHE = 'samvet-154697a85a';
+const CACHE = 'samvet-ac3f455cbb';
 const BASICO = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icons/icon-192.png'];
 
 self.addEventListener('install', e => {
@@ -36,4 +36,34 @@ self.addEventListener('fetch', e => {
     rede.then(resp => { if (!feito) { feito = true; clearTimeout(t); ok(resp); } })
       .catch(() => copia().then(m => { if (!feito) { feito = true; clearTimeout(t); ok(m || Response.error()); } }));
   }));
+});
+
+/* avisos: tocar na notificação abre o VetCamp */
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(l => {
+    for (const c of l) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
+});
+/* aviso em segundo plano (Android e computador com o app instalado): usa a agenda que o app deixou guardada */
+self.addEventListener('periodicsync', e => {
+  if (e.tag !== 'vetcamp-lembretes') return;
+  e.waitUntil((async () => {
+    const cache = await caches.open('vetcamp-notif');
+    const r = await cache.match('/__notif.json'); if (!r) return;
+    const j = await r.json(), c = j.cfg || {}; if (!c.on) return;
+    const agora = new Date(), d = new Date(agora.getTime() - agora.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    if (agora.getHours() < (+c.hora || 7)) return;
+    const st = j.st || {}; if (st.dia === d) return;
+    const its = (c.dia && j.porDia && j.porDia[d]) || [];
+    const opt = { icon: 'icons/icon-192.png', badge: 'icons/icon-192.png' };
+    if (its.length) await self.registration.showNotification('VetCamp · ' + its.length + ' para hoje', { ...opt, body: its.slice(0, 4).join('\n'), tag: 'vetcamp-dia' });
+    else if (c.motiv) {
+      const ontem = new Date(Date.parse(d + 'T12:00:00Z') - 864e5).toISOString().slice(0, 10);
+      if (st.motiv !== ontem && st.motiv !== d) { const m = j.msgs || []; if (m.length) await self.registration.showNotification('VetCamp', { ...opt, body: m[Math.floor(Math.random() * m.length)], tag: 'vetcamp-motiv' }); st.motiv = d; }
+    }
+    st.dia = d; j.st = st;
+    await cache.put('/__notif.json', new Response(JSON.stringify(j), { headers: { 'content-type': 'application/json' } }));
+  })());
 });
