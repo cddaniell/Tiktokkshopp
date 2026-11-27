@@ -176,6 +176,18 @@ service cloud.firestore {
       allow delete: if logado() && resource.data.dono == request.auth.uid;
     }
 
+    // agenda de avisos de cada conta (para o robô mandar notificações com o app fechado).
+    // A pessoa grava a própria agenda e os códigos dos aparelhos; o "enviado" só o servidor muda.
+    match /notif/{uid} {
+      allow read, delete: if dono(uid);
+      allow create, update: if dono(uid)
+        && request.resource.data.keys().hasOnly(['on', 'hora', 'dia', 'motiv', 'perfil', 'tz', 'porDia', 'tokens', 'atualizado', 'enviado'])
+        && ((resource == null && !('enviado' in request.resource.data)) || (resource != null && request.resource.data.get('enviado', null) == resource.data.get('enviado', null)))
+        && (!('tokens' in request.resource.data) || (request.resource.data.tokens is list && request.resource.data.tokens.size() <= 5))
+        && (!('porDia' in request.resource.data) || request.resource.data.porDia is map)
+        && (!('tz' in request.resource.data) || texto(request.resource.data.tz, 60));
+    }
+
     // plano e assinatura de cada conta: a pessoa só lê. Quem grava é o servidor, depois que a
     // empresa de pagamento confirma o pagamento (Pix falso, preço trocado ou cupom repetido não liberam nada)
     match /planos/{uid} {

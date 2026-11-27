@@ -15,5 +15,8 @@ window.SAMVET_FIREBASE = {
   storage: false,
   // Proteção extra (App Check): cole aqui a "chave do site" do reCAPTCHA v3 depois de criar
   // em https://www.google.com/recaptcha/admin e registrar em Firebase › App Check. Vazio = desligado.
-  appCheckKey: ""
+  appCheckKey: "",
+  // Notificações com o app fechado (celular e computador): cole a "chave pública" (par de chaves)
+  // de Firebase › Configurações do projeto › Cloud Messaging › Certificados push da Web. Vazio = desligado.
+  vapidKey: ""
 };

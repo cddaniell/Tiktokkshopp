@@ -1,0 +1,8 @@
+{
+  "name": "vetcamp-notificar",
+  "private": true,
+  "description": "VetCamp: manda as notificações do dia (roda de hora em hora no GitHub Actions)",
+  "type": "module",
+  "main": "notificar.mjs",
+  "dependencies": { "firebase-admin": "^12.7.0" }
+}

@@ -67,3 +67,11 @@ self.addEventListener('periodicsync', e => {
     await cache.put('/__notif.json', new Response(JSON.stringify(j), { headers: { 'content-type': 'application/json' } }));
   })());
 });
+
+/* notificação que chega do servidor (Firebase Cloud Messaging), mesmo com o VetCamp fechado */
+self.addEventListener('push', e => {
+  let j = {}; try { j = e.data ? e.data.json() : {}; } catch (x) { j = { data: { body: e.data && e.data.text() } }; }
+  const n = j.notification || {}, d = j.data || {};
+  const titulo = d.title || n.title || 'VetCamp', corpo = d.body || n.body || '';
+  e.waitUntil(self.registration.showNotification(titulo, { body: corpo, tag: d.tag || 'vetcamp', icon: 'icons/icon-192.png', badge: 'icons/icon-192.png', data: { url: d.url || './' } }));
+});

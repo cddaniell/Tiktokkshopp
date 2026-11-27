@@ -102,10 +102,26 @@ Na ficha de cada animal, aba **Fotos**:
 - **Exportar** uma foto ou a comparação montada numa imagem só (nome do animal, datas e intervalo) e **Compartilhar** pelo celular (WhatsApp, e-mail…).
 - As fotos são comprimidas (até 1600 px) e guardadas fora da ficha (`pacientes/<animal>/fotos` e `fotosHd`), então a ficha continua leve. Funcionam sem o plano Blaze. O banco só aceita imagem e só o dono (ou a equipe da clínica, menos o financeiro) grava.
 
-## Notificações
-Em **Conta › Notificações**: ligar neste aparelho, horário do aviso, lembretes do dia e "dica dia sim, dia não" quando não há nada marcado (ex.: "Prepare-se para o próximo atendimento").
-- Aparecem quando o VetCamp é aberto ou fica aberto no horário. No Android e no computador, com o app instalado, o navegador também pode avisar em segundo plano (sincronização periódica).
-- **Aviso com o app totalmente fechado no iPhone e garantido em qualquer aparelho** precisa de notificações push pelo servidor (Firebase Cloud Messaging + Cloud Functions): **plano Blaze**.
+## Notificações (celular e computador, mesmo com o VetCamp fechado)
+Como funciona:
+1. **O site pede autorização**: uma faixa no topo ("Autorizar alertas"). Se a pessoa toca em "Agora não", volta a perguntar depois de 3 dias. Se o navegador bloquear, a faixa explica como liberar e pede para continuar os alertas. No iPhone sem o app instalado, a faixa ensina a instalar.
+2. **Cada aparelho autorizado ganha um código** do Firebase Cloud Messaging (grátis). O app guarda em `notif/<conta>` o código, o horário escolhido e os lembretes dos próximos 14 dias.
+3. **Um robô roda de hora em hora** no GitHub Actions (`.github/workflows/notificacoes.yml`, grátis por o repositório ser público). No horário de cada pessoa, ele manda os lembretes do dia ou, quando não há nada, uma dica dia sim, dia não. Não repete no mesmo dia.
+4. **O aviso chega com o VetCamp fechado**: o service worker do site mostra a notificação.
+
+Onde funciona:
+- **Android**: Chrome, Edge, Firefox e Samsung Internet. Chega com o navegador fechado (melhor ainda com o app instalado).
+- **iPhone e iPad**: iOS 16.4 ou mais novo, **com o VetCamp instalado na tela de início** (Safari › Compartilhar › Adicionar à Tela de Início) e as notificações ativadas pelo app instalado.
+- **Computador**: Chrome, Edge e Firefox (Windows, Mac, Linux). Chega com o navegador aberto em segundo plano, mesmo sem a aba do VetCamp.
+
+### O que você precisa fazer uma vez (grátis)
+1. Firebase › engrenagem **Configurações do projeto** › aba **Cloud Messaging**.
+2. Em **Configuração da Web › Certificados push da Web**, toque em **Gerar par de chaves**.
+3. Copie a **chave** que aparece (é pública, pode mandar) e **mande para o Claude** colocar em `vapidKey` no `firebase-config.js`.
+4. Se na mesma aba aparecer "API do Firebase Cloud Messaging (V1) desativada", ative.
+Pronto: o robô já usa a mesma chave da publicação (segredo `FIREBASE_SERVICE_ACCOUNT`). Para testar na hora: GitHub › **Actions › Notificações do VetCamp › Run workflow**.
+
+Obs.: o GitHub pausa tarefas agendadas de repositórios públicos sem nenhuma atividade por 60 dias; se acontecer, basta reativar em Actions.
 
 ## Clínica com equipe (só no site próprio)
 Cada pessoa tem o **espaço pessoal** (só dela) e pode participar de uma ou mais **clínicas**. A troca é feita em **Conta › Equipe e clínica**.

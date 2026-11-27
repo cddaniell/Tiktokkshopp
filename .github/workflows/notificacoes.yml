@@ -1,0 +1,41 @@
+name: Notificações do VetCamp
+
+# Manda, de hora em hora, os avisos do dia para quem ligou as notificações (celular e computador),
+# mesmo com o VetCamp fechado. Usa os mesmos segredos da publicação do site. Grátis (repositório público).
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: notificacoes-vetcamp
+  cancel-in-progress: false
+
+jobs:
+  notificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Conferir segredos
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then echo "::warning::Sem FIREBASE_SERVICE_ACCOUNT: notificações desligadas."; echo "PULAR=1" >> "$GITHUB_ENV"; fi
+      - name: Instalar
+        if: env.PULAR != '1'
+        run: cd scripts/notificar && npm install --no-audit --no-fund
+      - name: Mandar os avisos do horário
+        if: env.PULAR != '1'
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          node scripts/notificar/notificar.mjs
+      - name: Apagar a chave do servidor
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

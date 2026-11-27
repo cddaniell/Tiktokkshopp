@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-WNCKFIgI+iU9/c4WFcZeqOYihv8SbFQaQ6MTEIZxy+k=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-jZYRNFuWqrAH7N8rzj4+2hTkcoewDfPk1G2dobECT5g=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -68,6 +68,8 @@ a{color:inherit}
 .alimb{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
 .mini4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.mini4>div{display:grid;gap:2px;background:var(--bg);border-radius:10px;padding:8px}.mini4 b{font-size:16px}.mini4 span{font-size:12px;color:var(--mute)}
 .item.alim.falta{border-color:var(--warn)}
+#notifbar{position:sticky;top:0;z-index:7;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px max(16px,env(safe-area-inset-left,0px));background:var(--note,#f3e1bf);color:var(--ink);font-size:14px;border-bottom:1px solid var(--line)}
+#notifbar .nbic{font-size:20px}#notifbar .nbtx{flex:1 1 220px}#notifbar .nbbt{display:flex;gap:6px;flex-wrap:wrap}
 .galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin:0 0 12px}
 .gfoto{position:relative;border:1px solid var(--line);border-radius:12px;padding:0;overflow:hidden;background:var(--bg);aspect-ratio:1;cursor:pointer}
 .gfoto img{width:100%;height:100%;object-fit:cover;display:block}
@@ -351,6 +353,7 @@ html.letra-maior body{zoom:1.12}
 <script src="lib/firebase-auth-compat.js"></script>
 <script src="lib/firebase-firestore-compat.js"></script>
 <script src="lib/firebase-storage-compat.js"></script>
+<script src="lib/firebase-messaging-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
 /* VetCamp · versão site próprio.
@@ -2575,15 +2578,17 @@ async function checarNotif(forcar){
   if(!forcar&&agora.getHours()<num(c.hora))return;
   const st=LS.get('vetcamp-notif-st',{});if(!forcar&&st.dia===d)return;
   const its=c.dia?itensDoDia(d):[];let ok=false;
-  if(its.length){ok=await mostrarNotif(`VetCamp · ${its.length} para hoje`,its.slice(0,4).join('\n')+(its.length>4?`\n+ ${its.length-4}`:''),'vetcamp-dia');if(!forcar)toast(`Hoje: ${its.length} lembrete(s). Veja a ${PROP()?'Lembretes':'Agenda'}.`)}
-  else if(c.motiv||forcar){const ontem=addD(d,-1);if(forcar||(st.motiv!==ontem&&st.motiv!==d)){ok=await mostrarNotif('VetCamp',proximaMotiv(),'vetcamp-motiv');st.motiv=d}}
+  const srv=pushAtivo()&&!forcar;
+  if(its.length){ok=srv?true:await mostrarNotif(`VetCamp · ${its.length} para hoje`,its.slice(0,4).join('\n')+(its.length>4?`\n+ ${its.length-4}`:''),'vetcamp-dia');if(!forcar)toast(`Hoje: ${its.length} lembrete(s). Veja a ${PROP()?'Lembretes':'Agenda'}.`)}
+  else if(c.motiv||forcar){const ontem=addD(d,-1);if(forcar||(st.motiv!==ontem&&st.motiv!==d)){ok=srv?true:await mostrarNotif('VetCamp',proximaMotiv(),'vetcamp-motiv');st.motiv=d}}
   st.dia=d;LS.set('vetcamp-notif-st',st);salvarAgendaNotif();return ok;
 }
 /* deixa a agenda dos próximos dias guardada para o aviso em segundo plano (celular Android e computador com o app instalado) */
 async function salvarAgendaNotif(){
   try{if(!('caches' in window))return;const c=notifCfg(),porDia={};for(let i=0;i<14;i++){const d=addD(hoje(),i);const its=itensDoDia(d).filter(t=>i===0||true);if(its.length)porDia[d]=its.slice(0,6)}
     const st=LS.get('vetcamp-notif-st',{});const cache=await caches.open('vetcamp-notif');
-    await cache.put('/__notif.json',new Response(JSON.stringify({cfg:c,porDia,msgs:PROP()?MSG_PROP:MSG_VET,st}),{headers:{'content-type':'application/json'}}))}catch(e){}
+    await cache.put('/__notif.json',new Response(JSON.stringify({cfg:c,porDia,msgs:PROP()?MSG_PROP:MSG_VET,st}),{headers:{'content-type':'application/json'}}));
+    await sincronizarPush(porDia)}catch(e){}
 }
 async function ativarNotif(){
   if(!('Notification' in window)){toast('Este navegador não mostra notificações. No iPhone, instale o VetCamp na tela de início (iOS 16.4 ou mais novo).');return}
@@ -2601,11 +2606,11 @@ function notifHtml(){
    <div class="fld h"><label for="nt_hora">Horário do aviso</label><select id="nt_hora">${[5,6,7,8,9,10,12,18,20].map(h=>`<option value="${h}"${num(c.hora)===h?' selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('')}</select></div>
    <div class="fld h"><label><input type="checkbox" id="nt_dia"${c.dia?' checked':''}> Lembretes do dia</label></div><div class="fld h"><label><input type="checkbox" id="nt_motiv"${c.motiv?' checked':''}> Dica dia sim, dia não quando não houver lembrete</label></div></div>
    <div class="btns"><button class="btn sm" data-notifteste>Enviar um teste agora</button></div>
-   <p class="meta" style="margin:8px 0 0">O aviso aparece quando o VetCamp é aberto ou fica aberto no horário escolhido. No Android e no computador, com o app instalado, o navegador também pode avisar em segundo plano.</p></div>`;
+   <p class="meta" style="margin:8px 0 0">${pushPossivel()?(pushAtivo()?'<b class="ok">Avisos com o app fechado ativos neste aparelho.</b> Chegam no horário escolhido, mesmo com o VetCamp fechado.':'Ao ligar, os avisos chegam no horário escolhido mesmo com o VetCamp fechado.')+(ehIOS()&&!instaladoApp()?' No iPhone, instale o VetCamp na tela de início e ative por lá.':''):'O aviso aparece quando o VetCamp é aberto ou fica aberto no horário escolhido.'}</p></div>`;
 }
 function ligarNotif(){
   const on=$('nt_on');if(!on)return;
-  on.onchange=()=>{if(on.checked)ativarNotif();else{LS.set(NOTIF_K,{...notifCfg(),on:false});toast('Notificações desligadas neste aparelho')}};
+  on.onchange=()=>{if(on.checked)ativarNotif();else{LS.set(NOTIF_K,{...notifCfg(),on:false});desligarPush();toast('Notificações desligadas neste aparelho')}};
   $('nt_hora').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),hora:+e.target.value});salvarAgendaNotif();toast('Horário salvo')};
   $('nt_dia').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),dia:e.target.checked});salvarAgendaNotif()};
   $('nt_motiv').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),motiv:e.target.checked});salvarAgendaNotif()};
@@ -2719,6 +2724,54 @@ async function compararFotos(p,rot){
   $('fc_exp').onclick=async()=>{$('fc_exp').disabled=true;try{exportarBlob(await montarComparacao(p,A,B),nome())}catch(e){toast('Não foi possível montar a imagem')}finally{if($('fc_exp'))$('fc_exp').disabled=false}};
   if($('fc_sh'))$('fc_sh').onclick=async()=>{try{compartilharBlob(await montarComparacao(p,A,B),nome(),`${p.nome} · ${rot}: antes e depois`)}catch(e){toast('Não foi possível compartilhar')}};
 }
+
+/* ---------- notificações com o app fechado (push) e pedido de autorização ---------- */
+/* O aparelho recebe um código (token) do Firebase Cloud Messaging. A agenda dos próximos dias fica em notif/<conta>;
+   um robô de hora em hora (GitHub Actions) manda o aviso no horário escolhido, mesmo com o VetCamp fechado. */
+const PUSH_CFG=()=>(window.SAMVET_FIREBASE||{});
+const pushPossivel=()=>STANDALONE&&!!db&&!!meId()&&'Notification' in window&&'serviceWorker' in navigator&&!!(window.firebase&&firebase.messaging)&&!!PUSH_CFG().vapidKey;
+const ehIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const instaladoApp=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const pushAtivo=()=>!!LS.get('vetcamp-push-ok',0);
+let pushSync=null;
+async function sincronizarPush(porDia){
+  if(!pushPossivel()||Notification.permission!=='granted'||!notifCfg().on)return false;
+  try{
+    const reg=await Promise.race([navigator.serviceWorker.ready,new Promise(ok=>setTimeout(()=>ok(null),4000))]);if(!reg)return false;
+    let tok=LS.get('vetcamp-push-token',null);
+    if(!tok||Date.now()-(tok.em||0)>7*864e5){const t=await firebase.messaging().getToken({vapidKey:PUSH_CFG().vapidKey,serviceWorkerRegistration:reg});if(!t)return false;tok={t,em:Date.now()};LS.set('vetcamp-push-token',tok)}
+    const c=notifCfg(),ref=db.doc('notif/'+meId());
+    const corpo={on:true,hora:num(c.hora),dia:!!c.dia,motiv:!!c.motiv,perfil:MODO,tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Sao_Paulo',porDia:porDia||{}};
+    const assin=JSON.stringify([corpo,tok.t]);if(LS.get('vetcamp-push-assin','')===assin&&pushAtivo())return true;
+    const atual=await ref.get().then(s=>s.exists?s.data():{}).catch(()=>({}));
+    const toks=[{t:tok.t,em:Date.now(),disp:(ehIOS()?'iPhone/iPad':/Android/.test(navigator.userAgent)?'Android':'Computador')},...(Array.isArray(atual.tokens)?atual.tokens:[]).filter(x=>x&&x.t!==tok.t)].slice(0,5);
+    await ref.set({...corpo,tokens:toks,atualizado:Date.now()},{merge:true});
+    LS.set('vetcamp-push-assin',assin);LS.set('vetcamp-push-ok',1);return true;
+  }catch(e){return false}
+}
+async function desligarPush(){try{LS.set('vetcamp-push-ok',0);LS.set('vetcamp-push-assin','');if(STANDALONE&&db&&meId())await db.doc('notif/'+meId()).set({on:false,atualizado:Date.now()},{merge:true})}catch(e){}}
+/* faixa no topo: pede autorização, ensina a instalar no iPhone e pede de novo quando a permissão some */
+function bannerNotif(){
+  const velho=$('notifbar');if(velho)velho.remove();
+  if(!STANDALONE||!db||!me)return;
+  const c=notifCfg(),adiado=LS.get('vetcamp-notifbar-ate',0)>Date.now();if(adiado)return;
+  let txt='',btn='';
+  if(!('Notification' in window)){if(ehIOS()&&!instaladoApp()){txt='No iPhone, os alertas chegam quando o VetCamp está na tela de início. Instale e abra por lá para ativar.';btn='<button type="button" class="btn sm pri" data-nbinst>Como instalar</button>'}else return}
+  else if(Notification.permission==='default'){
+    if(ehIOS()&&!instaladoApp()){txt='No iPhone, os alertas chegam quando o VetCamp está na tela de início. Instale e abra por lá para ativar.';btn='<button type="button" class="btn sm pri" data-nbinst>Como instalar</button>'}
+    else{txt=c.on?'Os alertas do VetCamp precisam da sua autorização para continuar. Toque em Autorizar.':'Receba no celular e no computador os agendamentos, vacinas e lembretes do dia, mesmo com o VetCamp fechado.';btn='<button type="button" class="btn sm pri" data-nbok>Autorizar alertas</button>'}}
+  else if(Notification.permission==='denied'){if(!c.on&&LS.get('vetcamp-notif-pediu',0)>2)return;txt='Os alertas estão bloqueados neste navegador. Para continuar recebendo, libere as notificações do site '+location.hostname+' nas configurações do navegador e toque em Já liberei.';btn='<button type="button" class="btn sm pri" data-nbrecheck>Já liberei</button>'}
+  else{if(!c.on&&!LS.get('vetcamp-notif-decidiu',0)){LS.set(NOTIF_K,{...c,on:true});LS.set('vetcamp-notif-decidiu',1)}return}
+  const b=document.createElement('div');b.id='notifbar';b.setAttribute('role','region');b.setAttribute('aria-label','Alertas do VetCamp');
+  b.innerHTML=`<span class="nbic" aria-hidden="true">🔔</span><span class="nbtx"></span><span class="nbbt">${btn}<button type="button" class="btn sm ghost" data-nbdepois>Agora não</button></span>`;
+  b.querySelector('.nbtx').textContent=txt;document.body.prepend(b);
+}
+document.addEventListener('click',async e=>{const t=e.target.closest&&e.target.closest('#notifbar button');if(!t)return;const d=t.dataset;
+  if('nbdepois' in d){LS.set('vetcamp-notifbar-ate',Date.now()+3*864e5);LS.set('vetcamp-notif-pediu',LS.get('vetcamp-notif-pediu',0)+1);$('notifbar').remove()}
+  else if('nbinst' in d){$('notifbar').remove();S.vis='conta';S.sel=null;LS.set('vetcamp-conta-abertas',[...new Set([...LS.get('vetcamp-conta-abertas',[]),'Instalar o VetCamp no celular'])]);render();scrollTo(0,0)}
+  else if('nbok' in d){LS.set('vetcamp-notif-decidiu',1);await ativarNotif();bannerNotif()}
+  else if('nbrecheck' in d){if(Notification.permission==='granted'){LS.set(NOTIF_K,{...notifCfg(),on:true});await salvarAgendaNotif();toast('Alertas liberados de novo');bannerNotif()}else{const p=await Notification.requestPermission().catch(()=>'denied');if(p==='granted'){LS.set(NOTIF_K,{...notifCfg(),on:true});await salvarAgendaNotif();toast('Alertas liberados')}else toast('Ainda bloqueado: libere nas configurações do navegador (cadeado ao lado do endereço).');bannerNotif()}}
+});
 
 function gerarDoc(t,p){
   const u=ult(p)[0]||{},pe=pesoAtual(p),H=cabec()+'\n'+'─'.repeat(24)+'\n\n';
@@ -3063,7 +3116,7 @@ function renderWho(){
 
 aplicarAparencia();
 render();
-setInterval(()=>checarNotif(),600000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)checarNotif()});
+setInterval(()=>checarNotif(),600000);document.addEventListener('visibilitychange',()=>{if(!document.hidden){checarNotif();if(dadosProntos&&!$('sheet').classList.contains('on'))bannerNotif()}});
 document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.tarck)marcarTarefa(t.dataset.tarck,t.checked)});
 (async()=>{
   const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
@@ -3096,7 +3149,7 @@ document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.datas
   timer=setTimeout(()=>note('Não foi possível carregar os dados ainda. Verifique a conexão.'),10000);
   const idle=()=>!$('sheet').classList.contains('on');
   colRef('pacientes').onSnapshot(snap=>{
-    if(!snap.metadata.fromCache){clearTimeout(timer);note('');if(!dadosProntos){dadosProntos=true;setTimeout(checarPerfilNovo,400);setTimeout(()=>checarNotif(),3000)}}
+    if(!snap.metadata.fromCache){clearTimeout(timer);note('');if(!dadosProntos){dadosProntos=true;setTimeout(checarPerfilNovo,400);setTimeout(()=>checarNotif(),3000);setTimeout(()=>{if(!$('sheet').classList.contains('on'))bannerNotif()},4500)}}
     S.pac=mesclarSnap('pacientes',snap.docs.map(d=>normPac({...d.data(),id:d.id})),S.pac);LS.set(PFX+'cache-pacientes',S.pac);avisoPend();
     if(S.sel&&!cur())S.sel=null;
     if(idle()&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#view .calc,#view #cfgf,#view .box input')))renderLogo();
