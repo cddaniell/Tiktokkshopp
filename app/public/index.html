@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-yv7m2YQ6DRptegWe5FXwbogtvHVVpiF1ibVTfNBFtI8=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-1Y4RkTp6//8BKtomnoVkg9pmaC4/72OyH3IXpMTJehw=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -1371,7 +1371,7 @@ function compactarConta(){
   for(const b of boxes){
     const h=b.querySelector('h3');if(!h)continue;const tit=h.textContent.trim();if(!tit)continue;
     const bar=h.parentElement.classList.contains('bar')?h.parentElement:null;
-    const d=document.createElement('details');d.className='sec '+[...b.classList].filter(c=>c!=='box').join(' ');d.dataset.sec=tit;
+    const d=document.createElement('details');d.className='sec '+[...b.classList].filter(c=>['soadmin','sopresc'].includes(c)).join(' ');d.dataset.sec=tit;
     const sm=document.createElement('summary');const r=CONTA_RESUMO[tit]||(()=>'');let res='';try{res=r()}catch(e){}
     sm.innerHTML=`<span class="st"></span><span class="sr"></span>`;sm.querySelector('.st').textContent=tit;sm.querySelector('.sr').textContent=res||'';
     if(bar&&bar.children.length===1)bar.remove();else h.remove();

@@ -1097,7 +1097,7 @@ function compactarConta(){
   for(const b of boxes){
     const h=b.querySelector('h3');if(!h)continue;const tit=h.textContent.trim();if(!tit)continue;
     const bar=h.parentElement.classList.contains('bar')?h.parentElement:null;
-    const d=document.createElement('details');d.className='sec '+[...b.classList].filter(c=>c!=='box').join(' ');d.dataset.sec=tit;
+    const d=document.createElement('details');d.className='sec '+[...b.classList].filter(c=>['soadmin','sopresc'].includes(c)).join(' ');d.dataset.sec=tit;
     const sm=document.createElement('summary');const r=CONTA_RESUMO[tit]||(()=>'');let res='';try{res=r()}catch(e){}
     sm.innerHTML=`<span class="st"></span><span class="sr"></span>`;sm.querySelector('.st').textContent=tit;sm.querySelector('.sr').textContent=res||'';
     if(bar&&bar.children.length===1)bar.remove();else h.remove();
