@@ -47,6 +47,16 @@ a{color:inherit}
 .alimb{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
 .mini4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.mini4>div{display:grid;gap:2px;background:var(--bg);border-radius:10px;padding:8px}.mini4 b{font-size:16px}.mini4 span{font-size:12px;color:var(--mute)}
 .item.alim.falta{border-color:var(--warn)}
+.sec{border:1px solid var(--line);border-radius:14px;background:var(--card);margin:0 0 10px}
+.sec>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;min-height:52px}
+.sec>summary::-webkit-details-marker{display:none}
+.sec>summary .st{font-weight:800;font-size:16px}.sec>summary .sr{flex:1;min-width:0;color:var(--mute);font-size:13px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec>summary::after{content:"";width:9px;height:9px;flex:none;margin:-4px 4px 0 2px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);transition:transform .2s,margin .2s;opacity:.7}
+.sec[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.sec[open]>summary{border-bottom:1px solid var(--line)}
+.sec>.seccorpo{padding:14px 16px}
+.sec>summary:focus-visible{outline:3px solid var(--act);outline-offset:2px;border-radius:14px}
+.cols.secs{display:block}
 .count.ctxt b{font-size:17px;line-height:1.25}
 .barra{display:block;height:6px;border-radius:3px;margin-top:4px;background:linear-gradient(90deg,var(--act) var(--w),color-mix(in srgb,var(--act) 12%,transparent) var(--w))}
 .lnk2{border:0;background:none;padding:0;color:var(--act);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;text-align:left}
@@ -1066,6 +1076,36 @@ function tutorialInstalar(){
    <ol class="passos">${passos.map(([t,d])=>`<li><b class="pt">${t}</b><span class="meta">${d}</span></li>`).join('')}</ol>
    <div class="btns"><button class="btn sm" data-copysite>Copiar link do site</button>${STANDALONE?'':`<a class="btn sm" href="${SITE_OFICIAL}" target="_blank" rel="noopener">Abrir o site</a>`}</div>`}</div>`;
 }
+
+/* Conta compacta: cada bloco vira só o título com uma setinha; abre ao tocar (lembra o que ficou aberto) */
+const CONTA_RESUMO={
+  'Dados da clínica':()=>S.cfg.clinica||'Toque para preencher nome, telefone, Pix…',
+  'Dados do haras / fazenda':()=>S.cfg.clinica||'Toque para preencher nome, telefone, Pix…',
+  'Seus dados profissionais':()=>S.cfg.crmv?'CRMV '+S.cfg.crmv:'Nome, CRMV e CPF',
+  'Equipe e clínica':()=>CLIN?CLIN.nome+' · '+PAPEIS[CLIN.papel]:'Espaço pessoal',
+  'Sua assinatura':()=>S.cfg.assinVet?'Assinatura salva':'Ainda não cadastrada',
+  'Tabela de preços':()=>'Valores que você cobra',
+  'Backup':()=>{const t=LS.get(PFX+'ultimo-backup',0);return t?'Último: '+new Date(t).toLocaleDateString('pt-BR'):'Baixar ou importar'},
+  'Sobre o VetCamp':()=>'Versão '+VERSAO,
+  'Aparência':()=>'Tema e tamanho da letra',
+  'Como entrar de outro aparelho':()=>'Celular, tablet, computador',
+  'Conectado':()=>me&&me.email||'Sua conta',
+  'Você está no modo local':()=>'Dados só neste navegador'};
+function compactarConta(){
+  const v=$('view'),abertas=LS.get('vetcamp-conta-abertas',[]);
+  const boxes=[...v.querySelectorAll(':scope > .box, :scope > .cols > .box')].filter(b=>!b.classList.contains('perfil')&&!b.classList.contains('perfiltipo'));
+  for(const b of boxes){
+    const h=b.querySelector('h3');if(!h)continue;const tit=h.textContent.trim();if(!tit)continue;
+    const bar=h.parentElement.classList.contains('bar')?h.parentElement:null;
+    const d=document.createElement('details');d.className='sec '+[...b.classList].filter(c=>c!=='box').join(' ');d.dataset.sec=tit;
+    const sm=document.createElement('summary');const r=CONTA_RESUMO[tit]||(()=>'');let res='';try{res=r()}catch(e){}
+    sm.innerHTML=`<span class="st"></span><span class="sr"></span>`;sm.querySelector('.st').textContent=tit;sm.querySelector('.sr').textContent=res||'';
+    if(bar&&bar.children.length===1)bar.remove();else h.remove();
+    b.before(d);b.classList.remove('box');b.classList.add('seccorpo');d.append(sm,b);if(abertas.includes(tit))d.open=true;
+    d.addEventListener('toggle',()=>{const l=LS.get('vetcamp-conta-abertas',[]).filter(x=>x!==tit);if(d.open)l.push(tit);LS.set('vetcamp-conta-abertas',l)});
+  }
+  const cols=v.querySelector(':scope > .cols');if(cols&&!cols.querySelector('.box'))cols.classList.add('secs');
+}
 function renderConta(){
   const c=S.cfg;
   const nome=me&&me.name;
@@ -1073,8 +1113,8 @@ function renderConta(){
   <div class="box perfil"><button class="fotobtn grande" data-fotoperfil aria-label="${fotoPerfil()?'Trocar':'Adicionar'} sua foto de perfil">${fotoPerfil()?`<span class="av"><img src="${fotoPerfil()}" alt="Sua foto de perfil"></span>`:`<span class="av">${esc(((S.cfg.apelido||nome||S.cfg.vet||'?').trim()[0]||'?').toUpperCase())}</span>`}<span class="cam">${fotoPerfil()?'Trocar':'+ Foto'}</span></button>
    <div class="grow"><h3>Seu perfil</h3><form id="perff" class="addrow"><input id="pf_apelido" placeholder="Como quer ser chamado(a)" aria-label="Nome de exibição" value="${esc(S.cfg.apelido||'')}"><button class="btn sm">Salvar nome</button></form>
    <div class="btns" style="margin-top:8px"><button class="btn sm" data-fotoperfil>${fotoPerfil()?'Trocar foto':'Adicionar foto'}</button>${fotoPerfil()?'<button class="btn sm ghost" data-fotoperfilrm>Remover foto</button>':''}</div>
-   <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p></div></div>
-  <div class="box"><div class="bar"><h3>Tipo de perfil</h3><button class="btn pri sm" data-trocarperfil>Alterar perfil</button></div><p style="margin:0">Você está usando o VetCamp como <b>${PROP()?'Proprietário de haras ou fazenda':'Veterinário(a)'}</b>. ${PROP()?'Seus animais, alimentação, gastos e lembretes.':'Prontuário, agenda, caixa e equipe da clínica.'} Os dados de cada perfil ficam separados.</p></div>
+   <p class="meta" style="margin:6px 0 0">A foto aparece no topo, na capa e só na sua conta.</p>${db&&STANDALONE&&AUTH?'<div class="btns" style="margin-top:8px"><button class="btn sm ghost" data-sair>Sair da conta</button></div>':''}</div></div>
+  <div class="box perfiltipo"><div class="bar"><h3>Tipo de perfil</h3><button class="btn pri sm" data-trocarperfil>Alterar perfil</button></div><p style="margin:0">Você está usando o VetCamp como <b>${PROP()?'Proprietário de haras ou fazenda':'Veterinário(a)'}</b>. ${PROP()?'Seus animais, alimentação, gastos e lembretes.':'Prontuário, agenda, caixa e equipe da clínica.'} Os dados de cada perfil ficam separados.</p></div>
   ${PROP()?'':equipeHtml()}
   ${tutorialInstalar()}
   ${db&&!STANDALONE?`<div class="box acesso"><span class="pill" style="--c:var(--${isDono?'act':'s-acompanhamento'})">${isDono?'Dono e desenvolvedor':'Usuário'}</span><p style="margin:8px 0 0">${isDono?'Só você pode alterar o aplicativo: telas, funções, regras de acesso e atualizações. Os usuários convidados usam tudo e alteram apenas os próprios dados.':'Você pode usar todas as funções e alterar tudo dos seus dados: pacientes, clientes, caixa, preços, estoque e documentos. O aplicativo em si só pode ser alterado pelo dono.'}</p></div>`:''}
@@ -1113,6 +1153,7 @@ function renderConta(){
   $('cfgf').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('cfgf').querySelectorAll('input,select'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o)};
   if($('proff'))$('proff').onsubmit=e=>{e.preventDefault();const o={...S.cfg};for(const el of $('proff').querySelectorAll('input'))o[el.id.slice(3)]=el.value.trim();salvarCfg(o,'Seus dados profissionais foram salvos')};
   ligarEquipe();
+  compactarConta();
 }
 
 /* ---------- clientes ---------- */
