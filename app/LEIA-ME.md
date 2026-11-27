@@ -94,6 +94,14 @@ Na primeira entrada de uma conta nova, o VetCamp pergunta como a pessoa vai usar
 - **Baias e piquetes**: ocupação, vagas e piquete em descanso.
 - **Compra e venda**, valor do plantel, **provas** (a inscrição vira gasto), **pesagens com ganho de peso (GMD)**, **indicadores** (taxa de prenhez, nascimentos, óbitos) e **categorias de gasto próprias**.
 
+## Fotos do atendimento
+Na ficha de cada animal, aba **Fotos**:
+- **+ Adicionar fotos** (câmera ou galeria, até 20 por vez) com um **nome** (ex.: "Ferida membro anterior esquerdo"), data e observação.
+- Organizadas **por dia**, com filtro pelo nome.
+- **Comparar primeira × última** do mesmo nome, lado a lado, com as datas e os dias de intervalo. Dá para escolher outras duas.
+- **Exportar** uma foto ou a comparação montada numa imagem só (nome do animal, datas e intervalo) e **Compartilhar** pelo celular (WhatsApp, e-mail…).
+- As fotos são comprimidas (até 1600 px) e guardadas fora da ficha (`pacientes/<animal>/fotos` e `fotosHd`), então a ficha continua leve. Funcionam sem o plano Blaze. O banco só aceita imagem e só o dono (ou a equipe da clínica, menos o financeiro) grava.
+
 ## Notificações
 Em **Conta › Notificações**: ligar neste aparelho, horário do aviso, lembretes do dia e "dica dia sim, dia não" quando não há nada marcado (ex.: "Prepare-se para o próximo atendimento").
 - Aparecem quando o VetCamp é aberto ou fica aberto no horário. No Android e no computador, com o app instalado, o navegador também pode avisar em segundo plano (sincronização periódica).

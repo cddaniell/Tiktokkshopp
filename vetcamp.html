@@ -47,6 +47,13 @@ a{color:inherit}
 .alimb{grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
 .mini4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.mini4>div{display:grid;gap:2px;background:var(--bg);border-radius:10px;padding:8px}.mini4 b{font-size:16px}.mini4 span{font-size:12px;color:var(--mute)}
 .item.alim.falta{border-color:var(--warn)}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin:0 0 12px}
+.gfoto{position:relative;border:1px solid var(--line);border-radius:12px;padding:0;overflow:hidden;background:var(--bg);aspect-ratio:1;cursor:pointer}
+.gfoto img{width:100%;height:100%;object-fit:cover;display:block}
+.gfoto span{position:absolute;left:0;right:0;bottom:0;padding:4px 6px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(transparent,rgb(0 0 0/.7));text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fotobig img{width:100%;max-height:70vh;object-fit:contain;border-radius:12px;background:#000}
+.comparar{display:grid;grid-template-columns:1fr 1fr;gap:8px}.comparar figure{margin:0}.comparar img{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:10px;background:#000}
+.comparar figcaption{font-weight:700;font-size:14px;margin-top:4px}
 .arvore{display:grid;gap:8px}.arvore>div{display:grid;gap:8px}.arvore .g2{grid-template-columns:1fr 1fr}.arvore .g3{grid-template-columns:repeat(2,1fr)}
 @media(min-width:700px){.arvore{grid-template-columns:1fr 1fr 2fr;align-items:center}.arvore .g2{grid-template-columns:1fr}.arvore .g3{grid-template-columns:1fr 1fr}}
 .gn{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}.gn span{display:block;font-size:12px;color:var(--mute)}
@@ -2031,14 +2038,14 @@ function esquecidasHtml(){const l=semCobranca();if(!l.length)return '';
 
 /* ---------- ficha ---------- */
 function renderFicha(p){
-  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,tabDe(m)+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),...(PROP()?[['gastos','Gastos']]:[]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']].filter(([k])=>!(k==='fin'&&(!pode('financeiro')||PROP()))&&!(k==='docs'&&(!pode('prescrever')||PROP())));
+  const tabs=[['resumo','Resumo'],['linha','Linha do tempo'],['fotos','Fotos'+((FOTOS[p.id]||[]).length?' ('+FOTOS[p.id].length+')':'')],...MODS.filter(m=>modVis(m,p)).map(m=>[m.key,tabDe(m)+((p[m.key]||[]).length?' ('+p[m.key].length+')':'')]),...(PROP()?[['gastos','Gastos']]:[]),['anexos','Anexos'+((p.anexos||[]).length?' ('+p.anexos.length+')':'')],['docs','Documentos'],['dados','Dados']].filter(([k])=>!(k==='fin'&&(!pode('financeiro')||PROP()))&&!(k==='docs'&&(!pode('prescrever')||PROP())));
   if(!tabs.some(t=>t[0]===S.tab))S.tab='resumo';
   $('ficha').innerHTML=`<button class="btn ghost sm" data-back>← Voltar</button>
   <div class="head"><button class="fotobtn" data-fotopac aria-label="${p.foto?'Trocar':'Adicionar'} foto de ${esc(p.nome)}">${avatar(p)}<span class="cam">${p.foto?'Trocar':'+ Foto'}</span></button><div class="grow"><h2>${esc(p.nome)}</h2><div class="meta">${esc([p.especie,p.raca,p.sexo,p.categoria,p.castrado==='Sim'?'castrado(a)':'',idade(p.nasc),p.modalidade].filter(Boolean).join(' · '))}<br>${esc(p.tutor||'—')}${p.tel?' · '+esc(p.tel):''}${p.prop?' · '+esc(p.prop):''}${p.lote?' · '+esc(p.lote):''}</div></div>
   <select class="stsel" id="st" aria-label="Status" style="--c:var(--s-${esc(p.status||'tratamento')})">${STATUS.map(([k,l])=>`<option value="${k}"${p.status===k?' selected':''}>${l}</option>`).join('')}</select></div>
   ${chipsAlerta(p)}
   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab===k}">${esc(l)}</button>`).join('')}</div>
-  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):S.tab==='gastos'?gastosAnimal(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${pode('financeiro')&&!PROP()?rodapeFin(p):''}`;
+  <div id="tabc">${S.tab==='resumo'?resumo(p):S.tab==='linha'?linhaTempo(p):S.tab==='dados'?dados(p):S.tab==='anexos'?anexos(p):S.tab==='docs'?docsTab(p):S.tab==='gastos'?gastosAnimal(p):S.tab==='fotos'?fotosTab(p):modulo(MODS.find(m=>m.key===S.tab),p)}</div>${pode('financeiro')&&!PROP()?rodapeFin(p):''}`;
   const fig=document.querySelector('.fig svg');if(fig)desenhaPeso(fig,p);
   const at=document.querySelector('.tab[aria-selected=true]');if(at&&at.scrollIntoView)at.scrollIntoView({block:'nearest',inline:'nearest'});
   hidratarNomes();
@@ -2330,6 +2337,115 @@ function ligarNotif(){
   $('nt_motiv').onchange=e=>{LS.set(NOTIF_K,{...notifCfg(),motiv:e.target.checked});salvarAgendaNotif()};
 }
 
+/* ---------- fotos do atendimento: galeria por animal, comparar primeira × última, exportar e compartilhar ---------- */
+/* Cada foto fica em dois documentos: miniatura (lista rápida) e foto em alta (só abre quando precisa).
+   Caminho: <espaço>/pacientes/<animal>/fotos e /fotosHd. Assim a ficha do animal continua leve. */
+const FOTOS={},FOTOS_HD={};let fotosUn=null,fotosPid='';
+const imgOk=u=>typeof u==='string'&&u.length<1100000&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u);
+const fotosCol=(pid,hd)=>db.collection(`${BASE}/pacientes/${pid}/${hd?'fotosHd':'fotos'}`);
+const ROT_SUG=()=>[...new Set([...(Object.values(FOTOS).flat().map(f=>f.rotulo).filter(Boolean)),'Ferida','Casco','Claudicação','Dentes','Olhos','Pele','Pós-operatório','Raio-X (foto da tela)','Ultrassom (foto da tela)',...REG_CORPO])];
+function carregarFotos(pid){
+  if(!db)return;if(fotosPid===pid&&fotosUn)return;if(fotosUn){try{fotosUn()}catch(e){}}fotosPid=pid;
+  fotosUn=fotosCol(pid).onSnapshot(s=>{FOTOS[pid]=s.docs.map(d=>({...d.data(),id:d.id})).filter(f=>imgOk(f.img)).sort((a,b)=>String(a.data).localeCompare(String(b.data))||(a.criado||0)-(b.criado||0));
+    const p=cur();if(p&&p.id===pid&&S.tab==='fotos'&&!$('sheet').classList.contains('on'))renderLogo()},()=>{});
+}
+function comprimir(file,lado,q){return new Promise((ok,erro)=>{const u=URL.createObjectURL(file),im=new Image();im.onerror=()=>{URL.revokeObjectURL(u);erro(new Error('imagem'))};
+  im.onload=()=>{URL.revokeObjectURL(u);let w=im.naturalWidth,h=im.naturalHeight;const r=Math.min(1,lado/Math.max(w,h));w=Math.round(w*r);h=Math.round(h*r);
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(im,0,0,w,h);
+    let qq=q,d=cv.toDataURL('image/jpeg',qq);while(d.length>950000&&qq>.35){qq-=.1;d=cv.toDataURL('image/jpeg',qq)}ok({d,w,h})};im.src=u})}
+async function salvarFotos(p,files,meta){
+  if(!db){toast('As fotos precisam da conta conectada.');return}
+  let n=0;const tot=files.length;
+  for(const f of files){if(!/^image\//.test(f.type)){continue}
+    try{toast(`Salvando foto ${n+1} de ${tot}…`);const hd=await comprimir(f,1600,.8),mini=await comprimir(f,420,.7),id=uid();
+      const base={data:meta.data||hoje(),rotulo:meta.rotulo||'Sem nome',obs:meta.obs||'',criado:Date.now()+n,por:meId(),w:hd.w,h:hd.h};
+      await fotosCol(p.id,true).doc(id).set({img:hd.d});await fotosCol(p.id).doc(id).set({...base,img:mini.d});FOTOS_HD[id]=hd.d;n++}
+    catch(e){toast('Não foi possível salvar uma das fotos'+(e&&e.code?' ('+errMsg(e)+')':''))}}
+  if(n)toast(n===1?'Foto salva':n+' fotos salvas');
+}
+async function fotoHd(pid,f){if(FOTOS_HD[f.id])return FOTOS_HD[f.id];
+  try{const s=await new Promise((ok,erro)=>{const ref=db.doc(`${BASE}/pacientes/${pid}/fotosHd/${f.id}`);let u=null;u=ref.onSnapshot(x=>{try{u&&u()}catch(e){}ok(x)},erro)});
+    const d=s.exists&&s.data()&&s.data().img;if(imgOk(d)){FOTOS_HD[f.id]=d;return d}}catch(e){}return f.img}
+function fotosTab(p){
+  carregarFotos(p.id);
+  const l=FOTOS[p.id];if(!db)return '<div class="empty"><p>As fotos do atendimento precisam da conta conectada.</p></div>';
+  if(!l)return '<p class="meta">Carregando fotos…</p>';
+  const rots=[...new Set(l.map(f=>f.rotulo))],fr=S.fRot&&rots.includes(S.fRot)?S.fRot:'',vis=fr?l.filter(f=>f.rotulo===fr):l;
+  const porDia={};for(const f of [...vis].reverse())(porDia[f.data]=porDia[f.data]||[]).push(f);
+  const comp=fr?l.filter(f=>f.rotulo===fr).length>=2:rots.some(r=>l.filter(f=>f.rotulo===r).length>=2);
+  return `<div class="bar"><h3>Fotos do atendimento</h3><div class="btns">${comp?'<button class="btn sm" data-fcomp>Comparar primeira × última</button>':''}<button class="btn pri sm" data-fadd>+ Adicionar fotos</button></div></div>
+  <p class="hint">Organizadas por dia e pelo nome que você der (ex.: "Ferida membro anterior"). Com duas ou mais fotos do mesmo nome, compare a primeira com a última e exporte para compartilhar.</p>
+  ${rots.length>1?`<div class="chips"><button class="btn sm${!fr?' pri':''}" data-frot="">Todas (${l.length})</button>${rots.map(r=>`<button class="btn sm${fr===r?' pri':''}" data-frot="${esc(r)}">${esc(r)} (${l.filter(f=>f.rotulo===r).length})</button>`).join('')}</div>`:''}
+  ${l.length?Object.entries(porDia).map(([d,fs])=>`<h3 class="dayh">${br(d)} <span class="meta">· ${quando0(d)}</span></h3><div class="galeria">${fs.map(f=>`<button class="gfoto" data-fver="${esc(f.id)}" aria-label="Abrir foto ${esc(f.rotulo)} de ${br(f.data)}"><img src="${f.img}" alt="" loading="lazy"><span>${esc(f.rotulo)}</span></button>`).join('')}</div>`).join('')
+   :'<div class="empty"><h2>Nenhuma foto ainda</h2><p>Tire ou escolha fotos do atendimento de hoje. Dê um nome para acompanhar a evolução (ferida, casco, olho…).</p><button class="btn pri" data-fadd>+ Adicionar fotos</button></div>'}`;
+}
+const quando0=d=>{const n=dias(d);return n===0?'hoje':n===-1?'ontem':n<0?`há ${-n} dias`:`em ${n} dias`};
+function pedirFotos(p){
+  $('card').innerHTML=`<h2>Fotos · ${esc(p.nome)}</h2><form id="ffrm" class="f">
+   <div class="fld"><label for="ff_arq">Fotos</label><input id="ff_arq" type="file" accept="image/*" multiple></div>
+   <div class="fld h"><label for="ff_rot">Nome / região *</label><input id="ff_rot" list="dl_frot" value="${esc(S.fRot||'')}" placeholder="Ex.: Ferida membro anterior esquerdo"><datalist id="dl_frot">${ROT_SUG().map(r=>`<option value="${esc(r)}">`).join('')}</datalist></div>
+   <div class="fld h"><label for="ff_data">Data</label><input id="ff_data" type="date" value="${hoje()}"></div>
+   <div class="fld"><label for="ff_obs">Observação</label><input id="ff_obs" placeholder="Opcional"></div>
+   <div class="acts"><button type="button" class="btn" id="cancel">Cancelar</button><button class="btn pri" id="ff_ok">Salvar fotos</button></div></form>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;
+  $('ffrm').onsubmit=async e=>{e.preventDefault();const fs=[...$('ff_arq').files];const rot=$('ff_rot').value.trim();
+    if(!fs.length){toast('Escolha ou tire pelo menos uma foto');return}if(!rot){toast('Dê um nome para as fotos');$('ff_rot').focus();return}
+    if(fs.length>20){toast('Até 20 fotos por vez');return}
+    $('ff_ok').disabled=true;$('ff_ok').textContent='Salvando…';await salvarFotos(p,fs,{rotulo:rot.slice(0,80),data:$('ff_data').value,obs:$('ff_obs').value.trim().slice(0,300)});fechar()};
+}
+async function verFoto(p,id){
+  const l=FOTOS[p.id]||[],f=l.find(x=>x.id===id);if(!f)return;const mesmo=l.filter(x=>x.rotulo===f.rotulo);
+  $('card').innerHTML=`<h2>${esc(f.rotulo)} · ${br(f.data)}</h2><div class="fotobig"><img id="fv_img" src="${f.img}" alt="${esc(f.rotulo)}"></div>${f.obs?`<p>${esc(f.obs)}</p>`:''}
+   <p class="meta">${esc(p.nome)} · ${mesmo.length} foto(s) com este nome</p>
+   <div class="acts"><button type="button" class="btn" id="cancel">Fechar</button>${mesmo.length>=2?`<button type="button" class="btn" data-fcomp="${esc(f.rotulo)}">Comparar</button>`:''}<button type="button" class="btn" id="fv_exp">Exportar</button>${navigator.share?'<button type="button" class="btn" id="fv_sh">Compartilhar</button>':''}<button type="button" class="btn" id="fv_ed">Editar</button><button type="button" class="btn ghost del" id="fv_del">Excluir</button></div>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;
+  fotoHd(p.id,f).then(d=>{if($('fv_img'))$('fv_img').src=d});
+  const blobDe=async()=>{const d=await fotoHd(p.id,f);return await (await fetch(d)).blob()};
+  const nomeArq=`${p.nome} - ${f.rotulo} - ${br(f.data).replace(/\//g,'-')}.jpg`;
+  $('fv_exp').onclick=async()=>{exportarBlob(await blobDe(),nomeArq)};
+  if($('fv_sh'))$('fv_sh').onclick=async()=>compartilharBlob(await blobDe(),nomeArq,`${p.nome} · ${f.rotulo} · ${br(f.data)}`);
+  $('fv_ed').onclick=()=>abrirForm('Editar foto',[{k:'rotulo',l:'Nome / região',req:1,list:ROT_SUG()},{k:'data',l:'Data',t:'date',h:1},{k:'obs',l:'Observação'}],{rotulo:f.rotulo,data:f.data,obs:f.obs||''},{},o=>{const {id,...resto}=f;fotosCol(p.id).doc(id).set({...resto,rotulo:String(o.rotulo).slice(0,80),data:o.data||f.data,obs:String(o.obs||'').slice(0,300)}).catch(e=>toast(errMsg(e)))});
+  let arm=0;$('fv_del').onclick=async()=>{if(!arm){arm=1;$('fv_del').textContent='Toque de novo para excluir';return}
+    try{await fotosCol(p.id).doc(f.id).delete();await fotosCol(p.id,true).doc(f.id).delete();delete FOTOS_HD[f.id];fechar();toast('Foto excluída')}catch(e){toast(errMsg(e))}};
+}
+function exportarBlob(blob,nome){if(!dl){toast('Download indisponível aqui.');return}dl.save({filename:nome,data:blob}).then(r=>{if(r&&r.status==='saved')toast('Imagem salva')}).catch(()=>toast('Não foi possível salvar.'))}
+async function compartilharBlob(blob,nome,txt){
+  try{const file=new File([blob],nome,{type:blob.type||'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:nome,text:txt});return}}catch(e){if(e&&e.name==='AbortError')return}
+  exportarBlob(blob,nome);toast('Imagem salva: envie pelo WhatsApp ou e-mail');
+}
+const carregarImg=src=>new Promise((ok,erro)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=erro;i.src=src});
+/* monta uma imagem só: antes × depois, com nome do animal, datas e intervalo */
+async function montarComparacao(p,a,b){
+  const [ia,ib]=await Promise.all([fotoHd(p.id,a),fotoHd(p.id,b)].map(x=>x.then(carregarImg)));
+  const W=1600,meio=W/2,pad=24,topo=110,rod=70,alt=Math.round(Math.max(ia.height*(meio-pad*1.5)/ia.width,ib.height*(meio-pad*1.5)/ib.width));
+  const cv=document.createElement('canvas');cv.width=W;cv.height=topo+alt+rod+pad;const c=cv.getContext('2d');
+  c.fillStyle='#fbf6ef';c.fillRect(0,0,cv.width,cv.height);c.fillStyle='#33210f';c.font='bold 40px system-ui,sans-serif';c.fillText(`${p.nome} · ${a.rotulo}`,pad,56);
+  const nd=Math.round((new Date(b.data)-new Date(a.data))/864e5);c.font='26px system-ui,sans-serif';c.fillStyle='#76583d';c.fillText(`${nd} dia(s) de intervalo${S.cfg.clinica?' · '+S.cfg.clinica:''}`,pad,94);
+  const des=(im,x)=>{const w=meio-pad*1.5,h=im.height*w/im.width;c.drawImage(im,x,topo,w,h)};des(ia,pad);des(ib,meio+pad/2);
+  c.fillStyle='#33210f';c.font='bold 30px system-ui,sans-serif';c.fillText('Antes · '+br(a.data),pad,topo+alt+48);c.fillText('Depois · '+br(b.data),meio+pad/2,topo+alt+48);
+  return await new Promise(ok=>cv.toBlob(ok,'image/jpeg',.86));
+}
+async function compararFotos(p,rot){
+  const l=FOTOS[p.id]||[];const rots=[...new Set(l.map(f=>f.rotulo))].filter(r=>l.filter(f=>f.rotulo===r).length>=2);
+  rot=rot&&rots.includes(rot)?rot:(S.fRot&&rots.includes(S.fRot)?S.fRot:rots[0]);if(!rot){toast('Adicione pelo menos duas fotos com o mesmo nome');return}
+  const fs=l.filter(f=>f.rotulo===rot),opt=sel=>fs.map(f=>`<option value="${esc(f.id)}"${f.id===sel?' selected':''}>${br(f.data)}${f.obs?' · '+esc(f.obs.slice(0,30)):''}</option>`).join('');
+  let A=fs[0],B=fs[fs.length-1];
+  $('card').innerHTML=`<h2>Comparar · ${esc(p.nome)}</h2>
+   <div class="f">${rots.length>1?`<div class="fld"><label for="fc_rot">Nome / região</label><select id="fc_rot">${rots.map(r=>`<option${r===rot?' selected':''}>${esc(r)}</option>`).join('')}</select></div>`:''}
+   <div class="fld h"><label for="fc_a">Antes</label><select id="fc_a">${opt(A.id)}</select></div><div class="fld h"><label for="fc_b">Depois</label><select id="fc_b">${opt(B.id)}</select></div></div>
+   <p class="meta" id="fc_int"></p><div class="comparar"><figure><img id="fc_ia" alt="Antes"><figcaption id="fc_ca"></figcaption></figure><figure><img id="fc_ib" alt="Depois"><figcaption id="fc_cb"></figcaption></figure></div>
+   <div class="acts"><button type="button" class="btn" id="cancel">Fechar</button><button type="button" class="btn" id="fc_exp">Exportar imagem</button>${navigator.share?'<button type="button" class="btn pri" id="fc_sh">Compartilhar</button>':''}</div>`;
+  $('sheet').classList.add('on');$('cancel').onclick=fechar;
+  const mostrar=()=>{A=fs.find(f=>f.id===$('fc_a').value)||A;B=fs.find(f=>f.id===$('fc_b').value)||B;
+    $('fc_ia').src=A.img;$('fc_ib').src=B.img;$('fc_ca').textContent='Antes · '+br(A.data);$('fc_cb').textContent='Depois · '+br(B.data);
+    const nd=Math.round((new Date(B.data)-new Date(A.data))/864e5);$('fc_int').textContent=`${rot} · ${nd} dia(s) entre as fotos`;
+    fotoHd(p.id,A).then(d=>{if($('fc_ia')&&A.id===$('fc_a').value)$('fc_ia').src=d});fotoHd(p.id,B).then(d=>{if($('fc_ib')&&B.id===$('fc_b').value)$('fc_ib').src=d})};
+  $('fc_a').onchange=mostrar;$('fc_b').onchange=mostrar;if($('fc_rot'))$('fc_rot').onchange=e=>compararFotos(p,e.target.value);mostrar();
+  const nome=()=>`${p.nome} - ${rot} - ${br(A.data).replace(/\//g,'-')} x ${br(B.data).replace(/\//g,'-')}.jpg`;
+  $('fc_exp').onclick=async()=>{$('fc_exp').disabled=true;try{exportarBlob(await montarComparacao(p,A,B),nome())}catch(e){toast('Não foi possível montar a imagem')}finally{if($('fc_exp'))$('fc_exp').disabled=false}};
+  if($('fc_sh'))$('fc_sh').onclick=async()=>{try{compartilharBlob(await montarComparacao(p,A,B),nome(),`${p.nome} · ${rot}: antes e depois`)}catch(e){toast('Não foi possível compartilhar')}};
+}
+
 function gerarDoc(t,p){
   const u=ult(p)[0]||{},pe=pesoAtual(p),H=cabec()+'\n'+'─'.repeat(24)+'\n\n';
   switch(t){
@@ -2532,6 +2648,10 @@ document.addEventListener('click',e=>{
   if(d.perfil){escolherPerfilModo(d.perfil);return}
   if('trocarperfil' in d){telaPerfil(false);return}
   if('linkcli' in d&&p){gerarLinkCliente(p);return}
+  if('fadd' in d&&p){pedirFotos(p);return}
+  if(d.fver&&p){verFoto(p,d.fver);return}
+  if('fcomp' in d&&p){compararFotos(p,d.fcomp||'');return}
+  if('frot' in d&&p){S.fRot=d.frot;render();return}
   if('notifteste' in d){checarNotif(true).then(ok=>toast(ok?'Notificação enviada':'Ative as notificações primeiro (e libere no navegador)'));return}
   if(d.fatpago){const k=d.fatpago+'_'+(S.fMes||hoje().slice(0,7)),f={...faturasPagas()};if(f[k])delete f[k];else f[k]=Date.now();salvarCfg({...S.cfg,faturas:f},f[k]?'Fatura marcada como recebida':'Fatura em aberto',1);render();return}
   if(d.pixfat){const c=S.cli.find(x=>x.id===d.pixfat);if(c){const f=faturaDe(c,S.fMes||hoje().slice(0,7));cobrarPix(f.total,{desc:'fatura '+(S.fMes||hoje().slice(0,7)),tel:c.tel,nome:c.nome,txid:'FAT'+c.id.slice(-8)})}return}

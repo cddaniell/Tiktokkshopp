@@ -29,6 +29,16 @@ service cloud.firestore {
       allow read, delete: if dono(uid) && colecaoValida(col);
       allow create, update: if dono(uid) && colecaoValida(col) && tamanhoOk(doc);
     }
+    // fotos do atendimento de cada animal (miniatura e alta resolução), só imagem
+    function fotoValida() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['img', 'data', 'rotulo', 'obs', 'criado', 'por', 'w', 'h'])
+        && d.img is string && d.img.size() < 1048000 && d.img.matches('^data:image/(jpeg|png|webp);base64,.*');
+    }
+    match /data/users/{uid}/{esp}/pacientes/{pid}/{sub}/{fid} {
+      allow read, delete: if dono(uid) && esp in ['samvet', 'fazenda'] && sub in ['fotos', 'fotosHd'];
+      allow create, update: if dono(uid) && esp in ['samvet', 'fazenda'] && sub in ['fotos', 'fotosHd'] && fid.matches('^[A-Za-z0-9_-]{1,64}$') && fotoValida();
+    }
     // espaço do proprietário de haras ou fazenda: separado do espaço do veterinário
     match /data/users/{uid}/fazenda/{col}/{doc} {
       allow read, delete: if dono(uid) && colecaoValida(col);
@@ -90,6 +100,11 @@ service cloud.firestore {
         allow delete: if (ehDono(cid) && !dono(uid)) || (dono(uid) && resource.data.papel != 'dono');
       }
 
+      match /app/samvet/pacientes/{pid}/{sub}/{fid} {
+        allow read: if membro(cid) && sub in ['fotos', 'fotosHd'];
+        allow delete: if membro(cid) && papel(cid) != 'financeiro' && sub in ['fotos', 'fotosHd'];
+        allow create, update: if membro(cid) && papel(cid) != 'financeiro' && sub in ['fotos', 'fotosHd'] && fid.matches('^[A-Za-z0-9_-]{1,64}$') && fotoValida();
+      }
       match /app/samvet/{col}/{doc} {
         allow read: if membro(cid) && colecaoValida(col);
 
