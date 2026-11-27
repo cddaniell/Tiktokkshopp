@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-1Y4RkTp6//8BKtomnoVkg9pmaC4/72OyH3IXpMTJehw=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-RFUWFlskGh893cAsCVA7g4ZJGsZBPTbgg2RcBcabotU=' 'sha256-Nm14q1B+kHjpITy31auPDZ3atHOLKyrQc1GBNaEVKZE=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -98,6 +98,17 @@ body.sem-est [data-estnovo]{display:none!important}
 .nav button{border:0;background:none;color:var(--barink);opacity:.78;min-height:42px;padding:0 12px;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap;flex:none}
 .nav button[aria-pressed=true]{opacity:1;border-color:var(--barink)}
 .nav .badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:99px;background:var(--barink);color:var(--bar);font-size:12px;margin-left:4px}
+.navg{flex:none;display:flex}
+.nav .navgb .seta{display:inline-block;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:0 2px 3px 8px;transition:transform .2s}
+.nav .navg.aberto .navgb .seta{transform:rotate(-135deg);margin-bottom:-2px}
+.nav .navgb .navsub{font-weight:600}
+.nav .navg.aberto .navgb{opacity:1}
+.navmenu{display:none;position:fixed;z-index:60;min-width:210px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px rgb(0 0 0/.25);padding:6px;gap:2px}
+.navg.aberto .navmenu{display:grid}
+.nav .navmenu button.navit{color:var(--ink);opacity:1;border:0;border-left:3px solid transparent;text-align:left;border-radius:10px;min-height:46px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.nav .navmenu button.navit:hover,.nav .navmenu button.navit:focus-visible{background:color-mix(in srgb,var(--act) 8%,transparent)}
+.nav .navmenu button.navit[aria-pressed=true]{background:color-mix(in srgb,var(--act) 14%,transparent);border-left-color:var(--act)}
+.nav .navmenu .badge{background:var(--act);color:#fff}
 .btn{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;color:var(--ink)}
 .btn.pri{background:var(--act);color:var(--actink);border-color:transparent}
 .btn.ghost{background:transparent}
@@ -1152,8 +1163,24 @@ function renderNav(){
   const n={agenda:S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=0&&x.tab!=='fin').length,
     intern:S.pac.filter(p=>p.status==='internado').length,
     estoque:S.est.filter(estAlerta).length,conta:CONVITES.length};
-  $('nav').innerHTML=(PROP()?VIEWS_PROP:VIEWS).filter(([k])=>visOk(k)).map(([k,l])=>`<button data-vis="${k}" aria-pressed="${!S.sel&&S.vis===k}">${l}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`).join('');
+  const lista=PROP()?VIEWS_PROP:VIEWS,nome=k=>(lista.find(v=>v[0]===k)||[])[1]||k;
+  const btn=(k,cls)=>`<button data-vis="${k}"${cls?` class="${cls}"`:''} aria-pressed="${!S.sel&&S.vis===k}">${nome(k)}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`;
+  $('nav').innerHTML=(PROP()?GRUPOS_PROP:GRUPOS_VET).map(g=>{
+    if(!g[0].startsWith('g:'))return visOk(g[0])?btn(g[0]):'';
+    const filhos=g[2].filter(visOk);if(!filhos.length)return '';if(filhos.length===1)return btn(filhos[0]);
+    const ativo=!S.sel&&filhos.includes(S.vis),aberto=navAberto===g[0],bd=filhos.reduce((t,k)=>t+(n[k]||0),0);
+    return `<div class="navg${aberto?' aberto':''}"><button class="navgb" data-navgrupo="${g[0]}" aria-haspopup="true" aria-expanded="${aberto}" aria-pressed="${ativo}">${g[1]}${ativo?`<span class="navsub"> · ${nome(S.vis)}</span>`:''}${bd?`<span class="badge">${bd}</span>`:''}<span class="seta" aria-hidden="true"></span></button><div class="navmenu" role="group" aria-label="${g[1]}">${filhos.map(k=>btn(k,'navit')).join('')}</div></div>`}).join('');
+  if(navAberto)posicionarMenu();
 }
+/* menu agrupado: itens parecidos ficam juntos e abrem ao tocar; o grupo da tela atual mostra onde você está */
+const GRUPOS_VET=[['pac'],['agenda'],['intern'],['clientes'],['g:fin','Financeiro',['caixa','orc','relat','precos']],['g:mais','Mais',['estoque','ferr']],['conta']];
+const GRUPOS_PROP=[['pac'],['agenda'],['trato'],['g:fin','Financeiro',['gastos','relat']],['clientes'],['conta']];
+let navAberto='';
+function posicionarMenu(){const g=$('nav').querySelector('.navg.aberto');if(!g)return;const r=g.querySelector('.navgb').getBoundingClientRect(),m=g.querySelector('.navmenu');m.style.top=Math.round(r.bottom+4)+'px';m.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8)))+'px'}
+function fecharMenu(){if(navAberto){navAberto='';renderNav()}}
+document.addEventListener('click',e=>{if(navAberto&&!(e.target.closest&&e.target.closest('.navg')))fecharMenu()},true);
+addEventListener('keydown',e=>{if(e.key==='Escape'&&navAberto){const g=navAberto;fecharMenu();const b=document.querySelector(`[data-navgrupo="${g}"]`);if(b)b.focus()}});
+addEventListener('resize',()=>{if(navAberto)posicionarMenu()});addEventListener('scroll',()=>{if(navAberto)posicionarMenu()},{passive:true});
 let renderTimer=null;
 function renderLogo(){if(renderTimer)return;renderTimer=setTimeout(()=>{renderTimer=null;render()},60)}
 function render(){
@@ -2543,7 +2570,8 @@ document.addEventListener('click',e=>{
   if(d.dente){t.setAttribute('aria-pressed',t.getAttribute('aria-pressed')!=='true');return}
   if(d.mic){if(micBtn===t){pararMic();return}pararMic();micBtn=t;micTa=$(d.mic);
     dict.start().catch(err=>{toast(err&&err.code==='not_granted'?'Microfone não autorizado.':'Ditado indisponível.');micBtn=null});return}
-  if(d.vis){S.vis=d.vis;S.sel=null;S.cliSel=null;render();scrollTo(0,0)}
+  if(d.navgrupo){navAberto=navAberto===d.navgrupo?'':d.navgrupo;renderNav();if(navAberto){const it=document.querySelector('.navg.aberto .navit');if(it&&e.detail===0)it.focus()}return}
+  if(d.vis){navAberto='';S.vis=d.vis;S.sel=null;S.cliSel=null;render();scrollTo(0,0)}
   else if(d.f){S.filtro=d.f;S.limPac=80;renderLista()}
   else if('maispac' in d){S.limPac=(S.limPac||80)+80;renderLista()}
   else if(d.finf){S.finF=d.finf;render()}
