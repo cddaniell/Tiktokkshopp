@@ -282,7 +282,11 @@ textarea.doc{width:100%;min-height:340px;font:15px/1.5 var(--body);padding:12px;
 .fab::before{content:"";position:fixed;inset:0;background:rgb(30 15 5/.38);opacity:0;transition:opacity .2s;pointer-events:none;z-index:-1}.fab.on::before{opacity:1;pointer-events:auto}
 .fab.on .fabmenu button{opacity:1;transform:none;pointer-events:auto}
 .fab.on .fabmenu button:nth-last-child(1){transition-delay:.02s}.fab.on .fabmenu button:nth-last-child(2){transition-delay:.04s}.fab.on .fabmenu button:nth-last-child(3){transition-delay:.06s}.fab.on .fabmenu button:nth-last-child(4){transition-delay:.08s}.fab.on .fabmenu button:nth-last-child(n+5){transition-delay:.1s}
-.fabic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--panel);font-size:17px}
+.fabic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--bar);color:var(--barink)}
+.icx{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.fabic .icx{width:17px;height:17px}
+.btn .icx{margin-right:2px}
+.icodica{width:22px;height:22px;flex:none;fill:none;stroke:var(--act);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #ficha{padding-bottom:90px}
 body:has(.sheet.on) .fab{display:none}
 .dch{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -317,7 +321,7 @@ body:has(.sheet.on) .fab{display:none}
 .skr .ska{width:48px;height:48px;border-radius:50%;flex:none}.skr span{flex:1;display:grid;gap:8px}.skr span i{height:12px}.skr span i:first-child{width:45%;height:15px}.skr span i:last-child{width:70%}
 @keyframes brilho{from{background-position:100% 0}to{background-position:0 0}}
 .empty.cav::before,.tlw:empty::before{content:"";display:block;width:76px;height:76px;margin:0 auto 10px;background:color-mix(in srgb,var(--act) 70%,transparent);-webkit-mask:var(--icpac) center/contain no-repeat;mask:var(--icpac) center/contain no-repeat}
-.tlw .tl{grid-template-columns:34px 52px minmax(0,1fr);align-items:start}.tli{flex:none;width:34px;height:34px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-size:16px;margin-right:4px}
+.tlw .tl{grid-template-columns:34px 52px minmax(0,1fr);align-items:start}.tli{flex:none;width:34px;height:34px;border-radius:50%;background:var(--bar);color:var(--barink);display:grid;place-items:center;margin-right:4px}.tli .icx{width:17px;height:17px}
 .dica{display:flex;gap:10px;align-items:center;background:color-mix(in srgb,var(--act) 10%,var(--card));border:1px solid color-mix(in srgb,var(--act) 30%,var(--line));border-radius:14px;padding:10px 12px;margin:10px 0;transition:opacity .25s,transform .25s}
 .dica p{margin:0;flex:1;font-size:14px}.dica.sai{opacity:0;transform:translateY(-6px)}
 .semana{margin:8px 0 0;font-size:14px;color:var(--mute)}.semana b{color:var(--ink)}
@@ -2116,7 +2120,7 @@ function abrirBusca(){
     $('bres').querySelectorAll('[data-bres]').forEach(b=>b.onclick=()=>{const a=l[+b.dataset.bres].abrir;$('sheet').classList.remove('on');
       if(a.id){S.sel=a.id;S.tab=a.tab||'resumo';render();scrollTo(0,0)}else if(a.cli){S.sel=null;S.vis='clientes';S.cliSel=a.cli;render()}else if(a.orc){S.sel=null;S.vis='orc';render();const o=S.orc.find(x=>x.id===a.orc);if(o)verOrc(o)}else if(a.vis){S.sel=null;S.vis=a.vis;render()}})};
   $('bq').oninput=mostrar;setTimeout(()=>$('bq').focus(),30);
-  if('BarcodeDetector' in window&&navigator.mediaDevices){const b=document.createElement('button');b.type='button';b.className='btn sm';b.textContent='📷 Ler microchip / código de barras';b.style.marginTop='8px';$('bq').insertAdjacentElement('afterend',b);b.onclick=()=>lerCodigo(v=>{$('bq').value=v;mostrar();const l=buscarTudo(v);if(l.length===1)$('bres').querySelector('[data-bres]').click()})}
+  if('BarcodeDetector' in window&&navigator.mediaDevices){const b=document.createElement('button');b.type='button';b.className='btn sm';b.innerHTML=ico('scan')+'Ler microchip / código de barras';b.style.marginTop='8px';$('bq').insertAdjacentElement('afterend',b);b.onclick=()=>lerCodigo(v=>{$('bq').value=v;mostrar();const l=buscarTudo(v);if(l.length===1)$('bres').querySelector('[data-bres]').click()})}
 }
 async function lerCodigo(ok){
   let st,parar=false;const ov=document.createElement('div');ov.className='scan';ov.innerHTML='<video playsinline muted></video><div class="scanmira"></div><p>Aponte para o código do microchip, brinco ou frasco</p><button type="button" class="btn">Cancelar</button>';document.body.appendChild(ov);
@@ -2126,7 +2130,9 @@ async function lerCodigo(ok){
   catch(e){fim();toast('Não foi possível usar a câmera. Libere a câmera para o VetCamp nas configurações do navegador.')}}
 /* linha do tempo do animal */
 function resumoTutor(p,it){const c=S.cfg;return `Olá, ${p.tutor||''}! Aqui é da ${c.clinica||'VetCamp'}. Resumo do atendimento de ${p.nome} em ${br(it.data)}:${it.diag?'\n\nDiagnóstico: '+it.diag:''}${it.trat?'\n\nTratamento: '+it.trat:''}${it.orient?'\n\nOrientações: '+it.orient:''}${it.retorno?'\n\nRetorno: '+br(it.retorno):''}\n\nQualquer dúvida, é só chamar.${c.vet?'\n'+c.vet+(c.crmv?' · CRMV '+c.crmv:''):''}`}
-const TL_IC={consultas:'🩺',evolucao:'📋',meds:'💊',vacinas:'💉',agend:'📅',locomotor:'🦵',odonto:'🦷',casco:'🐎',repro:'❤️',oficiais:'📄',exames:'🧪',fin:'💲',docs:'📝',anexos:'📎',pesagem:'⚖️',androl:'🔬',provas:'🏆',fotos:'📷'};
+const TL_IC={consultas:'esteto',evolucao:'prancheta',meds:'pilula',vacinas:'seringa',agend:'calendario',locomotor:'perna',odonto:'dente',casco:'ferradura',repro:'coracao',oficiais:'doc',exames:'tubo',fin:'cifrao',docs:'doc',anexos:'clipe',pesagem:'balanca',androl:'micro',provas:'trofeu',fotos:'camera'};
+const ICX={"esteto": "<path d=\"M6 3v5a4 4 0 0 0 8 0V3\"/><path d=\"M10 12v3a5 5 0 0 0 10 0v-2\"/><circle cx=\"20\" cy=\"11\" r=\"2\"/>", "seringa": "<path d=\"M18 2l4 4M17 7l-9 9-3 1 1-3 9-9M14 4l6 6M11 7l2 2M8 10l2 2M3 21l3-3\"/>", "pilula": "<rect x=\"2.5\" y=\"8.5\" width=\"19\" height=\"7\" rx=\"3.5\" transform=\"rotate(-45 12 12)\"/><path d=\"M8.5 8.5l7 7\"/>", "prancheta": "<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V3h6v1M9 10h6M9 14h6M9 18h3\"/>", "camera": "<path d=\"M4 7h3l2-3h6l2 3h3v12H4z\"/><circle cx=\"12\" cy=\"13\" r=\"3.5\"/>", "balanca": "<path d=\"M12 3v18M7 21h10M5 7h14\"/><path d=\"M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z\"/>", "ferradura": "<path d=\"M6 21V11a6 6 0 0 1 12 0v10\"/><path d=\"M4 21h4M16 21h4M6 14h.01M18 14h.01M7.5 8h.01M16.5 8h.01\"/>", "coracao": "<path d=\"M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z\"/>", "tubo": "<path d=\"M9 3h6M10 3v13a2 2 0 0 0 4 0V3M10 10h4\"/>", "calendario": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 10h18\"/>", "cifrao": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .9 3 2.1-1.3 2-3 2c-1.4 0-2.6-.6-3-1.6M12 6v2M12 16v2\"/>", "pin": "<path d=\"M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z\"/><circle cx=\"12\" cy=\"9.5\" r=\"2.5\"/>", "carro": "<path d=\"M5 17H3v-5l2-5h14l2 5v5h-2\"/><circle cx=\"7.5\" cy=\"17\" r=\"2\"/><circle cx=\"16.5\" cy=\"17\" r=\"2\"/><path d=\"M9.5 17h5M3 12h18\"/>", "msg": "<path d=\"M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z\"/>", "luz": "<path d=\"M9 18h6M10 21h4\"/><path d=\"M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z\"/>", "doc": "<path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5M9 13h6M9 17h4\"/>", "clipe": "<path d=\"M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7\"/>", "trofeu": "<path d=\"M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6\"/>", "perna": "<path d=\"M9 3v8l-2 6v4h5v-3l2-5V3\"/>", "dente": "<path d=\"M7 3c-2 0-3.5 1.7-3.5 4 0 3 1.5 4.5 2 8 .3 2.5 1 5 2.5 5s1.7-3 2.2-5c.3-1 1.3-1 1.6 0 .5 2 .7 5 2.2 5s2.2-2.5 2.5-5c.5-3.5 2-5 2-8 0-2.3-1.5-4-3.5-4-2 0-3 1-5 1S9 3 7 3z\"/>", "micro": "<path d=\"M6 21h12M9 17h6M10 17l-2-6M8 11l6-6 3 3-6 6zM15 4l2-2 3 3-2 2\"/>", "scan": "<path d=\"M3 7V4h3M18 4h3v3M21 17v3h-3M6 20H3v-3\"/><path d=\"M7 8v8M10 8v8M13 8v8M16 8v8\"/>"};
+const ico=(n,c='icx')=>ICX[n]?`<svg class="${c}" viewBox="0 0 24 24" aria-hidden="true">${ICX[n]}</svg>`:'';
 function linhaTempo(p){
   const ev=[];
   for(const m of MODS)if(modVis(m,p))for(const it of (p[m.key]||[])){const d=it[m.dateK||'data'];if(!d)continue;
@@ -2137,7 +2143,7 @@ function linhaTempo(p){
   ev.sort((a,b)=>(b.d+b.h).localeCompare(a.d+a.h));
   let mes='',html='';
   for(const e of ev){const m=String(e.d).slice(0,7);if(m!==mes){mes=m;html+=`<h3 class="dayh">${new Date(m+'-15T12:00:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</h3>`}
-    html+=`<button class="tl" data-tab="${esc(e.tab)}"><span class="tli" aria-hidden="true">${TL_IC[e.tab]||"•"}</span><span class="tld">${br(e.d).slice(0,5)}${e.h?'<br>'+esc(e.h):''}</span><span><b>${esc(e.tipo)}:</b> ${esc(e.tit)}${e.extra?`<br><span class="meta">${esc(String(e.extra).slice(0,140))}</span>`:''}</span></button>`}
+    html+=`<button class="tl" data-tab="${esc(e.tab)}"><span class="tli" aria-hidden="true">${ico(TL_IC[e.tab]||"doc")}</span><span class="tld">${br(e.d).slice(0,5)}${e.h?'<br>'+esc(e.h):''}</span><span><b>${esc(e.tipo)}:</b> ${esc(e.tit)}${e.extra?`<br><span class="meta">${esc(String(e.extra).slice(0,140))}</span>`:''}</span></button>`}
   return `<div class="bar"><h3>Linha do tempo</h3><span class="meta">${ev.length} registro(s)</span></div><p class="hint">Tudo o que aconteceu com ${esc(p.nome)}, do mais recente para o mais antigo. Toque para abrir.</p>${ev.length?`<div class="tlw">${html}</div>`:'<div class="empty"><p>Nenhum registro ainda.</p></div>'}`;
 }
 /* agenda para o calendário do celular (.ics) */
@@ -2729,19 +2735,19 @@ function baseRepetida(u,dk){const b={...u},h=hoje();
   return b}
 function fabHtml(p){
   if(PROP()&&!p)return '';
-  const it=[];const add=(attr,ic,txt)=>it.push(`<button type="button" ${attr}><span class="fabic" aria-hidden="true">${ic}</span>${esc(txt)}</button>`);
+  const it=[];const add=(attr,ic,txt)=>it.push(`<button type="button" ${attr}><span class="fabic" aria-hidden="true">${ico(ic)}</span>${esc(txt)}</button>`);
   const vis=k=>{const m=MODS.find(x=>x.key===k);return m&&modVis(m,p)};
-  if(vis('consultas'))add('data-add="consultas"','🩺',PROP()?'Atendimento':'Consulta');
-  if(vis('vacinas'))add('data-add="vacinas"','💉','Vacina / vermífugo');
-  if(vis('meds'))add('data-add="meds"','💊','Medicação');
-  if(vis('evolucao'))add('data-add="evolucao"','📋','Evolução da internação');
-  add('data-fadd','📷','Foto do atendimento');
-  if(vis('pesagem'))add('data-add="pesagem"','⚖️','Peso');
-  if(vis('casco'))add('data-add="casco"','🐎','Casco / ferrageamento');
-  if(vis('repro'))add('data-add="repro"','❤️','Reprodução');
-  if(vis('exames'))add('data-add="exames"','🧪','Exame');
-  if(vis('agend'))add('data-add="agend"','📅',PROP()?'Lembrete':'Agendar retorno');
-  if(vis('fin'))add('data-add="fin"','💲','Lançamento financeiro');
+  if(vis('consultas'))add('data-add="consultas"','esteto',PROP()?'Atendimento':'Consulta');
+  if(vis('vacinas'))add('data-add="vacinas"','seringa','Vacina / vermífugo');
+  if(vis('meds'))add('data-add="meds"','pilula','Medicação');
+  if(vis('evolucao'))add('data-add="evolucao"','prancheta','Evolução da internação');
+  add('data-fadd','camera','Foto do atendimento');
+  if(vis('pesagem'))add('data-add="pesagem"','balanca','Peso');
+  if(vis('casco'))add('data-add="casco"','ferradura','Casco / ferrageamento');
+  if(vis('repro'))add('data-add="repro"','coracao','Reprodução');
+  if(vis('exames'))add('data-add="exames"','tubo','Exame');
+  if(vis('agend'))add('data-add="agend"','calendario',PROP()?'Lembrete':'Agendar retorno');
+  if(vis('fin'))add('data-add="fin"','cifrao','Lançamento financeiro');
   return `<div class="fab" id="fab"><div class="fabmenu" role="menu" aria-label="Registrar">${it.join('')}</div><button type="button" class="fabbtn" data-fab aria-expanded="false" aria-label="Registrar algo para ${esc(p.nome)}"><span aria-hidden="true">+</span></button></div>`}
 document.addEventListener('click',e=>{const f=$('fab');if(!f)return;const b=e.target.closest&&e.target.closest('[data-fab]');
   if(b){const on=!f.classList.contains('on');f.classList.toggle('on',on);b.setAttribute('aria-expanded',on);if(on){const x=f.querySelector('.fabmenu button');if(x&&e.detail===0)x.focus()}return}
@@ -2828,7 +2834,7 @@ function roteiroHoje(its){
   const gs=Object.values(grupos).sort((a,b)=>(a.h||'99').localeCompare(b.h||'99'));
   return `<section class="box roteiro"><div class="bar"><h3>Roteiro de hoje</h3><span class="meta">${gs.length} parada(s) · ${hj.length} tarefa(s)</span></div>
   <ol>${gs.map((g,i)=>`<li><div class="rnum">${i+1}</div><div class="rtx"><b>${esc(g.local)}</b>${g.h?` <span class="meta">· ${esc(g.h)}</span>`:''}<p class="meta">${g.itens.map(x=>esc(x.p.nome)+': '+esc(x.txt.replace(' · '+g.local,''))).join(' · ')}</p>
-  <div class="btns"><a class="btn sm" href="${esc(mapsUrl(g.end))}" target="_blank" rel="noopener">📍 Maps</a><a class="btn sm" href="${esc(wazeUrl(g.end))}" target="_blank" rel="noopener">🚗 Waze</a>${g.tel?waLink(g.tel,`Olá, ${g.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Estou a caminho para o atendimento de hoje${g.h?' ('+g.h+')':''}.`).replace('>WhatsApp<','>💬 Estou a caminho<'):''}</div></div></li>`).join('')}</ol></section>`}
+  <div class="btns"><a class="btn sm" href="${esc(mapsUrl(g.end))}" target="_blank" rel="noopener">${ico("pin")}Maps</a><a class="btn sm" href="${esc(wazeUrl(g.end))}" target="_blank" rel="noopener">${ico("carro")}Waze</a>${g.tel?waLink(g.tel,`Olá, ${g.tutor||''}! Aqui é da ${S.cfg.clinica||'VetCamp'}. Estou a caminho para o atendimento de hoje${g.h?' ('+g.h+')':''}.`).replace('>WhatsApp<','>'+ico('msg')+'Estou a caminho<'):''}</div></div></li>`).join('')}</ol></section>`}
 function cobrancaLote(ids,val,desc){
   const por={};for(const id of ids){const q=S.pac.find(x=>x.id===id);if(!q)continue;const k=(telWa(q.tel)||q.tutor||'?');(por[k]=por[k]||{tutor:q.tutor,tel:q.tel,an:[]}).an.push(q.nome)}
   const gs=Object.values(por);if(!gs.length)return;
@@ -2854,7 +2860,7 @@ function posSalvar(p,key,o){
 function comemorar(key){
   const tot=S.pac.reduce((n,x)=>n+(x.consultas||[]).length+(x.vacinas||[]).length+(x.meds||[]).length,0);
   const marcos=[10,50,100,250,500,1000,2000,5000];
-  if(marcos.includes(tot)&&LS.get('vetcamp-marco',0)<tot){LS.set('vetcamp-marco',tot);setTimeout(()=>{toast(`🎉 ${tot} registros no VetCamp! Seu trabalho está todo organizado.`);festa()},900)}}
+  if(marcos.includes(tot)&&LS.get('vetcamp-marco',0)<tot){LS.set('vetcamp-marco',tot);setTimeout(()=>{toast(`${tot} registros no VetCamp! Seu trabalho está todo organizado.`);festa()},900)}}
 /* ---------- aconchego: ✓ animado, transições, arrastar para fechar, comemoração, resumo da semana, dicas ---------- */
 function salvoAnim(){if(navigator.vibrate)navigator.vibrate(15);if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const el=document.createElement('div');el.className='salvo';el.setAttribute('aria-hidden','true');
   el.innerHTML='<svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg>';document.body.appendChild(el);setTimeout(()=>el.remove(),1100)}
@@ -2874,7 +2880,7 @@ function depoisRender(){
   if(k+(S.sel||'')!==telaAnt){telaAnt=k+(S.sel||'');alvo.classList.remove('entra');void alvo.offsetWidth;alvo.classList.add('entra')}
   // dica de primeira vez (uma linha, some para sempre no "Entendi")
   const vistas=LS.get('vetcamp-dicas',{});if(DICAS[k]&&!vistas[k]&&!alvo.querySelector('.dica')){const d=document.createElement('div');d.className='dica';d.setAttribute('role','note');
-    d.innerHTML=`<span aria-hidden="true">💡</span><p></p><button type="button" class="btn sm" data-dicaok="${k}">Entendi</button>`;d.querySelector('p').textContent=DICAS[k];
+    d.innerHTML=`${ico("luz","icodica")}<p></p><button type="button" class="btn sm" data-dicaok="${k}">Entendi</button>`;d.querySelector('p').textContent=DICAS[k];
     const ref=S.sel?alvo.querySelector('.head'):alvo.querySelector('.bar')||alvo.firstElementChild;if(ref&&S.sel)ref.insertAdjacentElement('afterend',d);else if(ref)ref.insertAdjacentElement(S.vis==='pac'?'afterend':'afterend',d);else alvo.prepend(d)}
   if(!S.sel&&S.vis==='pac'){const c=$('view').querySelector('.capa>div:last-child');if(c&&!c.querySelector('.semana')){const t=semanaHtml();if(t)c.insertAdjacentHTML('beforeend',t)}}
 }
