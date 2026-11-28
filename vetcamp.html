@@ -261,11 +261,15 @@ textarea.doc{width:100%;min-height:340px;font:15px/1.5 var(--body);padding:12px;
   #navmostrar{display:none}
   html.latoff .nav{display:none}
   html.latoff .wrap{margin-left:0}
-  html.latoff #navmostrar{display:grid}
+  html.latoff .top #navmostrar{display:grid}
 }
 @media(max-width:600px){.top .brandrow h1{min-width:0;overflow:hidden;text-overflow:ellipsis}.top .brandrow h1 small{overflow:hidden;text-overflow:ellipsis}.toprow>.who,.toprow>.bbtn,.toprow>#novo{flex:none}.toprow{gap:6px}}
 @media(max-width:440px){#novo .nl{display:none}#novo{min-width:40px;justify-content:center;font-size:20px;padding:0 12px}}
 @media(max-width:400px){.top h1{font-size:20px}.top .logo{width:30px;height:30px}.who{padding:3px 10px 3px 3px;font-size:13px}#novo{padding:0 10px}}
+#navmostrar{display:none}
+.top h1 .beta{display:inline-block;vertical-align:super;margin-left:6px;padding:1px 6px;border:1px solid color-mix(in srgb,var(--barink) 55%,transparent);border-radius:99px;font:700 10px/1.4 var(--body);letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+@media(min-width:1000px){.top h1 .beta{font-size:11px}}
+@media(max-width:600px){.top h1{line-height:1.05}.top h1 .beta{display:block;width:max-content;margin:2px 0 0;padding:0 5px;font-size:8.5px;vertical-align:baseline}}
 .pgrp{border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;margin:0}
 .pgrp legend{font:800 14px var(--display);color:var(--brand);padding:0 6px}
 .rs{font-size:13px;color:var(--mute)}
@@ -350,7 +354,7 @@ html.letra-maior body{zoom:1.12}
 
 <header class="top"><div class="topin">
   <div class="toprow">
-    <button class="bbtn" id="navmostrar" aria-label="Mostrar o menu lateral" title="Mostrar o menu"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button><div class="brandrow"><span class="logo" role="img" aria-label="Logo VetCamp"></span><h1>VetCamp<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
+    <button class="bbtn" id="navmostrar" aria-label="Mostrar o menu lateral" title="Mostrar o menu"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button><div class="brandrow"><span class="logo" role="img" aria-label="Logo VetCamp"></span><h1>VetCamp<span class="beta" title="O VetCamp está em versão beta: novidades chegando e ajustes sendo feitos">Beta</span><small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
     <button class="who" id="who" data-vis="conta"><span class="dot"></span>Entrar</button>
     <button class="bbtn" id="busca" aria-label="Buscar em tudo" title="Buscar (/)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     <button class="btn pri sm" id="novo" aria-label="Novo paciente">+ <span class="nl">Paciente</span></button>
