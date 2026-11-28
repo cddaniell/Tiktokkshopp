@@ -94,6 +94,33 @@ Na primeira entrada de uma conta nova, o VetCamp pergunta como a pessoa vai usar
 - **Baias e piquetes**: ocupação, vagas e piquete em descanso.
 - **Compra e venda**, valor do plantel, **provas** (a inscrição vira gasto), **pesagens com ganho de peso (GMD)**, **indicadores** (taxa de prenhez, nascimentos, óbitos) e **categorias de gasto próprias**.
 
+## Uso no dia a dia: ficha rápida, campo e aconchego
+
+Feito a partir das reclamações mais comuns dos programas veterinários (cliques demais, lentidão, cobrar uma visita com vários animais) e de guias de usabilidade.
+
+**Ficha rápida**
+- **Botão + redondo** no canto da ficha de cada animal: consulta, vacina/vermífugo, medicação, foto, peso, casco, reprodução, exame, agendamento e lançamento financeiro em 2 toques.
+- **Formulários curtos**: só o essencial aparece; o resto fica em "Mostrar mais campos" (consulta, novo animal, medicação e vacina). Campo já preenchido nunca é escondido.
+- **Datas com um toque**: "Hoje" e "Ontem"; nas datas futuras (próxima dose, retorno, término) "+7 dias", "+15 dias", "+30 dias", "+6 meses" e "+1 ano".
+- **Botões − e +** em peso, temperatura, FC, FR, intervalo e doses. A temperatura, a FC e a FR começam no meio da faixa normal da espécie.
+- **Modelos de atendimento** na consulta: Cólica, Claudicação, Ferida, Vacinação anual, Exame pré-compra, Retorno e Diarreia preenchem a consulta inteira. "+ Salvar este como modelo" guarda os seus.
+- **Repetir o último** em Sanidade e Medicação: copia o último registro com a data de hoje e a próxima dose no mesmo intervalo.
+- **Lembra da última vez**: ao digitar uma medicação já usada, dose, via e intervalo vêm preenchidos; numa vacina já usada, a próxima dose é sugerida no mesmo intervalo.
+
+**Campo e visita ao haras**
+- **Roteiro de hoje** na Agenda: as paradas agrupadas por propriedade, na ordem do horário, com botões Maps, Waze e "Estou a caminho" pelo WhatsApp.
+- **Cobrança única da visita**: depois do atendimento em lote com valor, abre uma cobrança por proprietário (todos os animais somados), com WhatsApp, Pix e copiar texto.
+- **Depois de salvar** uma consulta: botão para mandar o resumo ao tutor pelo WhatsApp. Depois de agendar: botão para avisar o tutor.
+- **Ler microchip ou código de barras** pela câmera na busca (Android/Chrome).
+- **Atalhos no ícone do app** (segurar o ícone no celular): "Novo paciente" e "Agenda de hoje".
+
+**Aconchego**
+- ✓ animado e vibração curta ao salvar; telas que deslizam ao trocar; janelas que sobem e **fecham arrastando para baixo** no celular.
+- Esqueleto de carregamento, telas vazias com o cavalo, linha do tempo com ícones e comemoração com confete nos marcos (10, 50, 100, 250… registros).
+- **Resumo da semana** na capa (atendimentos, recebido e o que vence em 7 dias).
+- **Dicas de primeira vez**: uma linha em cada tela principal, que some para sempre ao tocar "Entendi".
+- **Tema "Escuro à noite"** em Conta › Aparência: escuro das 19h às 6h, claro de dia.
+
 ## Fotos do atendimento
 Na ficha de cada animal, aba **Fotos**:
 - **+ Adicionar fotos** (câmera ou galeria, até 20 por vez) com um **nome** (ex.: "Ferida membro anterior esquerdo"), data e observação.
