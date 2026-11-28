@@ -16,15 +16,16 @@
   #auth .ab{width:min(420px,100%);display:grid;gap:14px;margin:auto;position:relative}
   #auth{flex-direction:column;justify-content:flex-start;padding:0 0 24px}
   #auth .ab{padding:0 max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;width:min(452px,100%);margin-top:-46px}
-  #auth .acena{position:relative;flex:none;width:100%;height:230px;overflow:hidden;background:#f6e7cc}
-  #auth .acena svg{position:absolute;inset:0;width:100%;height:100%}
+  #auth .acena{position:relative;flex:none;width:100%;height:260px;overflow:hidden;background:#f3dcb4 url(img/login-campo.jpg) 72% 30%/cover no-repeat}
+  #auth .acena::after{content:"";position:absolute;inset:auto 0 0 0;height:70px;background:linear-gradient(transparent,var(--bg,#f6eee3))}
   #auth .acena .frase{display:none}
   #auth .ab .alogo{background:var(--card,#fbf6ef);-webkit-mask:none;mask:none;border-radius:50%;width:92px;height:92px;box-shadow:0 4px 14px rgb(60 30 10/.25);display:grid;place-items:center;border:3px solid var(--card,#fbf6ef)}
   #auth .ab .alogo::before{content:"";width:62px;height:62px;background:var(--brand,#5b381b);-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat}
   @media (min-width:900px){
     #auth{flex-direction:row;padding:0;align-items:stretch}
     #auth .acena{width:52%;height:auto;min-height:100%}
-    #auth .acena svg{top:auto;height:68%}
+    #auth .acena{background-position:right center}
+    #auth .acena::after{inset:0 0 0 auto;width:120px;height:auto;background:linear-gradient(90deg,transparent,var(--bg,#f6eee3))}
     #auth .acena .frase{display:block;position:absolute;left:8%;right:8%;top:9%;color:#3d2410}
     #auth .acena .frase b{display:block;font:800 clamp(30px,3.2vw,44px)/1.1 Archivo,system-ui,sans-serif;letter-spacing:.01em}
     #auth .acena .frase span{display:block;margin-top:10px;font-size:17px;color:#5b381b;max-width:30em}
@@ -62,15 +63,7 @@
   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
   const tela=document.createElement('div');tela.id='auth';tela.setAttribute('role','dialog');tela.setAttribute('aria-label','Entrar no VetCamp');
-  tela.innerHTML=`<div class="acena" aria-hidden="true"><svg viewBox="0 0 400 260" preserveAspectRatio="xMaxYMax slice"><defs><linearGradient id="vcCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e7cc"/><stop offset="1" stop-color="#e7c697"/></linearGradient></defs>
-<rect width="400" height="260" fill="url(#vcCeu)"/><circle cx="300" cy="92" r="30" fill="#f8d9a0"/><circle cx="300" cy="92" r="46" fill="#f8d9a0" opacity=".35"/>
-<path d="M0 150 Q60 118 130 140 T260 132 T400 128 V260 H0Z" fill="#d2ad7e"/>
-<path d="M0 176 Q90 146 190 168 T400 160 V260 H0Z" fill="#b98a59"/>
-<g fill="#7a4e2a"><path d="M268 158c0-14 10-24 22-24s22 10 22 24z"/><rect x="286" y="150" width="7" height="22"/><path d="M330 154c0-11 8-19 17-19s17 8 17 19z"/><rect x="344" y="148" width="6" height="18"/></g>
-<path d="M0 204 Q120 180 240 198 T400 192 V260 H0Z" fill="#94643a"/>
-<g stroke="#5b381b" stroke-width="4" stroke-linecap="round"><path d="M10 236 V196M70 232 V192M130 230 V190M190 230 V190"/><path d="M6 204 Q100 198 196 198M6 220 Q100 214 196 214" stroke-width="3"/></g>
-<g fill="#3d2410"><path d="M262 118c-2-4-1-7 0-9 2 2 3 4 3 6 2-3 4-4 6-5 0 3-1 5-3 7 6 4 10 10 13 18 4 9 10 13 20 13h42c9 0 15 4 18 11 2 5 1 10-1 14l-3 8 2 14 1 14h-7l-2-13-4-12c-3 2-7 3-11 3l-2 10 2 12h-7l-3-12v-10c-11 1-22 1-33-1l-3 11 1 12h-7l-2-12 1-12c-5-3-8-7-9-12l-3 10 1 14h-7l-1-13 1-14c0-7 0-14-3-20l-6-12c-3 2-7 3-11 3-4 0-7-2-8-5 2-3 5-5 9-8z"/><path d="M377 156c8 4 12 13 11 26-1 7-4 13-8 17 2-8 3-15 1-22-1-6-4-11-8-14z"/></g>
-<g stroke="#5b381b" stroke-width="2" stroke-linecap="round" fill="none"><path d="M40 252l-3-9M44 252l1-10M48 252l4-8M228 250l-3-8M232 250l1-9M236 250l4-7M330 252l-3-8M334 252l1-9M338 252l4-7"/></g></svg>
+  tela.innerHTML=`<div class="acena" aria-hidden="true">
 <div class="frase"><b>Do pasto ao prontuário.</b><span>Fichas, vacinas, reprodução e financeiro dos seus cavalos e do rebanho, no celular e no computador.</span><ul><li>🐴 Equinos e grandes animais</li><li>📷 Fotos e comparação</li><li>🔔 Alertas no celular</li></ul></div></div><div class="ab"><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p><div id="a_carr" role="status"><i aria-hidden="true"></i>Entrando na sua conta…</div><div class="volta" id="a_volta" hidden><img id="a_vfoto" alt=""><b id="a_vnome"></b><span id="a_vmail"></span><button type="button" class="ok2" id="a_vbtn">Continuar</button><button type="button" class="lnk" id="a_outra">Usar outra conta</button></div>
    <div class="tabs2" role="group" aria-label="Entrar ou criar conta"><button type="button" data-m="entrar" aria-pressed="true">Entrar</button><button type="button" data-m="criar" aria-pressed="false">Criar conta</button></div>
    <div class="msg" id="a_msg" role="status"></div>
