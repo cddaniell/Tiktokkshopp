@@ -224,6 +224,33 @@ textarea.doc{width:100%;min-height:340px;font:15px/1.5 var(--body);padding:12px;
 .capa p{margin:4px 0 0;color:var(--mute)}
 .capa .hoje{margin-top:10px;font-weight:700;color:var(--ink)}
 @media(max-width:600px){.top .logo{width:34px;height:34px}.top h1{font-size:22px}.toprow{flex-wrap:nowrap;gap:8px}.brandrow{min-width:0;flex:1 1 auto}.who:has(img){padding:3px;border-color:transparent}.who:has(img) .wn{display:none}.who img{width:36px;height:36px}#novo{padding:0 12px}.capa{grid-template-columns:1fr;justify-items:center;text-align:center;padding:20px 16px;gap:10px}.capa .logo{width:130px;height:130px}}
+.nav .nvi{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;vertical-align:-4px;margin-right:6px}
+.nav .navmenu .nvi{margin-right:10px}
+.nav .navmenu button.navit .nvt{flex:1;text-align:left}
+/* computador: logo e nome maiores à esquerda, perfil/busca/+Paciente no canto direito e as seções numa barra lateral */
+@media(min-width:1000px){
+  :root{--lat:236px}
+  .topin{max-width:none;padding-block:12px}
+  .top .logo{width:58px;height:58px}
+  .top h1{font-size:32px}.top h1 small{font-size:14px}
+  .toprow{flex-wrap:nowrap;gap:12px}
+  .nav{position:fixed;left:0;top:var(--toph,82px);bottom:0;width:var(--lat);margin:0;flex-direction:column;gap:2px;overflow-y:auto;overflow-x:hidden;padding:14px 10px 24px;background:var(--bar);box-shadow:2px 0 8px var(--shadow);z-index:4}
+  .nav button{width:100%;text-align:left;border:0;border-left:3px solid transparent;border-radius:10px;min-height:46px;padding:0 12px;display:flex;align-items:center;font-size:15px}
+  .nav button:hover{opacity:1;background:color-mix(in srgb,var(--barink) 10%,transparent)}
+  .nav button[aria-pressed=true]{opacity:1;background:color-mix(in srgb,var(--barink) 16%,transparent);border-left-color:var(--barink)}
+  .nav .nvi{width:20px;height:20px;margin-right:12px}
+  .nav .badge{margin-left:auto}
+  .navg{flex-direction:column;width:100%}
+  .nav .navgb .seta{margin-left:auto}.nav .navgb .badge+.seta{margin-left:8px}
+  .nav .navgb .navsub{display:none}
+  .navmenu{position:static;box-shadow:none;border:0;background:transparent;min-width:0;padding:2px 0 6px 14px}
+  .navg.lado .navmenu{display:grid}
+  .nav .navmenu button.navit{color:var(--barink);opacity:.85;min-height:40px;font-size:14px;border-left:2px solid color-mix(in srgb,var(--barink) 25%,transparent);border-radius:0 10px 10px 0}
+  .nav .navmenu button.navit:hover{background:color-mix(in srgb,var(--barink) 10%,transparent)}
+  .nav .navmenu button.navit[aria-pressed=true]{opacity:1;background:color-mix(in srgb,var(--barink) 16%,transparent);border-left-color:var(--barink)}
+  .nav .navmenu .badge{background:var(--barink);color:var(--bar)}
+  .wrap{margin-left:var(--lat);max-width:none;padding-left:max(28px,calc((100vw - var(--lat) - 1100px)/2));padding-right:max(28px,calc((100vw - var(--lat) - 1100px)/2))}
+}
 .pgrp{border:1px solid var(--line);border-radius:12px;padding:8px 12px 10px;margin:0}
 .pgrp legend{font:800 14px var(--display);color:var(--brand);padding:0 6px}
 .rs{font-size:13px;color:var(--mute)}
@@ -901,19 +928,24 @@ async function pendentesEquipe(){
 }
 
 /* ---------- navegação ---------- */
+const NAV_IC={"pac": "<circle cx=\"5.5\" cy=\"10\" r=\"2\"/><circle cx=\"9.5\" cy=\"5.5\" r=\"2\"/><circle cx=\"14.5\" cy=\"5.5\" r=\"2\"/><circle cx=\"18.5\" cy=\"10\" r=\"2\"/><path d=\"M12 11c-3 0-6 4.5-6 7.2 0 1.5 1.2 2.3 2.7 2.3 1.2 0 2-.7 3.3-.7s2.1.7 3.3.7c1.5 0 2.7-.8 2.7-2.3C18 15.5 15 11 12 11z\"/>", "agenda": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 10h18\"/>", "intern": "<path d=\"M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5\"/><circle cx=\"7\" cy=\"11\" r=\"2\"/>", "clientes": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6\"/><circle cx=\"17\" cy=\"9\" r=\"2.4\"/><path d=\"M16 14.2c2.8.3 5 2.6 5 5.8\"/>", "g:fin": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .9 3 2.1-1.3 2-3 2c-1.4 0-2.6-.6-3-1.6M12 6v2M12 16v2\"/>", "caixa": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M3 10h18M7 15h3\"/>", "orc": "<path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5M9 13h6M9 17h4\"/>", "relat": "<path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/>", "precos": "<path d=\"M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"1.3\"/>", "g:mais": "<circle cx=\"5\" cy=\"12\" r=\"1.6\"/><circle cx=\"12\" cy=\"12\" r=\"1.6\"/><circle cx=\"19\" cy=\"12\" r=\"1.6\"/>", "estoque": "<path d=\"M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8\"/>", "ferr": "<path d=\"M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.5-.6-.6-2.5z\"/>", "conta": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/><path d=\"M6.2 18.4c1.3-2 3.4-3.2 5.8-3.2s4.5 1.2 5.8 3.2\"/>", "g:man": "<path d=\"M12 21V11M12 11c0-4 3-7 8-7 0 5-3 8-8 7zM12 14c0-3-2.5-5.5-7-5.5 0 4 2.5 6.5 7 5.5z\"/>", "trato": "<path d=\"M5 9h14l-1.5 11h-11z\"/><path d=\"M8 9c0-3 1.8-5 4-5s4 2 4 5\"/>", "locais": "<path d=\"M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z\"/><circle cx=\"12\" cy=\"9.5\" r=\"2.5\"/>", "tarefas": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"3\"/><path d=\"M8 12l3 3 5-6\"/>", "gastos": "<path d=\"M6 3h12v18l-3-2-3 2-3-2-3 2z\"/><path d=\"M9 8h6M9 12h6\"/>", "faturas": "<path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5M12 11v6M10 13c0-.8.9-1.4 2-1.4s2 .5 2 1.2-.9 1-2 1.2-2 .6-2 1.3.9 1.2 2 1.2 2-.5 2-1.3\"/>"};
+const navIc=k=>NAV_IC[k]?`<svg class="nvi" viewBox="0 0 24 24" aria-hidden="true">${NAV_IC[k]}</svg>`:'';
+const LATERAL=()=>matchMedia('(min-width:1000px)').matches;
+function ajustarTopo(){const t=document.querySelector('.top .toprow');if(t){const h=Math.round(t.getBoundingClientRect().bottom+12);document.documentElement.style.setProperty('--toph',h+'px')}}
+let latAntes=null;addEventListener('resize',()=>{ajustarTopo();const l=LATERAL();if(l!==latAntes){latAntes=l;try{renderNav()}catch(e){}}});
 const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['clientes','Clientes'],['caixa','Caixa'],['orc','Orçamentos'],['relat','Relatórios'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
 function renderNav(){
   const n={agenda:S.pac.filter(p=>p.status!=='obito').flatMap(pendencias).filter(x=>dias(x.d)<=0&&x.tab!=='fin').length,
     intern:S.pac.filter(p=>p.status==='internado').length,
     estoque:S.est.filter(estAlerta).length,conta:CONVITES.length};
   const lista=PROP()?VIEWS_PROP:VIEWS,nome=k=>(lista.find(v=>v[0]===k)||[])[1]||k;
-  const btn=(k,cls)=>`<button data-vis="${k}"${cls?` class="${cls}"`:''} aria-pressed="${!S.sel&&S.vis===k}">${nome(k)}${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`;
+  const btn=(k,cls)=>`<button data-vis="${k}"${cls?` class="${cls}"`:''} aria-pressed="${!S.sel&&S.vis===k}">${navIc(k)}<span class="nvt">${nome(k)}</span>${n[k]?`<span class="badge">${n[k]}</span>`:''}</button>`;
   $('nav').innerHTML=(PROP()?GRUPOS_PROP:GRUPOS_VET).map(g=>{
     if(!g[0].startsWith('g:'))return visOk(g[0])?btn(g[0]):'';
     const filhos=g[2].filter(visOk);if(!filhos.length)return '';if(filhos.length===1)return btn(filhos[0]);
     const ativo=!S.sel&&filhos.includes(S.vis),aberto=navAberto===g[0],bd=filhos.reduce((t,k)=>t+(n[k]||0),0);
-    return `<div class="navg${aberto?' aberto':''}"><button class="navgb" data-navgrupo="${g[0]}" aria-haspopup="true" aria-expanded="${aberto}" aria-pressed="${ativo}">${g[1]}${ativo?`<span class="navsub"> · ${nome(S.vis)}</span>`:''}${bd?`<span class="badge">${bd}</span>`:''}<span class="seta" aria-hidden="true"></span></button><div class="navmenu" role="group" aria-label="${g[1]}">${filhos.map(k=>btn(k,'navit')).join('')}</div></div>`}).join('');
-  if(navAberto)posicionarMenu();
+    const lado=LATERAL()&&(aberto||ativo);return `<div class="navg${aberto&&!LATERAL()?' aberto':''}${lado?' lado':''}"><button class="navgb" data-navgrupo="${g[0]}" aria-haspopup="true" aria-expanded="${LATERAL()?lado:aberto}" aria-pressed="${ativo}">${navIc(g[0])}${g[1]}${ativo?`<span class="navsub"> · ${nome(S.vis)}</span>`:''}${bd?`<span class="badge">${bd}</span>`:''}<span class="seta" aria-hidden="true"></span></button><div class="navmenu" role="group" aria-label="${g[1]}">${filhos.map(k=>btn(k,'navit')).join('')}</div></div>`}).join('');
+  if(navAberto&&!LATERAL())posicionarMenu();ajustarTopo();
 }
 /* menu agrupado: itens parecidos ficam juntos e abrem ao tocar; o grupo da tela atual mostra onde você está */
 const GRUPOS_VET=[['pac'],['agenda'],['intern'],['clientes'],['g:fin','Financeiro',['caixa','orc','relat','precos']],['g:mais','Mais',['estoque','ferr']],['conta']];
@@ -921,7 +953,7 @@ const GRUPOS_PROP=[['pac'],['agenda'],['g:man','Manejo',['trato','locais','taref
 let navAberto='';
 function posicionarMenu(){const g=$('nav').querySelector('.navg.aberto');if(!g)return;const r=g.querySelector('.navgb').getBoundingClientRect(),m=g.querySelector('.navmenu');m.style.top=Math.round(r.bottom+4)+'px';m.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8)))+'px'}
 function fecharMenu(){if(navAberto){navAberto='';renderNav()}}
-document.addEventListener('click',e=>{if(navAberto&&!(e.target.closest&&e.target.closest('.navg')))fecharMenu()},true);
+document.addEventListener('click',e=>{if(navAberto&&!LATERAL()&&!(e.target.closest&&e.target.closest('.navg')))fecharMenu()},true);
 addEventListener('keydown',e=>{if(e.key==='Escape'&&navAberto){const g=navAberto;fecharMenu();const b=document.querySelector(`[data-navgrupo="${g}"]`);if(b)b.focus()}});
 addEventListener('resize',()=>{if(navAberto)posicionarMenu()});addEventListener('scroll',()=>{if(navAberto)posicionarMenu()},{passive:true});
 let renderTimer=null;
