@@ -34,6 +34,14 @@
     #auth .acena li::before{content:"✓";position:absolute;left:12px;top:9px;width:20px;height:20px;border-radius:50%;background:#965a27;color:#fff;font:700 12px/20px system-ui;text-align:center}
     #auth .acena li strong{color:#5b381b}
     #auth .ab{margin:auto 4vw auto auto;padding:32px 40px;width:min(500px,40%);z-index:1}
+    #auth .ab{gap:10px;padding:24px 40px}
+    #auth .ab .alogo{width:66px;height:66px}#auth .ab .alogo::before{width:46px;height:46px}
+    #auth h1{font-size:30px}
+  }
+  @media (min-width:900px) and (max-height:860px){
+    #auth .sub{display:none}
+    #auth form{padding:14px 18px;gap:8px}
+    #auth input{min-height:42px}
   }
   #auth .alogo{width:96px;height:96px;margin:0 auto;background:var(--brand,#5b381b);-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat}
   #auth h1{font:800 34px Archivo,system-ui,sans-serif;letter-spacing:.04em;text-align:center;margin:0;color:var(--brand,#5b381b)}
