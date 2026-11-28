@@ -7,3 +7,4 @@
 - O site próprio (Firebase) é gerado a partir do mesmo arquivo por `scripts/build_app.py`; veja `app/LEIA-ME.md`.
 - Não renomear identificadores internos com "samvet" (chaves do localStorage, caminho `data/users/<id>/samvet/...` no banco, `window.SAMVET_*`): mudar isso faz os usuários perderem acesso aos dados já salvos.
 - Responder sempre em português do Brasil.
+- **Publicar só com autorização:** antes de qualquer `git push` (que publica o site pelo GitHub Actions) ou de publicar o artifact, mostrar o que mudou e pedir autorização ao usuário. Nunca publicar sem um "pode publicar".
