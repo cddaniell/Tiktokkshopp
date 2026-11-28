@@ -16,22 +16,22 @@
   #auth .ab{width:min(420px,100%);display:grid;gap:14px;margin:auto;position:relative}
   #auth{flex-direction:column;justify-content:flex-start;padding:0 0 24px}
   #auth .ab{padding:0 max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;width:min(452px,100%);margin-top:-46px}
-  #auth .acena{position:relative;flex:none;width:100%;height:260px;overflow:hidden;background:#f3dcb4 url(img/login-campo.jpg) 72% 30%/cover no-repeat}
-  #auth .acena::after{content:"";position:absolute;inset:auto 0 0 0;height:70px;background:linear-gradient(transparent,var(--bg,#f6eee3))}
+  #auth .acena{position:relative;flex:none;width:100%;height:270px;overflow:hidden;background:linear-gradient(color-mix(in srgb,var(--bg,#f6eee3) 28%,transparent),color-mix(in srgb,var(--bg,#f6eee3) 28%,transparent)),#e9c48f url(img/login-campo.jpg) 52% 30%/cover no-repeat}
+  #auth .acena::after{content:"";position:absolute;inset:auto 0 0 0;height:110px;background:linear-gradient(transparent,var(--bg,#f6eee3))}
   #auth .acena .frase{display:none}
   #auth .ab .alogo{background:var(--card,#fbf6ef);-webkit-mask:none;mask:none;border-radius:50%;width:92px;height:92px;box-shadow:0 4px 14px rgb(60 30 10/.25);display:grid;place-items:center;border:3px solid var(--card,#fbf6ef)}
   #auth .ab .alogo::before{content:"";width:62px;height:62px;background:var(--brand,#5b381b);-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat}
   @media (min-width:900px){
     #auth{flex-direction:row;padding:0;align-items:stretch}
-    #auth .acena{width:52%;height:auto;min-height:100%}
-    #auth .acena{background-position:right center}
-    #auth .acena::after{inset:0 0 0 auto;width:120px;height:auto;background:linear-gradient(90deg,transparent,var(--bg,#f6eee3))}
+    #auth .acena{position:fixed;inset:0;width:auto;height:auto;z-index:0;background:var(--bg,#f6eee3) url(img/login-campo.jpg) no-repeat;background-size:auto 100%;background-position:calc(46vw - 107vh) center}
+    #auth .acena::after{inset:0;height:auto;background:linear-gradient(90deg,color-mix(in srgb,var(--bg,#f6eee3) 30%,transparent) 0%,color-mix(in srgb,var(--bg,#f6eee3) 30%,transparent) 44%,color-mix(in srgb,var(--bg,#f6eee3) 85%,transparent) 60%,var(--bg,#f6eee3) 68%)}
+    #auth .acena .frase{z-index:1;right:auto;left:5vw;width:min(30vw,520px)}
     #auth .acena .frase{display:block;position:absolute;left:8%;right:8%;top:9%;color:#3d2410}
     #auth .acena .frase b{display:block;font:800 clamp(30px,3.2vw,44px)/1.1 Archivo,system-ui,sans-serif;letter-spacing:.01em}
     #auth .acena .frase span{display:block;margin-top:10px;font-size:17px;color:#5b381b;max-width:30em}
     #auth .acena ul{list-style:none;padding:0;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:8px}
     #auth .acena li{background:rgb(251 246 239/.75);border:1px solid #d8c1a2;border-radius:99px;padding:6px 12px;font-size:14px;font-weight:700;color:#5b381b}
-    #auth .ab{margin:auto;padding:32px 40px;width:min(500px,48%)}
+    #auth .ab{margin:auto 4vw auto auto;padding:32px 40px;width:min(500px,40%);z-index:1}
   }
   #auth .alogo{width:96px;height:96px;margin:0 auto;background:var(--brand,#5b381b);-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat}
   #auth h1{font:800 34px Archivo,system-ui,sans-serif;letter-spacing:.04em;text-align:center;margin:0;color:var(--brand,#5b381b)}
