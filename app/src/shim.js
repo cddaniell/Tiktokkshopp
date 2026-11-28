@@ -173,6 +173,8 @@
     bar.querySelectorAll('.lpsome').forEach(el=>{const r=el.getBoundingClientRect(),b0=bar.getBoundingClientRect(),l=r.left-b0.left;
       const o=r.width?1-Math.min(1,Math.max(0,(frente-l)/r.width)):1;el.style.opacity=o;el.style.visibility=o<.02?'hidden':''});
   }
+  // no computador a foto da esquerda fica parada (fixa); a rodinha do mouse em cima dela também rola o login
+  tela.addEventListener('wheel',e=>{if(tela.classList.contains('lp-on')||!e.target.closest('.acena'))return;tela.scrollTop+=e.deltaMode===1?e.deltaY*16:e.deltaY;e.preventDefault()},{passive:false});
   tela.addEventListener('scroll',()=>{if(!cavQ)cavQ=requestAnimationFrame(cavalinho)},{passive:true});
   addEventListener('resize',()=>{if(!cavQ)cavQ=requestAnimationFrame(cavalinho)});
   const querLp=()=>{const l=lerL();return !(l&&l.email)};
