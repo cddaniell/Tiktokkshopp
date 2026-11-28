@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-v4lof8elTrlNg9244TtVoWLs/h27aTzgpencVtZ/WpU=' 'sha256-jZYRNFuWqrAH7N8rzj4+2hTkcoewDfPk1G2dobECT5g=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-EmJr7Fc34sBEgfch6jR4MPJOj5+Sh+3VSN9rc4fg4MY=' 'sha256-jZYRNFuWqrAH7N8rzj4+2hTkcoewDfPk1G2dobECT5g=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -416,13 +416,59 @@ html.letra-maior body{zoom:1.12}
   #auth #a_carr i{display:block;width:34px;height:34px;margin:0 auto 10px;border:4px solid var(--line,#d8c1a2);border-top-color:var(--act,#965a27);border-radius:50%;animation:agira .8s linear infinite}
   @keyframes agira{to{transform:rotate(360deg)}}
   #auth .rod{font-size:12px;color:var(--mute,#76583d);text-align:center}#auth .rod a{color:inherit}
+  /* ---------- página de apresentação (antes do login) ---------- */
+  #auth.lp-on{display:block;padding:0}
+  #auth.lp-on>.acena,#auth.lp-on>.ab{display:none!important}
+  #auth:not(.lp-on)>.lp{display:none}
+  #auth .lp{color:var(--ink,#33210f);font-size:16px;line-height:1.55}
+  .lp a{color:inherit}
+  .lp .lpbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px max(16px,4vw);background:color-mix(in srgb,var(--bg,#f6eee3) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid color-mix(in srgb,var(--line,#d8c1a2) 60%,transparent)}
+  .lp .lpmarca{display:flex;align-items:center;gap:8px;font:800 22px Archivo,system-ui,sans-serif;color:var(--brand,#5b381b);margin-right:auto;text-decoration:none}
+  .lp .lpmarca i{width:34px;height:34px;background:var(--brand,#5b381b);-webkit-mask:var(--logo) center/contain no-repeat;mask:var(--logo) center/contain no-repeat}
+  .lp .lplinks{display:none;gap:22px;margin-right:18px}.lp .lplinks a{text-decoration:none;font-weight:600;color:var(--mute,#76583d)}.lp .lplinks a:hover{color:var(--ink,#33210f)}
+  .lp .bt{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border-radius:10px;font-weight:700;font-size:15px;border:1px solid var(--act,#965a27);cursor:pointer;text-decoration:none;white-space:nowrap}
+  .lp .bt.cheio{background:var(--act,#965a27);color:var(--actink,#fff)}.lp .bt.vazio{background:transparent;color:var(--act,#965a27)}
+  .lp .bt.gr{min-height:52px;padding:0 24px;font-size:17px}
+  .lp .hero{position:relative;display:flex;align-items:flex-end;background:var(--bg,#f6eee3) url(img/login-campo.jpg) 44% top/auto 52vh no-repeat}
+  .lp .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--bg,#f6eee3) 22%,transparent) 0%,color-mix(in srgb,var(--bg,#f6eee3) 30%,transparent) 36vh,var(--bg,#f6eee3) 52vh)}
+  .lp .hero>div{position:relative;padding:40vh max(16px,4vw) 40px;max-width:640px}
+  .lp .selo{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--act,#965a27);margin-bottom:10px}
+  .lp h2{font:800 clamp(32px,5.4vw,58px)/1.06 Archivo,system-ui,sans-serif;margin:0;color:var(--brand,#5b381b);letter-spacing:-.01em}
+  .lp .hero p{font-size:clamp(16px,1.6vw,19px);color:var(--ink,#33210f);margin:16px 0 24px;max-width:34em}
+  .lp .ctas{display:flex;gap:10px;flex-wrap:wrap}
+  .lp section.bl{padding:64px max(16px,4vw);max-width:1180px;margin:0 auto}
+  .lp h3{font:800 clamp(26px,3.4vw,38px)/1.15 Archivo,system-ui,sans-serif;margin:0 0 8px;color:var(--brand,#5b381b)}
+  .lp .lead{color:var(--mute,#76583d);margin:0 0 32px;max-width:40em}
+  .lp .grade{display:grid;gap:16px;grid-template-columns:1fr}
+  .lp .card{background:var(--card,#fbf6ef);border:1px solid var(--line,#d8c1a2);border-radius:16px;padding:22px}
+  .lp .card h4{margin:12px 0 6px;font-size:18px;color:var(--ink,#33210f)}.lp .card p{margin:0;color:var(--mute,#76583d);font-size:15px}
+  .lp .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--act,#965a27) 14%,transparent);color:var(--act,#965a27)}
+  .lp .ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .lp .faixa{background:var(--panel,#ecdcc6)}
+  .lp .publico .card ul{margin:12px 0 0;padding-left:18px;color:var(--mute,#76583d);font-size:15px}.lp .publico .card li{margin:4px 0}
+  .lp .passos{counter-reset:p}.lp .passos .card{position:relative;padding-top:26px}
+  .lp .passos .card::before{counter-increment:p;content:counter(p);display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--act,#965a27);color:var(--actink,#fff);font-weight:800}
+  .lp .final{text-align:center;padding:64px max(16px,4vw);background:var(--brand,#5b381b);color:#fbf6ef}
+  .lp .final h3{color:#fbf6ef}.lp .final p{color:#ecdcc6;margin:0 auto 24px;max-width:34em}
+  .lp .final .bt.cheio{background:#fbf6ef;color:#5b381b;border-color:#fbf6ef}.lp .final .bt.vazio{color:#fbf6ef;border-color:#fbf6ef}
+  .lp footer{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;padding:22px max(16px,4vw);font-size:14px;color:var(--mute,#76583d)}
+  #auth .voltalp{justify-self:start;border:0;background:none;color:var(--act,#965a27);font-weight:700;padding:6px 0;font-size:15px;cursor:pointer}
+  @media (max-width:420px){.lp .lpbar .bt{padding:0 12px;font-size:14px;min-height:38px}.lp .lpmarca{font-size:19px}.lp .lpmarca i{width:28px;height:28px}}
+  @media (min-width:760px){.lp .grade{grid-template-columns:repeat(2,1fr)}}
+  @media (min-width:900px){
+    .lp .lplinks{display:flex}
+    .lp .hero{min-height:min(86vh,720px);align-items:center;background-position:right 30% center;background-size:cover}
+    .lp .hero::before{background:linear-gradient(90deg,var(--bg,#f6eee3) 0%,color-mix(in srgb,var(--bg,#f6eee3) 88%,transparent) 34%,color-mix(in srgb,var(--bg,#f6eee3) 20%,transparent) 62%,transparent 80%)}
+    .lp .hero>div{padding-top:60px;padding-bottom:60px}
+    .lp .grade.tres{grid-template-columns:repeat(3,1fr)}
+  }
   #verifbar{position:sticky;top:0;z-index:6;background:var(--note,#f3e1bf);color:var(--ink,#33210f);font-size:14px;padding:8px max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
   #verifbar button{border:1px solid var(--line,#d8c1a2);background:var(--card,#fbf6ef);border-radius:8px;min-height:34px;padding:0 10px;font-weight:700;color:inherit}`;
   const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
   const tela=document.createElement('div');tela.id='auth';tela.setAttribute('role','dialog');tela.setAttribute('aria-label','Entrar no VetCamp');
-  tela.innerHTML=`<div class="acena" aria-hidden="true">
-<div class="frase"><b>Do pasto ao prontuário.</b><span>Fichas, vacinas, reprodução e financeiro dos seus cavalos e do rebanho, no celular e no computador.</span><ul><li>🐴 Equinos e grandes animais</li><li>📷 Fotos e comparação</li><li>🔔 Alertas no celular</li></ul></div></div><div class="ab"><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p><div id="a_carr" role="status"><i aria-hidden="true"></i>Entrando na sua conta…</div><div class="volta" id="a_volta" hidden><img id="a_vfoto" alt=""><b id="a_vnome"></b><span id="a_vmail"></span><button type="button" class="ok2" id="a_vbtn">Continuar</button><button type="button" class="lnk" id="a_outra">Usar outra conta</button></div>
+  tela.innerHTML=`<div class="lp" id="lp"><header class="lpbar"><a class="lpmarca" href="#lp-topo" data-lptopo><i aria-hidden="true"></i>VetCamp</a><nav class="lplinks" aria-label="Seções"><a href="#lp-recursos">Recursos</a><a href="#lp-publico">Para quem</a><a href="#lp-como">Como funciona</a></nav><button type="button" class="bt vazio" data-lp="entrar">Entrar</button><button type="button" class="bt cheio" data-lp="criar">Cadastre-se</button></header><div class="hero" id="lp-topo"><div><span class="selo">Prontuário veterinário de campo</span><h2>O cuidado com seus cavalos, organizado do pasto ao prontuário.</h2><p>O VetCamp reúne atendimentos, vacinas, reprodução, fotos e financeiro de equinos e grandes animais em um só lugar, no celular e no computador.</p><div class="ctas"><button type="button" class="bt cheio gr" data-lp="criar">Criar minha conta</button><button type="button" class="bt vazio gr" data-lp="entrar">Já tenho conta</button></div></div></div><section class="bl" id="lp-recursos"><h3>Tudo o que o atendimento a campo precisa</h3><p class="lead">Ferramentas pensadas para a rotina de quem trabalha com cavalos e grandes animais.</p><div class="grade tres"><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M9 11h6M9 15h4"/></svg></span><h4>Prontuário completo</h4><p>Histórico de cada animal com anamnese, exame clínico, evolução, prescrições e documentos em PDF.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><path d="M18 2l4 4M17 7l-9 9-3 1 1-3 9-9M14 4l6 6M11 7l2 2M8 10l2 2M3 21l3-3"/></svg></span><h4>Vacinas e vermifugação</h4><p>Calendário sanitário com avisos de reforço e controle de carência de medicamentos.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></span><h4>Reprodução</h4><p>Controle de ciclos, coberturas, diagnóstico de gestação, previsão de parto e exame andrológico.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><h4>Fotos do atendimento</h4><p>Registre a evolução de feridas e lesões e compare a primeira com a última foto.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/></svg></span><h4>Financeiro e orçamentos</h4><p>Orçamentos, faturas, despesas e o custo de cada animal, prontos para enviar ao cliente.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14c2.8 0 5 2.2 5 5"/></svg></span><h4>Equipe e clínica</h4><p>Trabalhe com veterinários, estagiários e financeiro, cada um com o acesso certo.</p></div></div></section><div class="faixa"><section class="bl publico" id="lp-publico"><h3>Feito para quem vive o campo</h3><p class="lead">Ao entrar, você escolhe o modo que combina com a sua rotina. Dá para trocar depois.</p><div class="grade"><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v3h6V3M9 11h6M9 15h4"/></svg></span><h4>Veterinários de grandes animais</h4><p>Para atendimentos em haras, fazendas e propriedades.</p><ul><li>Fichas clínicas e receituário</li><li>Agenda e lembretes do dia</li><li>Orçamentos e cobrança por cliente</li></ul></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></span><h4>Haras e fazendas</h4><p>Para proprietários que querem o plantel organizado.</p><ul><li>Trato, pesagens e manejo</li><li>Gastos por animal e relatórios</li><li>Genealogia, provas e reprodução</li></ul></div></div></section></div><section class="bl" id="lp-como"><h3>Como funciona</h3><p class="lead">Comece em poucos minutos.</p><div class="grade tres passos"><div class="card"><h4>Crie sua conta</h4><p>Com e-mail e senha ou com a sua conta Google.</p></div><div class="card"><h4>Escolha o seu perfil</h4><p>Veterinário ou proprietário de haras e fazenda.</p></div><div class="card"><h4>Cadastre os animais</h4><p>E acompanhe tudo no celular, até com o aplicativo fechado recebendo alertas.</p></div></div></section><div class="faixa"><section class="bl"><div class="grade tres"><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><h4>Dados protegidos</h4><p>Cada conta acessa somente os próprios dados, guardados na nuvem com acesso protegido.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span><h4>No celular e no computador</h4><p>Instale na tela de início do celular e use também no computador, com tudo sincronizado.</p></div><div class="card"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg></span><h4>Alertas no horário certo</h4><p>Lembretes de atendimentos, vacinas e tarefas do dia direto no seu celular.</p></div></div></section></div><div class="final"><h3>Pronto para organizar o seu plantel?</h3><p>Crie sua conta e comece a registrar seus atendimentos hoje mesmo.</p><div class="ctas" style="justify-content:center"><button type="button" class="bt cheio gr" data-lp="criar">Cadastre-se</button><button type="button" class="bt vazio gr" data-lp="entrar">Entrar</button></div></div><footer><span>© VetCamp · Prontuário veterinário</span><a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a></footer></div><div class="acena" aria-hidden="true">
+<div class="frase"><b>Do pasto ao prontuário.</b><span>Fichas, vacinas, reprodução e financeiro dos seus cavalos e do rebanho, no celular e no computador.</span><ul><li>🐴 Equinos e grandes animais</li><li>📷 Fotos e comparação</li><li>🔔 Alertas no celular</li></ul></div></div><div class="ab"><button type="button" class="voltalp" id="a_voltalp">← Conhecer o VetCamp</button><div class="alogo" aria-hidden="true"></div><h1>VetCamp</h1><p class="sub">Prontuário veterinário · equinos, grandes e pequenos animais</p><div id="a_carr" role="status"><i aria-hidden="true"></i>Entrando na sua conta…</div><div class="volta" id="a_volta" hidden><img id="a_vfoto" alt=""><b id="a_vnome"></b><span id="a_vmail"></span><button type="button" class="ok2" id="a_vbtn">Continuar</button><button type="button" class="lnk" id="a_outra">Usar outra conta</button></div>
    <div class="tabs2" role="group" aria-label="Entrar ou criar conta"><button type="button" data-m="entrar" aria-pressed="true">Entrar</button><button type="button" data-m="criar" aria-pressed="false">Criar conta</button></div>
    <div class="msg" id="a_msg" role="status"></div>
    <button type="button" class="gbtn" id="a_google"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span id="a_gtxt">Entrar com Google</span></button>
@@ -453,6 +499,13 @@ html.letra-maior body{zoom:1.12}
     $('l_nome').hidden=$('l_senha2').hidden=m!=='criar';$('l_senha').hidden=false;$('a_esq').hidden=m!=='entrar';
     $('a_senha').autocomplete=m==='criar'?'new-password':'current-password';$('a_ok').textContent=m==='criar'?'Criar conta':'Entrar';$('a_gtxt').textContent=m==='criar'?'Criar conta com Google':'Entrar com Google';msg('')}
   tela.addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(b)setModo(b.dataset.m)});
+  // apresentação: aparece para quem ainda não tem conta lembrada neste aparelho
+  const abrirLogin=m=>{tela.classList.remove('lp-on');setModo(m);tela.scrollTop=0;setTimeout(()=>{try{(m==='criar'?$('a_nome'):($('a_email').value?$('a_senha'):$('a_email'))).focus()}catch(e){}},50)};
+  const abrirLp=()=>{tela.classList.add('lp-on');tela.scrollTop=0};
+  tela.addEventListener('click',e=>{const b=e.target.closest('[data-lp]');if(b){abrirLogin(b.dataset.lp);return}
+    if(e.target.closest('#a_voltalp'))abrirLp();
+    const a=e.target.closest('.lp a[href^="#lp-"]');if(a){e.preventDefault();const t=document.getElementById(a.getAttribute('href').slice(1));if(t)tela.scrollTo({top:t.offsetTop-(a.hasAttribute('data-lptopo')?t.offsetTop:64),behavior:'smooth'})}});
+  const querLp=()=>{const l=lerL();return !(l&&l.email)};
 
   /* ---------- lembrar a conta neste aparelho ---------- */
   // Fica conectado; só pede login de novo depois de 4 dias sem abrir o VetCamp (e-mail e nome continuam salvos).
@@ -474,7 +527,7 @@ html.letra-maior body{zoom:1.12}
   // sessão rápida: quem entrou nos últimos 4 dias abre direto, sem ver a tela de login
   const L0=lerL(),rapida=!!(L0&&L0.uid&&L0.ultimo&&Date.now()-L0.ultimo<INATIVO&&configurado);
   let redir=false;try{redir=sessionStorage.getItem('vetcamp-redir')==='1';sessionStorage.removeItem('vetcamp-redir')}catch(e){}
-  if(rapida)tela.hidden=true;else if(redir)entrando(true);
+  if(rapida)tela.hidden=true;else if(redir)entrando(true);else if(querLp())tela.classList.add('lp-on');
 
   /* ---------- Firebase ---------- */
   let auth=null,fs=null,storage=null;
@@ -508,7 +561,7 @@ html.letra-maior body{zoom:1.12}
       else{
         usuario=null;entrando(false);
         if(appIniciado){tela.dataset.reabrir='1';const lv=lerL();if(lv){lv.ultimo=0;gravarL(lv)}}
-        mostrarVolta();tela.hidden=false;setTimeout(()=>{try{($('a_email').value?$('a_senha'):$('a_email')).focus()}catch(e){}},50)}
+        mostrarVolta();if(!appIniciado&&querLp()&&tela.dataset.reabrir!=='1')abrirLp();tela.hidden=false;if(!tela.classList.contains('lp-on'))setTimeout(()=>{try{($('a_email').value?$('a_senha'):$('a_email')).focus()}catch(e){}},50)}
     });
     addEventListener('visibilitychange',()=>{if(!document.hidden)tocarUso()});setInterval(tocarUso,600000);
   }
