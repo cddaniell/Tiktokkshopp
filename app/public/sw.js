@@ -1,6 +1,6 @@
 /* VetCamp · guarda a página para o aplicativo abrir mesmo com sinal fraco.
    Os dados em si ficam no banco do Firebase, que já funciona sem internet. */
-const CACHE = 'samvet-e703b313ef';
+const CACHE = 'samvet-adb696c20b';
 const BASICO = ['./', 'index.html', 'firebase-config.js', 'manifest.webmanifest', 'icons/icon-192.png'];
 
 self.addEventListener('install', e => {

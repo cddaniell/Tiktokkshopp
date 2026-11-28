@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-W3fMdOvQFj83PPbK5bi+bjqjeWwieG0zNnZ2maFExhI=' 'sha256-80MgrHS0/YVRSQhllXVBfno7Z8y+J2UYmAT4Gb/2h44=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'sha256-bFNvlDw56o0PCsHPIaJKG3Ob72bdNnvCVQixOMH+nfQ=' 'sha256-W3fMdOvQFj83PPbK5bi+bjqjeWwieG0zNnZ2maFExhI=' 'sha256-dkzcdp/akDznhrNgHIHvZUZfYt/koiog402Yyx/E/88=' https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b381b">
 <meta name="description" content="VetCamp: prontuário veterinário para equinos, grandes e pequenos animais.">
@@ -274,7 +274,15 @@ textarea.doc{width:100%;min-height:340px;font:15px/1.5 var(--body);padding:12px;
   .nav .navmenu button.navit:hover{background:color-mix(in srgb,var(--barink) 10%,transparent)}
   .nav .navmenu button.navit[aria-pressed=true]{opacity:1;background:color-mix(in srgb,var(--barink) 16%,transparent);border-left-color:var(--barink)}
   .nav .navmenu .badge{background:var(--barink);color:var(--bar)}
-  .wrap{margin-left:var(--lat);max-width:none;padding-left:max(28px,calc((100vw - var(--lat) - 1100px)/2));padding-right:max(28px,calc((100vw - var(--lat) - 1100px)/2))}
+  .wrap{margin-left:var(--lat);max-width:none;padding-left:32px;padding-right:32px}
+  .wrap>*{max-width:1160px;margin-left:auto;margin-right:auto}
+  html{zoom:1.1}
+  .card{max-height:83vh}
+  .nav .navrec{opacity:.7;font-size:13px;min-height:36px;margin-bottom:6px}
+  #navmostrar{display:none}
+  html.latoff .nav{display:none}
+  html.latoff .wrap{margin-left:0}
+  html.latoff #navmostrar{display:grid}
 }
 @media(max-width:600px){.top .brandrow h1{min-width:0;overflow:hidden;text-overflow:ellipsis}.top .brandrow h1 small{overflow:hidden;text-overflow:ellipsis}.toprow>.who,.toprow>.bbtn,.toprow>#novo{flex:none}.toprow{gap:6px}}
 @media(max-width:440px){#novo .nl{display:none}#novo{min-width:40px;justify-content:center;font-size:20px;padding:0 12px}}
@@ -363,7 +371,7 @@ html.letra-maior body{zoom:1.12}
 
 <header class="top"><div class="topin">
   <div class="toprow">
-    <div class="brandrow"><span class="logo" role="img" aria-label="Logo VetCamp"></span><h1>VetCamp<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
+    <button class="bbtn" id="navmostrar" aria-label="Mostrar o menu lateral" title="Mostrar o menu"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button><div class="brandrow"><span class="logo" role="img" aria-label="Logo VetCamp"></span><h1>VetCamp<small>Prontuário veterinário · equinos, grandes e pequenos animais</small></h1></div>
     <button class="who" id="who" data-vis="conta"><span class="dot"></span>Entrar</button>
     <button class="bbtn" id="busca" aria-label="Buscar em tudo" title="Buscar (/)"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     <button class="btn pri sm" id="novo" aria-label="Novo paciente">+ <span class="nl">Paciente</span></button>
@@ -1324,7 +1332,7 @@ async function pendentesEquipe(){
 const NAV_IC={"pac": "<path d=\"M15 2.5l-1.6 3.1C10.5 6.4 7.4 9 5.4 12.3L4 14.6c-.4 1 .1 2 1.2 2.2l1.4.2c.8.1 1.5-.3 1.9-1l1.1-1.7c.6 1.5.5 3.9-.8 6.7h10.7c.3-5.5-.5-10.5-2.9-14.6L15.8 4z\"/><path d=\"M10.6 9.4h.01\"/><path d=\"M17.7 8.6l1.7-.9M18.8 12.2l1.8-.5\"/>", "agenda": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 10h18\"/>", "intern": "<path d=\"M3 10.5L12 4l9 6.5V21H3z\"/><path d=\"M12 11v6M9 14h6\"/>", "clientes": "<circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6\"/><circle cx=\"17\" cy=\"9\" r=\"2.4\"/><path d=\"M16 14.2c2.8.3 5 2.6 5 5.8\"/>", "g:fin": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .9 3 2.1-1.3 2-3 2c-1.4 0-2.6-.6-3-1.6M12 6v2M12 16v2\"/>", "caixa": "<rect x=\"3\" y=\"6\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M3 10h18M7 15h3\"/>", "orc": "<path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5M9 13h6M9 17h4\"/>", "relat": "<path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/>", "precos": "<path d=\"M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"1.3\"/>", "g:mais": "<circle cx=\"5\" cy=\"12\" r=\"1.6\"/><circle cx=\"12\" cy=\"12\" r=\"1.6\"/><circle cx=\"19\" cy=\"12\" r=\"1.6\"/>", "estoque": "<path d=\"M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8\"/>", "ferr": "<path d=\"M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.5-.6-.6-2.5z\"/>", "conta": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/><path d=\"M6.2 18.4c1.3-2 3.4-3.2 5.8-3.2s4.5 1.2 5.8 3.2\"/>", "g:man": "<path d=\"M12 21V11M12 11c0-4 3-7 8-7 0 5-3 8-8 7zM12 14c0-3-2.5-5.5-7-5.5 0 4 2.5 6.5 7 5.5z\"/>", "trato": "<path d=\"M5 9h14l-1.5 11h-11z\"/><path d=\"M8 9c0-3 1.8-5 4-5s4 2 4 5\"/>", "locais": "<path d=\"M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z\"/><circle cx=\"12\" cy=\"9.5\" r=\"2.5\"/>", "tarefas": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"3\"/><path d=\"M8 12l3 3 5-6\"/>", "gastos": "<path d=\"M6 3h12v18l-3-2-3 2-3-2-3 2z\"/><path d=\"M9 8h6M9 12h6\"/>", "faturas": "<path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5M12 11v6M10 13c0-.8.9-1.4 2-1.4s2 .5 2 1.2-.9 1-2 1.2-2 .6-2 1.3.9 1.2 2 1.2 2-.5 2-1.3\"/>"};
 const navIc=k=>(k==='pac'||k==='intern')?`<span class="nvi nvm ic-${k}" aria-hidden="true"></span>`:NAV_IC[k]?`<svg class="nvi" viewBox="0 0 24 24" aria-hidden="true">${NAV_IC[k]}</svg>`:'';
 const LATERAL=()=>matchMedia('(min-width:1000px)').matches;
-function ajustarTopo(){const t=document.querySelector('.top .toprow');if(t){const h=Math.round(t.getBoundingClientRect().bottom+12);document.documentElement.style.setProperty('--toph',h+'px')}}
+function ajustarTopo(){const t=document.querySelector('.top');if(t){const h=t.offsetHeight;document.documentElement.style.setProperty('--toph',h+'px')}}
 let latAntes=null;addEventListener('resize',()=>{ajustarTopo();const l=LATERAL();if(l!==latAntes){latAntes=l;try{renderNav()}catch(e){}}});
 const VIEWS=[['pac','Pacientes'],['agenda','Agenda'],['intern','Internação'],['clientes','Clientes'],['caixa','Caixa'],['orc','Orçamentos'],['relat','Relatórios'],['precos','Preços'],['estoque','Estoque'],['ferr','Ferramentas'],['conta','Conta']];
 function renderNav(){
@@ -1338,11 +1346,17 @@ function renderNav(){
     const filhos=g[2].filter(visOk);if(!filhos.length)return '';if(filhos.length===1)return btn(filhos[0]);
     const ativo=!S.sel&&filhos.includes(S.vis),aberto=navAberto===g[0],bd=filhos.reduce((t,k)=>t+(n[k]||0),0);
     const lado=LATERAL()&&(aberto||ativo);return `<div class="navg${aberto&&!LATERAL()?' aberto':''}${lado?' lado':''}"><button class="navgb" data-navgrupo="${g[0]}" aria-haspopup="true" aria-expanded="${LATERAL()?lado:aberto}" aria-pressed="${ativo}">${navIc(g[0])}${g[1]}${ativo?`<span class="navsub"> · ${nome(S.vis)}</span>`:''}${bd?`<span class="badge">${bd}</span>`:''}<span class="seta" aria-hidden="true"></span></button><div class="navmenu" role="group" aria-label="${g[1]}">${filhos.map(k=>btn(k,'navit')).join('')}</div></div>`}).join('');
+  if(LATERAL())$('nav').insertAdjacentHTML('afterbegin','<button class="navrec" data-navrec aria-label="Esconder o menu lateral"><svg class="nvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span class="nvt">Esconder menu</span></button>');
   if(navAberto&&!LATERAL())posicionarMenu();ajustarTopo();
 }
 /* menu agrupado: itens parecidos ficam juntos e abrem ao tocar; o grupo da tela atual mostra onde você está */
 const GRUPOS_VET=[['pac'],['agenda'],['intern'],['clientes'],['g:fin','Financeiro',['caixa','orc','relat','precos']],['g:mais','Mais',['estoque','ferr']],['conta']];
 const GRUPOS_PROP=[['pac'],['agenda'],['g:man','Manejo',['trato','locais','tarefas','ferr']],['g:fin','Financeiro',['gastos','faturas','relat']],['clientes'],['conta']];
+/* menu lateral: aparece sempre; quem quiser esconde pela setinha e mostra de novo pelos 3 pontinhos */
+try{if(localStorage.getItem('vetcamp-lateral-oculta')==='1')document.documentElement.classList.add('latoff')}catch(e){}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-navrec],#navmostrar');if(!t)return;const off=t.id!=='navmostrar';
+  document.documentElement.classList.toggle('latoff',off);try{localStorage.setItem('vetcamp-lateral-oculta',off?'1':'0')}catch(x){}
+  if(!off){const b=document.querySelector('[data-navrec]');if(b)b.focus()}else{const m=$('navmostrar');if(m)m.focus()}});
 let navAberto='';
 function posicionarMenu(){const g=$('nav').querySelector('.navg.aberto');if(!g)return;const r=g.querySelector('.navgb').getBoundingClientRect(),m=g.querySelector('.navmenu');m.style.top=Math.round(r.bottom+4)+'px';m.style.left=Math.round(Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8)))+'px'}
 function fecharMenu(){if(navAberto){navAberto='';renderNav()}}
